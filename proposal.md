@@ -142,4 +142,64 @@ _Option to report content with a quick and simple form._
 
 _A sorting feature that shows news articles with the most interactivity._
 
+### User persona 5
+
+##### Persona description:  Content moderator
+
+##### Name: Sarah
+
+##### Importance of users corresponding to this persona: Very Important. Small percentage of users but critical for maintaining quality and safety.
+
+##### Broad goal: To monitor, review and manage user content to ensure a safe and positive experience.
+
+###### User stories (give at least 2)
+
+- As a **content moderator**, I Want to be able to remove posts that violate community guidelines.
+
+_A remove post option for set moderator profiles._
+
+- As a **content moderator**, I want to review reported posts to decide whether to remove them.
+
+_A list of flagged posts to be reviewed by a moderator._
+
+- As a **content moderator**, I want to ban users who repeatedly violate guidelines.
+
+_User suspension feature that only moderators are allowed to use._
+
 ## Mock-ups
+
+##### Full View
+
+![Full View Image](images/fullview.png)
+
+##### Account Registration Screen
+
+![Account Registration Mock-Up Image](images/accReg.png)
+
+##### Login Screen
+
+![Login Form Mock-Up Image](images/login.png)
+
+##### Home Screen
+
+![Home Mock-Up Image](images/home.png)
+
+##### Profile Screen
+
+![Profile Mock-Up Image](images/profile.png)
+
+##### Gaming Screen 
+
+![Game Mock-Up Image](images/gaming.png)
+
+##### Chatting Screen
+
+![Chat Room Mock-Up Image](images/chatting.png)
+
+##### Moderator Screen
+
+![Moderator page Mock-Up Image](images/moderator.png)
+
+##### New Post Screen
+
+![New Post Mock-Up Image](images/newPost.png)
