@@ -1,7 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "webprojazure.blob.core.windows.net",
+      },
+    ],
+  },
+  env: {
+    PORT: process.env.PORT || "8080"
+  },
 };
 
 export default nextConfig;
