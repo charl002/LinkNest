@@ -1,8 +1,10 @@
 import { auth } from "@/auth";
 import Image from "next/image";
 import { redirect } from "next/navigation";
+import Logout from "@/components/Logout"
 
 const HomePage = async () => {
+
     const session = await auth();
 
 
@@ -12,6 +14,7 @@ const HomePage = async () => {
     const userImage = session?.user?.image ?? "/path/to/default/image.png"; // Provide a default image
 
     return(
+        <>
         <div className="flex flex-col items-center m-4">
             <h1>{session?.user?.name}</h1>
 
@@ -22,6 +25,8 @@ const HomePage = async () => {
                 height={72}
                 className="rounded-full" />
         </div>
+        <Logout />
+        </>
     )
 }
 
