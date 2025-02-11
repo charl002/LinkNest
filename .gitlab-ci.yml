@@ -2,6 +2,8 @@ stages:
   - lint
   - test
 
+image: node:lts-bullseye-slim
+
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'push'
