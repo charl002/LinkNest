@@ -24,8 +24,9 @@ const HomePage = async () => {
                 width={72}
                 height={72}
                 className="rounded-full" />
+                
+            <Logout />
         </div>
-        <Logout />
         </>
     )
 }
