@@ -11,7 +11,7 @@ const HomePage = async () => {
     if(!session?.user) redirect("/");
 
 
-    const userImage = session?.user?.image ?? "/path/to/default/image.png"; // Provide a default image
+    const userImage = session?.user?.image ?? "../public/defaultProfilePic.jpg";
 
     return(
         <>
@@ -24,7 +24,7 @@ const HomePage = async () => {
                 width={72}
                 height={72}
                 className="rounded-full" />
-                
+
             <Logout />
         </div>
         </>
