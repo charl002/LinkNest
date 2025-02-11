@@ -16,7 +16,7 @@ export function initSocket(server: HTTPServer) {
       console.log("User connected", socket.id);
 
       socket.on("message", (msg) => {
-        socket.broadcast.emit("message", msg); 
+        socket.broadcast.emit("message", msg);
       });
 
       socket.on("disconnect", () => {
