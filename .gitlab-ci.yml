@@ -1,0 +1,27 @@
+stages:
+  - lint
+  - test
+
+image: node:lts-bullseye-slim
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'push'
+      when: always
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: always
+    - if: $CI_COMMIT_BRANCH
+      when: always
+
+test-server:
+  stage: test
+  script:
+    - npm install
+    - cd __tests__ && npm install jest && npm run test
+  allow_failure: false
+
+lint-server: 
+  stage: lint
+  script: 
+    - npm install && npx eslint
+  allow_failure: false
