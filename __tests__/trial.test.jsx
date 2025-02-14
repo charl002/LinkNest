@@ -1,4 +1,4 @@
-import { add } from '../app/page'
+import { add } from '../utils/mock_test.tsx'; 
 
 describe('add', () => {
     test('Should add to 5', () => {
