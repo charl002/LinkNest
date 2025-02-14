@@ -26,7 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
      <body className="bg-gray-100 text-gray-900 antialiased">
+        {/* Shared Navbar */}
         <Navbar />
+
+        {/* Main Content */}
         <main className="flex min-h-screen">{children}</main>
       </body>
     </html>
