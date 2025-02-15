@@ -2,9 +2,7 @@ import Sidebar from "../../components/Sidebar";
 import Post from "../../components/Post";
 import ChatList from "../../components/ChatList";
 import { auth } from "@/auth";
-// import Image from "next/image";
 import { redirect } from "next/navigation";
-// import Logout from "@/components/Logout"
 
 export default async function Home() {
     const session = await auth();
