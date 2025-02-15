@@ -1,35 +1,25 @@
+import Sidebar from "../../components/Sidebar";
+import Post from "../../components/Post";
+import ChatList from "../../components/ChatList";
 import { auth } from "@/auth";
-import Image from "next/image";
 import { redirect } from "next/navigation";
-import Logout from "@/components/Logout"
 
-const HomePage = async () => {
-
+export default async function Home() {
     const session = await auth();
-
 
     if(!session?.user) redirect("/");
 
+  return (
+    <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full">
+      <Sidebar />
 
-    const userImage = session?.user?.image ?? "../public/defaultProfilePic.jpg";
+      <section className="flex flex-col space-y-6">
+        <Post />
+        <Post />
+        <Post />
+      </section>
 
-    return(
-        <>
-        <div className="flex flex-col items-center m-4">
-            <h1>{session?.user?.name}</h1>
-
-            <Image
-                src={userImage}
-                alt={session?.user?.name || "User Image"}
-                width={72}
-                height={72}
-                className="rounded-full" />
-
-            <Logout />
-        </div>
-        </>
-    )
-}
-
-export default HomePage
-
+      <ChatList />
+    </div>
+  );
+};

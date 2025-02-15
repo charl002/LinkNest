@@ -14,11 +14,12 @@ export const{
 
             authorization: {
                 params: {
-                    promt: "consent", 
+                    prompt: "consent", 
                     access_type: "offline",
                     response_type: "code",
                 }
             }
         })
-    ]
+    ],
+    trustHost: true
 })

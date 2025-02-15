@@ -1,10 +1,13 @@
-import LoginForm from "@/components/LoginForm";
+import Post from "@/components/Post";
 
 export default function Home() {
   return (
-    <div className="flex flex-col justify-center items-center m-4">
-      <h1 className="text-3xl my-3">Sign In</h1>
-      <LoginForm/>
+    <div className="flex flex-col items-center gap-6 p-6 w-full">
+      <section className="flex flex-col space-y-6 max-w-2xl w-full">
+        <Post />
+        <Post />
+        <Post />
+      </section>
     </div>
   );
 }
