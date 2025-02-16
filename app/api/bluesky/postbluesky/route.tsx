@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { getAllDocuments } from "@/firebase/firestore/getData";
-import { GET as getNews } from "../getnews/route";
+import { GET as getBluesky } from "../getbluesky/route";
 
 interface Results {
   added: (string | null)[];
@@ -10,25 +10,25 @@ interface Results {
 
 export async function POST() {
   try {
-    const response = await getNews();
+    const response = await getBluesky();
     if (!(response instanceof NextResponse)) {
-      throw new Error('Invalid response from news API');
+      throw new Error('Invalid response from Bluesky API');
     }
 
     const data = await response.json();
     
-    if (!data || !data.data || !Array.isArray(data.data)) {
-      throw new Error('Invalid news data format');
+    if (!data || !data.posts || !Array.isArray(data.posts)) {
+      throw new Error('Invalid Bluesky data format');
     }
 
-    const { results: existingNewsDocs, error: fetchError } = await getAllDocuments('news');
+    const { results: existingBlueSkyDocs, error: fetchError } = await getAllDocuments('bluesky');
     
     if (fetchError) {
-      throw new Error('Failed to fetch existing news');
+      throw new Error('Failed to fetch existing Bluesky posts');
     }
 
-    const existingUuids = new Set(
-      existingNewsDocs?.docs.map(doc => doc.data().uuid) || []
+    const existingIds = new Set(
+      existingBlueSkyDocs?.docs.map(doc => doc.data().id) || []
     );
 
     const results: Results = {
@@ -36,16 +36,16 @@ export async function POST() {
       skipped: []
     };
 
-    for (const newsItem of data.data) {
-      if (existingUuids.has(newsItem.uuid)) {
-        results.skipped.push(newsItem.uuid);
+    for (const post of data.posts) {
+      if (existingIds.has(post.id)) {
+        results.skipped.push(post.id);
         continue;
       }
 
-      const { result, error } = await addData('news', newsItem);
+      const { result, error } = await addData('bluesky', post);
       
       if (error) {
-        console.error('Error adding news item:', error);
+        console.error('Error adding Bluesky post:', error);
         continue;
       }
       
@@ -55,7 +55,7 @@ export async function POST() {
     if (results.added.length === 0) {
       return NextResponse.json(
         { 
-          message: 'No new items added', 
+          message: 'No new posts added', 
           skipped: results.skipped.length,
           results 
         },
@@ -65,7 +65,7 @@ export async function POST() {
 
     return NextResponse.json(
       { 
-        message: `Successfully added ${results.added.length} news items`, 
+        message: `Successfully added ${results.added.length} Bluesky posts`, 
         skipped: results.skipped.length,
         results 
       },
@@ -73,7 +73,7 @@ export async function POST() {
     );
 
   } catch (error) {
-    console.error('Error in POST /api/news/postnews:', error);
+    console.error('Error in POST /api/bluesky/postbluesky:', error);
     return NextResponse.json(
       { message: 'An error occurred', error },
       { status: 500 }
@@ -81,6 +81,7 @@ export async function POST() {
   }
 }
 
-// fetch('/api/news/postnews', {
+// Example usage:
+// fetch('/api/bluesky/postbluesky', {
 //   method: 'POST'
 // }).then(res => res.json()).then(console.log)
