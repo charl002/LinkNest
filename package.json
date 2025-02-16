@@ -12,9 +12,13 @@
   },
   "dependencies": {
     "@atproto/api": "^0.12.2",
+    "@azure/storage-blob": "^12.26.0",
     "firebase": "^11.3.0",
+    "formidable": "^3.5.2",
+    "install": "^0.13.0",
     "next": "15.1.6",
     "next-auth": "^5.0.0-beta.25",
+    "npm": "^11.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0"
@@ -26,6 +30,7 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
+    "@types/formidable": "^3.4.5",
     "@types/jest": "^29.5.14",
     "@types/node": "^20",
     "@types/react": "^19",
