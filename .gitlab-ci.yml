@@ -1,6 +1,6 @@
 stages:
   - lint
-  # - test
+  - test
 
 image: node:lts-bullseye-slim
 
@@ -13,12 +13,11 @@ workflow:
     - if: $CI_COMMIT_BRANCH
       when: always
 
-# test-server:
-#   stage: test
-#   script:
-#     - npm install
-#     - cd __tests__ && npm install jest && npm run test
-#   allow_failure: false
+test-server:
+  stage: test
+  script:
+    - npm install && npm run test
+  allow_failure: false
 
 lint-server: 
   stage: lint

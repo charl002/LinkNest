@@ -6,7 +6,7 @@ import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   title: "LinkNest",
-  description: "All rights reserved to LinkedOut",
+  description: "LinkNest is a website where you can connect with others by chatting, sharing posts and videocalling!",
 };
 
 export default async function RootLayout({
