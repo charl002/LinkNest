@@ -9,7 +9,7 @@ export default function UserCheck() {
     useEffect(() => {
         if (!session?.user) return;
 
-        const { email, name } = session.user;
+        const { email, name, image } = session.user;
 
         // Call the GET API to fetch all users
         const fetchData = async () => {
@@ -27,11 +27,10 @@ export default function UserCheck() {
                 }
 
                 const data = await response.json();
-                console.log("data");
                 console.log(data);
 
                 // Check if the user's email already exists in the database
-                const userExists = data.users.some((user: { email: string; name: string }) => user.email === email);
+                const userExists = data.users.some((user: { email: string; name: string; image: string }) => user.email === email);
 
                 if (!userExists) {
                     // If the user doesn't exist, call the POST API to store the user's data
@@ -40,7 +39,7 @@ export default function UserCheck() {
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ email, name }),
+                        body: JSON.stringify({ email, name, image }),
                     });
 
                     if (!postResponse.ok) {
