@@ -28,6 +28,7 @@ export default function UserCheck() {
 
                 const data = await response.json();
                 console.log(data);
+                console.log(encodeURIComponent("rahmanmahbub0529@gmail.com"));
 
                 // Check if the user's email already exists in the database
                 const userExists = data.users.some((user: { email: string; name: string; image: string }) => user.email === email);
