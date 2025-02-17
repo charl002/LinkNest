@@ -20,7 +20,7 @@ const Navbar = async () => {
           {session?.user ? (
             // If user is logged in, show profile image, username & logout button
             <>
-            <Link href={`/profile/${session.user.email}`}>
+            <Link href={`/profile/${encodeURIComponent(session.user.email ?? "")}`}>
               <div className="flex items-center space-x-3 cursor-pointer">
                   <Image
                     src={userImage}

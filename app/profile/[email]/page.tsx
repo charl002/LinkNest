@@ -1,13 +1,20 @@
-const Profile = async ({ params }: { params: { email: string } }) => {
+import Sidebar from "../../../components/Sidebar";
+import ChatList from "../../../components/ChatList";
+import ProfilePage from "../../../components/ProfilePage";
+
+interface ProfileProps {
+    params: { email: string };
+}
+
+const Profile = ({ params }: ProfileProps) => {
+
     const user = decodeURIComponent(params.email);
 
-    if (!user) {
-        return <div>User not found</div>;
-    }
-
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold">{user} Profile</h1>
+        <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full">
+            <Sidebar />
+            <ProfilePage user={user} />
+            <ChatList />
         </div>
     );
 };
