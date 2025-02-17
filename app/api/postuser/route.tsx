@@ -3,13 +3,13 @@ import addData from "@/firebase/firestore/addData";
 
 export async function POST(req: Request) {
     try {
-        const { email, name, image } = await req.json();
+        const { email, name, image, username } = await req.json();
 
-        if (!email || !name || !image) {
-            return NextResponse.json({ message: "Email, name, and image are required" }, { status: 400 });
+        if (!email || !name || !image || !username) {
+            return NextResponse.json({ message: "Email, name, username, and image are required" }, { status: 400 });
         }
 
-        const data = { email, name, image };
+        const data = { email, name, image, username };
         const { result: docId, error } = await addData("users", data);
 
         if (error) {
