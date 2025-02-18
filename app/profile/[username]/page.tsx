@@ -3,12 +3,12 @@ import ChatList from "../../../components/ChatList";
 import ProfilePage from "../../../components/ProfilePage";
 
 interface ProfileProps {
-    params: { email: string };
+    params: { username: string };
 }
 
 const Profile = ({ params }: ProfileProps) => {
 
-    const user = decodeURIComponent(params.email);
+    const user = decodeURIComponent(params.username);
 
     return (
         <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full">
