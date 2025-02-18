@@ -10,6 +10,7 @@ export default function UserCheck() {
     const { data: session } = useSession();
     const [usernameRequired, setUsernameRequired] = useState(false);
     const [username, setUsername] = useState("");
+    const [description, setDescription] = useState("");
     const [usernameError, setUsernameError] = useState("");
 
     useEffect(() => {
@@ -96,7 +97,7 @@ export default function UserCheck() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, name, image, username }),
+                body: JSON.stringify({ email, name, image, username, description }),
             });
 
             if (!postResponse.ok) {
@@ -114,7 +115,7 @@ export default function UserCheck() {
         return (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
                 <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg">
-                    <h2 className="text-xl font-bold mb-4">Choose a Username</h2>
+                    <h2 className="text-3xl font-bold mb-4 text-center">Setup Your Account</h2>
                     <input
                         type="text"
                         placeholder="Username"
@@ -126,6 +127,13 @@ export default function UserCheck() {
                     {usernameError && (
                         <p className="text-red-500 text-sm mb-4">{usernameError}</p>
                     )}
+                    <input
+                        type="text"
+                        placeholder="Description (Optional)"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded mb-4"
+                    />
                     <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded">
                         Submit
                     </button>
