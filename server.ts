@@ -4,7 +4,9 @@ import next from "next";
 import { Server as SocketIOServer } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
-const app = next({ dev });
+const hostname = process.env.HOST || "localhost";
+const port = Number(process.env.ENV) || 3000;
+const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -13,7 +15,6 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   });
 
-  // ✅ Initialize WebSocket server
   const io = new SocketIOServer(server, {
     cors: {
       origin: "*",
@@ -25,7 +26,7 @@ app.prepare().then(() => {
     console.log("User connected", socket.id);
 
     socket.on("message", (msg) => {
-      socket.broadcast.emit("message", msg); // Broadcast to all except sender
+      socket.broadcast.emit("message", msg);
     });
 
     socket.on("disconnect", () => {
@@ -33,7 +34,11 @@ app.prepare().then(() => {
     });
   });
 
-  server.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
+  server.once("error", (err) => {
+    console.error(err);
+    process.exit(1);
+  })
+  .listen(port, () => {
+    console.log(`> Ready on http://${hostname}:${port}`);
   });
 });
