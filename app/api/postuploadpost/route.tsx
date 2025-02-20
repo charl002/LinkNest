@@ -22,9 +22,16 @@ export async function POST(request: Request) {
     const username = formData.get("username")?.toString();
     const title = formData.get("title")?.toString();
     const text = formData.get("text")?.toString();
-    const date = formData.get("date")?.toString();
     const tags = formData.getAll("tags").map(tag => tag.toString());
     const file = formData.get("file") as File | null;
+    const now = new Date();
+    const datePart = now.toISOString().split("T")[0]; 
+    const timePart = now.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    });
+    const date = `${datePart} ${timePart}`
 
     // Validate required fields
     if (!username || !title || !text || !date) {
