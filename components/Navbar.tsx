@@ -38,7 +38,7 @@ const Navbar = () => {
     return (
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">
-          <span className="text-black">Link</span><span className="text-blue-500">Nest</span>
+          <a href="/home"><span className="text-black">Link</span><span className="text-blue-500">Nest</span></a>
         </h1>
         
         <div className="flex items-center space-x-3">
