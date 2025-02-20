@@ -1,6 +1,8 @@
 stages:
   - lint
   - test
+  - build
+  - deploy
 
 image: node:lts-bullseye-slim
 
@@ -24,3 +26,23 @@ lint-server:
   script: 
     - npm install && npx eslint
   allow_failure: false
+
+build-frontend:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "deploy"
+  before_script:
+    - apt-get update && apt-get install -y curl
+  script:
+    - npm install && npm run build
+    - curl -X POST https://api.render.com/deploy/srv-{RENDER_SERVICE}key={RENDER_API_KEY}
+  artifacts:
+    expire_in: 1 day
+    when: on_success
+    paths:
+      - .next/
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Deployment to Render triggered."
