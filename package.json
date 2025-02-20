@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "node server.ts",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch"
