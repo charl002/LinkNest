@@ -2,12 +2,10 @@ import Sidebar from "../../../components/Sidebar";
 import ChatList from "../../../components/ChatList";
 import ProfilePage from "../../../components/ProfilePage";
 
-interface ProfileProps {
-    params: { username: string };
-}
+type ProfileParams = Promise<{ username: string }>
 
-const Profile = async ({ params }: ProfileProps) => {
-    const { username } = await params; 
+const Profile = async (props : { params: ProfileParams }) => {
+    const { username } = await props.params; 
     const user = decodeURIComponent(username);
 
     return (
