@@ -2,11 +2,11 @@
   "name": "linknest",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "type": "module",
     "dev": "node server.ts",
     "build": "next build",
-    "start": "ts-node server.ts",
+    "start": "node server.ts",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch"
