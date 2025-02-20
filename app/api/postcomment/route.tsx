@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { UpdateData } from "@firebase/firestore";
+import updateData from "@/firebase/firestore/updateData";
 
 export async function POST(req: Request) {
     try {
@@ -25,13 +25,14 @@ export async function POST(req: Request) {
             date
         };
 
-        
+        const { result: docId, error } = await updateData("posts", postId, data);
 
         if (error) {
-            return NextResponse.json({ message: "Error adding user", error }, { status: 500 });
+            return NextResponse.json({ message: "Error adding comment", error }, { status: 500 });
         }
 
-        return NextResponse.json({ message: "user added successfully", id: docId }, { status: 200 });
+        return NextResponse.json({ message: "comment added successfully", id: docId }, { status: 200 });
+
     } catch (err) {
         return NextResponse.json({ message: "Unexpected error occurred", error: err }, { status: 500 });
     }
