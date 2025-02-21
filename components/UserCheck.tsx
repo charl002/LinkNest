@@ -2,9 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import ChatList from "./ChatList";
 import Sidebar from "./Sidebar";
 import Post from "./Post";
-import ChatList from "./ChatList";
+
+interface Post {
+    id: string;
+    title: string;
+    username: string;
+    description: string;
+    tags: string[];
+    comments: string[];
+    likes: number;
+    images: { url: string; alt: string; thumb: string }[];
+    createdAt: string;
+    avatar: string;
+}
 
 export default function UserCheck() {
     const { data: session } = useSession();
@@ -12,6 +25,7 @@ export default function UserCheck() {
     const [username, setUsername] = useState("");
     const [description, setDescription] = useState("");
     const [usernameError, setUsernameError] = useState("");
+    const [posts, setPosts] = useState<Post[]>([]);
 
     useEffect(() => {
         if (!session?.user) return;
@@ -50,6 +64,37 @@ export default function UserCheck() {
         };
 
         fetchData();
+    }, [session]);
+
+    useEffect(() => {
+        if (!session?.user) return;
+
+        const fetchPosts = async () => {
+            try {
+                const response = await fetch('/api/bluesky/getfromdb');
+                const newsresponse = await fetch('/api/news/getfromdb');
+                const data = await response.json();
+                const newsdata = await newsresponse.json();
+                let allPosts: Post[] = [];
+
+                if (data.success) {
+                    // Add Bluesky posts to allPosts
+                    allPosts = allPosts.concat(data.posts);
+                }
+                if (newsdata.success) {
+                    // Add News posts to allPosts
+                    allPosts = allPosts.concat(newsdata.posts);
+                }
+
+                // Randomize the order of all posts
+                const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
+                setPosts(shuffledPosts);
+            } catch (err) {
+                console.error("Error fetching posts:", err);
+            }
+        };
+
+        fetchPosts();
     }, [session]);
 
     const checkUsernameAvailability = async (username: string) => {
@@ -146,11 +191,11 @@ export default function UserCheck() {
         <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full">
             <Sidebar />
             <section className="flex flex-col space-y-6">
-                <Post />
-                <Post />
-                <Post />
+                {posts.map((post, index) => (
+                <Post key={`${post.id}-${index}`} {...post} profilePicture={post.avatar}/>
+                ))}
             </section>
             <ChatList />
         </div>
-    );
+      );
 }

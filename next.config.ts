@@ -4,12 +4,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "webprojazure.blob.core.windows.net",
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
+        protocol: 'https',
+        hostname: '**', // Allow all hostnames
       },
     ],
   },

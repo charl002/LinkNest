@@ -42,7 +42,12 @@ export async function POST() {
         continue;
       }
 
-      const { result, error } = await addData('bluesky', post);
+      const postWithLikes = {
+        ...post,
+        likes: 0
+      };
+
+      const { result, error } = await addData('bluesky', postWithLikes);
       
       if (error) {
         console.error('Error adding Bluesky post:', error);
