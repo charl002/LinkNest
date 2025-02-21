@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Logout from "./Logout";
 import LoginForm from "./LoginForm";
-//import Link from "next/link";
+import Link from "next/link";
 
 const Navbar = () => {
 
@@ -38,14 +38,14 @@ const Navbar = () => {
     return (
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">
-          <span className="text-black">Link</span><span className="text-blue-500">Nest</span>
+          <a href="/home"><span className="text-black">Link</span><span className="text-blue-500">Nest</span></a>
         </h1>
         
         <div className="flex items-center space-x-3">
           {session?.user ? (
             // If user is logged in, show profile image, username & logout button
             <>
-            {/*<Link href={`/profile/${encodeURIComponent(userName)}`}>*/}
+            <Link href={`/profile/${encodeURIComponent(userName)}`}>
               <div className="flex items-center space-x-3 cursor-pointer">
                   <Image
                     src={userImage}
@@ -59,7 +59,7 @@ const Navbar = () => {
                     <p className="text-gray-500 text-sm">@{userName}</p>
                 </div>
                 </div>
-              {/*</Link>*/}
+              </Link>
               <Logout />
             </>
           ) : (
