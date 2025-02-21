@@ -8,6 +8,11 @@ interface GetDocumentResult {
     error: unknown;
 }
 
+interface GetFriendRequestsResult {
+  requests: DocumentData[] | null;
+  error: unknown;
+}
+
 export async function getDocument(collection: string, id: string): Promise<GetDocumentResult> {
     const docRef = doc(db, collection, id);
 
@@ -41,4 +46,22 @@ export async function getAllDocuments(collectionName: string): Promise<GetAllDoc
     }
 
     return { results, error };
+}
+
+// WIll use this temporarely
+
+export async function getFriendRequests(): Promise<GetFriendRequestsResult> {
+  const colRef = collection(db, "friend_requests");
+
+  let requests: DocumentData[] | null = null;
+  let error: unknown = null;
+
+  try {
+      const snapshot: QuerySnapshot<DocumentData> = await getDocs(colRef);
+      requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Convert docs to objects
+  } catch (e) {
+      error = e;
+  }
+
+  return { requests, error };
 }
