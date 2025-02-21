@@ -42,7 +42,13 @@ export async function POST() {
         continue;
       }
 
-      const { result, error } = await addData('news', newsItem);
+      // Add likes field to the news item
+      const newsItemWithLikes = {
+        ...newsItem,
+        likes: 0
+      };
+
+      const { result, error } = await addData('news', newsItemWithLikes);
       
       if (error) {
         console.error('Error adding news item:', error);
