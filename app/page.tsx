@@ -26,6 +26,10 @@ export default function Home() {
         const newsresponse = await fetch('/api/news/getfromdb');
         const data = await response.json();
         const newsdata = await newsresponse.json();
+
+        // const customResponse = await fetch('/api/getuserpost');
+        // const customData = await customResponse.json();
+
         let allPosts: Post[] = [];
 
         if (data.success) {
@@ -34,6 +38,10 @@ export default function Home() {
         if (newsdata.success) {
           allPosts = allPosts.concat(newsdata.posts);
         }
+
+        // if (customData.success){
+        //   allPosts = allPosts.concat(customData.posts);
+        // }
 
         const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
         setPosts(shuffledPosts);
