@@ -3,6 +3,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 interface User {
   id: string;
@@ -13,9 +14,14 @@ interface User {
 }
 
 export default function Sidebar() {
+  const { data: session } = useSession();
   const [friendName, setFriendName] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const currentUser = users.find(user => user.email === session?.user?.email);
+  const senderUsername = currentUser?.username || null;
 
   useEffect(() => {
     async function fetchUsers() {
@@ -41,12 +47,47 @@ export default function Sidebar() {
     if (friendName.trim() === "") {
       setFilteredUsers([]);
     } else {
-      console.log("Users:", users);
       setFilteredUsers(users.filter(user => 
         user.username && user.username.toLowerCase().includes(friendName.toLowerCase())
       ));
     }
-  }, [friendName, users]);  
+  }, [friendName, users]);
+
+  const handleAddFriend = async () => {
+    if (!session?.user?.name || !friendName) {
+      alert("Error: Missing username.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const requestBody = {
+      senderUsername: senderUsername,
+      receiverUsername: friendName,
+    };
+
+    try {
+      const response = await fetch("/api/postfriendrq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to add friend.");
+      }
+
+      alert(`Friend request sent to ${friendName}!`);
+      setFriendName("");
+    } catch (error) {
+      console.error("Error adding friend:", error);
+      alert("Failed to add friend. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <aside className="bg-white shadow-md p-4 rounded-md flex flex-col space-y-4">
@@ -80,7 +121,9 @@ export default function Sidebar() {
                 ))}
               </ul>
             )}
-            <Button onClick={() => alert(`Added ${friendName}`)}>Add Friend</Button>
+            <Button onClick={handleAddFriend} disabled={isLoading}>
+              {isLoading ? "Adding..." : "Add Friend"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
