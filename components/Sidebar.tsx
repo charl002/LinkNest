@@ -58,6 +58,9 @@ export default function Sidebar() {
     if (!session?.user?.name || !friendName) {
       customToast({message: `Error! Missing username`, type: "error"});
       return;
+    } else if(senderUsername === friendName){
+      customToast({message: "You can't add yourself!", type: "info"});
+      return;
     }
 
     setIsLoading(true);
@@ -73,21 +76,22 @@ export default function Sidebar() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-
+    
       const result = await response.json();
-
+    
       if (!response.ok) {
-        throw new Error(result.message || "Failed to add friend.");
+        customToast({ message: `${result.message}`, type: "error" });
+        return;
       }
-
-      customToast({message: `Friend request sent to ${friendName}!`, type: "success"});
+    
+      customToast({ message: `Friend request sent to ${friendName}!`, type: "success" });
       setFriendName("");
     } catch (error) {
       console.error("Error adding friend:", error);
-      customToast({message: `Failed to add friend. Please try again.`, type: "error"});
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
     } finally {
       setIsLoading(false);
-    }
+    }    
   };
 
   return (
