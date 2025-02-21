@@ -14,8 +14,7 @@ interface UserData {
   };
 }
 
-export default function ProfilePage( { user }: { user: string } ) {
-
+export default function ProfilePage({ user }: { user: string }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,31 +40,50 @@ export default function ProfilePage( { user }: { user: string } ) {
     fetchUser();
   }, [user]);
 
-  
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">{user} Profile</h1>
-
+    <div className="bg-white shadow-md rounded-lg p-6 text-center border border-gray-300">
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
 
       {userData && (
         <div>
-          <h2 className="text-xl font-semibold">User ID: {userData.id}</h2>
-          <Image
-            src={userData.data.image}
-            alt="User Profile"
-            width={40}
-            height={40}
-            className="rounded-full border border-gray-300"
-          />
-          <p>Name: {userData.data.name}</p>
-          <p>Email: {userData.data.email}</p>
-          <p>Username: {userData.data.username}</p>
-          <p>Description: {userData.data.description}</p>
+          <div className="flex items-center justify-around my-4">
+            <div className="flex flex-col items-center">
+              <p className="font-bold text-lg">{userData.data.username}</p>
+              <Image
+                src={userData.data.image}
+                alt="User Profile"
+                width={80}
+                height={80}
+                className="rounded-full border border-gray-400 mt-2"
+              />
+            </div>
+            
+            <div className="text-center">
+              <p className="font-semibold">Posts</p>
+              <p>10</p>
+            </div>
+            <div className="text-center">
+              <p className="font-semibold">Followers</p>
+              <p>100</p>
+            </div>
+            <div className="text-center">
+              <p className="font-semibold">Following</p>
+              <p>200</p>
+            </div>
+          </div>
+
+          <div className="ml-4 text-left">
+            <p className="font-semibold">{userData.data.name}</p>
+            <p className="text-gray-600">{userData.data.description}</p>
+          </div>
+
+          <h3 className="font-semibold mt-4">Posts</h3>
+          <div className="w-full h-40 bg-gray-200 rounded-md flex items-center justify-center mt-2">
+            <p className="text-gray-500">Post Placeholder</p>
+          </div>
         </div>
       )}
     </div>
   );
-
 }
