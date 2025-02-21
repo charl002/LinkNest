@@ -1,4 +1,5 @@
-"use-client";
+"use client";
+
 import { useState, useRef } from "react";
 // import Image from "next/image";
 import { useSession } from "next-auth/react"; 
