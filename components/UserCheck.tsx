@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import ChatList from "./ChatList";
 import Sidebar from "./Sidebar";
 import Post from "./Post";
+import { Toaster } from "sonner";
 
 interface Post {
     id: string;
@@ -196,6 +197,7 @@ export default function UserCheck() {
                 ))}
             </section>
             <ChatList />
+            <Toaster position="bottom-center" richColors></Toaster>
         </div>
       );
 }

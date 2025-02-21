@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { customToast } from "./ui/customToast";
 
 interface User {
   id: string;
@@ -55,7 +56,7 @@ export default function Sidebar() {
 
   const handleAddFriend = async () => {
     if (!session?.user?.name || !friendName) {
-      alert("Error: Missing username.");
+      customToast({message: `Error! Missing username`, type: "error"});
       return;
     }
 
@@ -79,11 +80,11 @@ export default function Sidebar() {
         throw new Error(result.message || "Failed to add friend.");
       }
 
-      alert(`Friend request sent to ${friendName}!`);
+      customToast({message: `Friend request sent to ${friendName}!`, type: "success"});
       setFriendName("");
     } catch (error) {
       console.error("Error adding friend:", error);
-      alert("Failed to add friend. Please try again.");
+      customToast({message: `Failed to add friend. Please try again.`, type: "error"});
     } finally {
       setIsLoading(false);
     }
