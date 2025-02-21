@@ -78,6 +78,7 @@ export default function ProfilePage({ user }: { user: string }) {
             <p className="text-gray-600">{userData.data.description}</p>
           </div>
 
+          <br/>
           <h3 className="font-semibold mt-4">Posts</h3>
           <div className="w-full h-40 bg-gray-200 rounded-md flex items-center justify-center mt-2">
             <p className="text-gray-500">Post Placeholder</p>
