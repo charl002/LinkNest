@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import ChatList from "./ChatList";
+import Sidebar from "./Sidebar";
 import Post from "./Post";
 
 interface Post {
@@ -178,12 +180,14 @@ export default function UserCheck() {
     }
 
     return (
-        <div className="flex flex-col items-center gap-6 p-6 w-full">
-          <section className="flex flex-col space-y-6 max-w-2xl w-full">
-            {posts.map((post, index) => (
-              <Post key={`${post.id}-${index}`} {...post} profilePicture={post.avatar}/>
-            ))}
-          </section>
+        <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full">
+            <Sidebar />
+            <section className="flex flex-col space-y-6">
+                {posts.map((post, index) => (
+                <Post key={`${post.id}-${index}`} {...post} profilePicture={post.avatar}/>
+                ))}
+            </section>
+            <ChatList />
         </div>
       );
 }
