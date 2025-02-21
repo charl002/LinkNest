@@ -70,66 +70,66 @@ const CreatePost = () => {
             } else {
             setMessage("Error uploading post. Please try again.");
             }
-        };
+    };
 
-        return (
-            <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-md">
-              <h1 className="text-2xl font-bold mb-4">Create a Post</h1>
+    return (
+        <div className="w-full max-w-2xl bg-gray-200 shadow-lg rounded-lg p-10">
+            <h1 className="text-3xl font-bold mb-6 text-center">Create a New Post</h1>
         
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-700">Title:</label>
-                  <input
+                <label className="block text-gray-700 font-semibold">Title:</label>
+                <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded"
+                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
                     required
-                  />
+                />
                 </div>
         
                 <div>
-                  <label className="block text-gray-700">Description:</label>
-                  <textarea
+                <label className="block text-gray-700 font-semibold">Description:</label>
+                <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded"
+                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
                     required
-                  />
+                />
                 </div>
         
                 <div>
-                  <label className="block text-gray-700">Hashtags:</label>
-                  <input
+                <label className="block text-gray-700 font-semibold">Hashtags:</label>
+                <input
                     type="text"
                     value={hashtags}
                     onChange={(e) => setHashtags(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded"
+                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
                     placeholder="#sports #coding"
-                  />
+                />
                 </div>
         
                 <div>
-                  <label className="block text-gray-700">Upload Image/Video:</label>
-                  <input
+                <label className="block text-gray-700 font-semibold">Upload Image/Video:</label>
+                <input
                     type="file"
                     ref={fileInputRef}
                     onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="w-full p-2 border border-gray-300 rounded"
-                  />
+                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
+                />
                 </div>
         
                 <button
-                  type="submit"
-                  className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+                type="submit"
+                className="w-full bg-blue-500 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-600"
                 >
-                  Publish
+                Publish
                 </button>
-              </form>
+            </form>
         
-              {message && <p className="mt-4 text-center text-red-500">{message}</p>}
-            </div>
-          );
-        };
+            {message && <p className="mt-6 text-center text-red-500 text-lg">{message}</p>}
+        </div>
+    );
+};
 
 export default CreatePost;
