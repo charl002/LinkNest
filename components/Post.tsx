@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface PostProps {
     title: string;
     username: string;
@@ -5,16 +7,36 @@ interface PostProps {
     tags: string[];
     comments: string[];
     likes: number;
+    images: { url: string; alt: string; thumb: string }[];
+    profilePicture: string;
 }
 
-export default function Post({ title, username, description, tags, comments, likes }: PostProps) {
+export default function Post({ title, username, description, tags, comments, likes, images, profilePicture }: PostProps) {
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
         <div className="flex items-center space-x-2">
-          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+          {profilePicture ? (
+            <Image 
+              src={profilePicture} 
+              alt={`${username}'s profile picture`} 
+              width={40} 
+              height={40} 
+              className="rounded-full" 
+              layout="fixed"
+            />
+          ) : null}
           <p className="font-bold">{username}</p>
         </div>
-        <div className="mt-4 bg-gray-200 h-40 w-full rounded-md"></div>
+        {images.length > 0 ? (
+          <Image 
+            src={images[0].url} 
+            alt={images[0].alt} 
+            width={640} 
+            height={160} 
+            className="mt-4 bg-gray-200 rounded-md" 
+            layout="responsive"
+          />
+        ) : null}
         <p className="mt-2 font-semibold">{title}</p>
         <p className="text-gray-500">{description}</p>
         <p className="text-blue-500 text-sm mt-2">{tags.join(' ')}</p>
