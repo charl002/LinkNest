@@ -59,13 +59,27 @@ export default function Sidebar() {
 
   useEffect(() => {
     if (!currentUser) return;
+  
     async function fetchPendingRequests() {
-      try{
+      try {
         const response = await fetch(`/api/getpendingrequests?username=${senderUsername}`);
         const data = await response.json();
-
+  
         if (data && Array.isArray(data.pendingRequests)) {
-          setPendingRequests(data.pendingRequests as User[]);
+          const userRequests = await Promise.all(
+            data.pendingRequests.map(async (username: string) => {
+              const userResponse = await fetch(`/api/getuserbyusername?username=${username}`);
+              const userData = await userResponse.json();
+  
+              if (userResponse.ok) {
+                return { id: userData.id, ...userData.data };
+              } else {
+                console.error(`User ${username} not found`);
+                return null;
+              }
+            })
+          );
+          setPendingRequests(userRequests.filter(Boolean));
         } else {
           console.error("Unexpected API response:", data);
           setPendingRequests([]);
@@ -75,7 +89,7 @@ export default function Sidebar() {
         setPendingRequests([]);
       }
     }
-
+  
     fetchPendingRequests();
   }, [currentUser, senderUsername]);
 
