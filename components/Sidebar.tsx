@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { customToast } from "./ui/customToast";
+import Image from "next/image";
+
 
 interface User {
   id: string;
@@ -180,7 +182,14 @@ export default function Sidebar() {
             {pendingRequests.map((user) => (
               <li key={user.id} className="flex justify-between items-center p-2 border-b">
                 <div className="flex items-center gap-3">
-                  
+                <Image 
+                  src={user.image} 
+                  alt={user.username} 
+                  width={40} 
+                  height={40} 
+                  className="rounded-full border"
+                  onError={(e) => console.error(`Error loading image for ${user.username}:`, e)}
+                />
                   <span className="text-md font-medium">{user.username}</span>
                 </div>
                 <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
