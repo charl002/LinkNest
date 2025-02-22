@@ -189,9 +189,9 @@ export default function UserCheck() {
     }
 
     return (
-        <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full">
+        <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full h-screen">
             <Sidebar />
-            <section className="flex flex-col space-y-6">
+            <section className="flex flex-col space-y-6 h-full overflow-y-auto">
                 {posts.map((post, index) => (
                 <Post key={`${post.id}-${index}`} {...post} profilePicture={post.avatar}/>
                 ))}
@@ -199,5 +199,5 @@ export default function UserCheck() {
             <ChatList />
             <Toaster position="bottom-center" richColors></Toaster>
         </div>
-      );
+      ); 
 }
