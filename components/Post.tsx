@@ -5,7 +5,7 @@ interface PostProps {
     username: string;
     description: string;
     tags: string[];
-    comments: string[];
+    comments: { comment: string; username: string; date: string; likes: number }[];
     likes: number;
     images: { url: string; alt: string; thumb: string }[];
     profilePicture: string;
@@ -44,9 +44,17 @@ export default function Post({ title, username, description, tags, comments, lik
           <span className="text-gray-600">{likes} {likes === 1 ? 'like' : 'likes'}</span>
         </div>
         <div className="mt-4">
-          {comments.map((comment, index) => (
-            <p key={index} className="text-gray-600">{comment}</p>
-          ))}
+          {comments.length > 0 ? (
+            comments.map((comment, index) => (
+              <div key={index} className="text-gray-600">
+                <p><strong>{comment.username}:</strong> {comment.comment}</p>
+                <p className="text-gray-400 text-sm">{comment.date}</p>
+                <p className="text-gray-400 text-sm">Likes: {comment.likes}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-600">No comments yet.</p>
+          )}
         </div>
       </div>
     );

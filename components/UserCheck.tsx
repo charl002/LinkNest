@@ -13,11 +13,11 @@ interface Post {
     username: string;
     description: string;
     tags: string[];
-    comments: string[];
+    comments: { comment: string; username: string; date: string; likes: number }[];
     likes: number;
     images: { url: string; alt: string; thumb: string }[];
     createdAt: string;
-    avatar: string;
+    profilePicture: string;
 }
 
 export default function UserCheck() {
@@ -74,8 +74,10 @@ export default function UserCheck() {
             try {
                 const response = await fetch('/api/bluesky/getfromdb');
                 const newsresponse = await fetch('/api/news/getfromdb');
+                const customResponse = await fetch('/api/getuserpost');
                 const data = await response.json();
                 const newsdata = await newsresponse.json();
+                const customData = await customResponse.json();
                 let allPosts: Post[] = [];
 
                 if (data.success) {
@@ -86,6 +88,9 @@ export default function UserCheck() {
                     // Add News posts to allPosts
                     allPosts = allPosts.concat(newsdata.posts);
                 }
+                if (customData.success){
+                    allPosts = allPosts.concat(customData.posts);
+                  }
 
                 // Randomize the order of all posts
                 const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
@@ -193,7 +198,7 @@ export default function UserCheck() {
             <Sidebar />
             <section className="flex flex-col space-y-6 h-full overflow-y-auto">
                 {posts.map((post, index) => (
-                <Post key={`${post.id}-${index}`} {...post} profilePicture={post.avatar}/>
+                <Post key={`${post.id}-${index}`} {...post} profilePicture={post.profilePicture}/>
                 ))}
             </section>
             <ChatList />

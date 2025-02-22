@@ -9,11 +9,11 @@ interface Post {
   username: string;
   description: string;
   tags: string[];
-  comments: string[];
+  comments: { comment: string; username: string; date: string; likes: number }[];
   likes: number;
   images: { url: string; alt: string; thumb: string }[];
   createdAt: string;
-  avatar: string;
+  profilePicture: string;
 }
 
 export default function Home() {
@@ -38,7 +38,6 @@ export default function Home() {
         if (newsdata.success) {
           allPosts = allPosts.concat(newsdata.posts);
         }
-
         if (customData.success){
           allPosts = allPosts.concat(customData.posts);
         }
@@ -57,7 +56,7 @@ export default function Home() {
     <div className="flex flex-col items-center gap-6 p-6 w-full h-screen">
       <section className="flex flex-col space-y-6 max-w-2xl w-full h-full overflow-y-auto">
         {posts.map((post, index) => (
-          <Post key={`${post.id}-${index}`} {...post} profilePicture={post.avatar}/>
+          <Post key={`${post.id}-${index}`} {...post} profilePicture={post.profilePicture}/>
         ))}
       </section>
     </div>
