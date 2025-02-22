@@ -8,7 +8,7 @@ interface UpdateDataResult {
     error: Error | null;
 }
 
-export default async function addData(
+export default async function updateData(
     collectionName: string,
     objectId: string,
     data: Record<string, unknown>

@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { customToast } from "./ui/customToast";
+import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+
 
 interface User {
   id: string;
@@ -21,6 +25,7 @@ export default function Sidebar() {
   const [friendName, setFriendName] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const currentUser = users.find(user => user.email === session?.user?.email);
@@ -55,6 +60,42 @@ export default function Sidebar() {
       ));
     }
   }, [friendName, users]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+  
+    async function fetchPendingRequests() {
+      try {
+        const response = await fetch(`/api/getpendingrequests?username=${senderUsername}`);
+        const data = await response.json();
+  
+        if (data && Array.isArray(data.pendingRequests)) {
+          const userRequests = await Promise.all(
+            data.pendingRequests.map(async (username: string) => {
+              const userResponse = await fetch(`/api/getuserbyusername?username=${username}`);
+              const userData = await userResponse.json();
+  
+              if (userResponse.ok) {
+                return { id: userData.id, ...userData.data };
+              } else {
+                console.error(`User ${username} not found`);
+                return null;
+              }
+            })
+          );
+          setPendingRequests(userRequests.filter(Boolean));
+        } else {
+          console.error("Unexpected API response:", data);
+          setPendingRequests([]);
+        }
+      } catch (error) {
+        console.error("Error fetching pending requests:", error);
+        setPendingRequests([]);
+      }
+    }
+  
+    fetchPendingRequests();
+  }, [currentUser, senderUsername]);
 
   const handleAddFriend = async () => {
     if (!session?.user?.name || !friendName) {
@@ -96,44 +137,125 @@ export default function Sidebar() {
     }    
   };
 
+  const handleAcceptRequest = async (friendUsername: string) => {
+    if (!senderUsername) {
+      customToast({ message: "Error! Missing current username", type: "error" });
+      return;
+    }
+  
+    try {
+      // Step 1: Update Friend Request Status
+      const updateResponse = await fetch("/api/updatefriendstatus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: friendUsername,
+          receiverUsername: senderUsername,
+          status: "accepted", 
+        }),
+      });
+  
+      const updateResult = await updateResponse.json();
+  
+      if (!updateResponse.ok) {
+        customToast({ message: `Error updating status: ${updateResult.message}`, type: "error" });
+        return;
+      }
+  
+      // Step 2: Add to Friends Table
+      const addFriendResponse = await fetch("/api/postaddfriend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: senderUsername, 
+          receiverUsername: friendUsername,
+        }),
+      });
+  
+      const addFriendResult = await addFriendResponse.json();
+  
+      if (!addFriendResponse.ok) {
+        customToast({ message: `Error adding friend: ${addFriendResult.message}`, type: "error" });
+        return;
+      }
+        setPendingRequests((prevRequests) =>
+        prevRequests.filter((user) => user.username !== friendUsername)
+      );
+  
+      customToast({ message: `You are now friends with ${friendUsername}!`, type: "success" });
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    }
+  };
+
   return (
-    <aside className="bg-white shadow-md p-4 rounded-md flex flex-col space-y-4">
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button> Add A Friend! </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add a Friend</DialogTitle>
-            <DialogDescription>Enter your friend&apos;s name below.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="friend-name">Friend&apos;s Name</Label>
-            <Input
-              id="friend-name"
-              placeholder="Enter name..."
-              value={friendName}
-              onChange={(e) => setFriendName(e.target.value)}
-            />
-            {filteredUsers.length > 0 && (
-              <ul className="bg-gray-100 p-2 rounded-md max-h-40 overflow-y-auto">
-                {filteredUsers.map(user => (
-                  <li 
-                    key={user.id} 
-                    className="p-2 hover:bg-gray-200 cursor-pointer"
-                    onClick={() => setFriendName(user.username)}
-                  >
-                    {user.username}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Button onClick={handleAddFriend} disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Friend"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+    <aside className="bg-white shadow-md p-4 rounded-md flex flex-col h-full">
+      <div className="flex-1 flex flex-col justify-center items-center pt-4">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button> Add A Friend! </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add a Friend</DialogTitle>
+              <DialogDescription>Enter your friend&apos;s name below.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="friend-name">Friend&apos;s Name</Label>
+              <Input
+                id="friend-name"
+                placeholder="Enter name..."
+                value={friendName}
+                onChange={(e) => setFriendName(e.target.value)}
+              />
+              {filteredUsers.length > 0 && (
+                <ul className="bg-gray-100 p-2 rounded-md max-h-40 overflow-y-auto">
+                  {filteredUsers.map(user => (
+                    <li 
+                      key={user.id} 
+                      className="p-2 hover:bg-gray-200 cursor-pointer"
+                      onClick={() => setFriendName(user.username)}
+                    >
+                      {user.username}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button onClick={handleAddFriend} disabled={isLoading}>
+                {isLoading ? "Adding..." : "Add Friend"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <div className="flex-1 flex flex-col justify-center items-center border-b pb-4">
+      <h2 className="text-lg font-semibold">Pending Friend Requests</h2>
+        {pendingRequests.length > 0 ? (
+          <ScrollArea className="w-full max-h-60 overflow-y-auto">
+            <ul className="mt-2 w-full">
+              {pendingRequests.map((user) => (
+                <li key={user.id} className="flex justify-between items-center p-2 border-b">
+                  <div className="flex items-center gap-3">
+                    <Image 
+                      src={user.image} 
+                      alt={user.username} 
+                      width={40} 
+                      height={40} 
+                      className="rounded-full border"
+                      onError={(e) => console.error(`Error loading image for ${user.username}:`, e)}
+                    />
+                    <span className="text-md font-medium">{user.username}</span>
+                  </div>
+                  <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        ) : (
+          <p className="text-gray-500">No pending requests</p>
+        )}
+      </div>
     </aside>
   );
 }
