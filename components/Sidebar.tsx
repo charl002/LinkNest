@@ -179,7 +179,10 @@ export default function Sidebar() {
           <ul className="mt-2 w-full">
             {pendingRequests.map((user) => (
               <li key={user.id} className="flex justify-between items-center p-2 border-b">
-                <span>{user.username}</span>
+                <div className="flex items-center gap-3">
+                  
+                  <span className="text-md font-medium">{user.username}</span>
+                </div>
                 <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
               </li>
             ))}
