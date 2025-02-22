@@ -135,6 +135,58 @@ export default function Sidebar() {
     }    
   };
 
+  const handleAcceptRequest = async (friendUsername: string) => {
+    if (!senderUsername) {
+      customToast({ message: "Error! Missing current username", type: "error" });
+      return;
+    }
+  
+    try {
+      // Step 1: Update Friend Request Status
+      const updateResponse = await fetch("/api/updatefriendstatus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: friendUsername,
+          receiverUsername: senderUsername,
+          status: "accepted", // Updating status in the database
+        }),
+      });
+  
+      const updateResult = await updateResponse.json();
+  
+      if (!updateResponse.ok) {
+        customToast({ message: `Error updating status: ${updateResult.message}`, type: "error" });
+        return;
+      }
+  
+      // Step 2: Add to Friends Table
+      const addFriendResponse = await fetch("/api/addfriend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: senderUsername, 
+          receiverUsername: friendUsername,
+        }),
+      });
+  
+      const addFriendResult = await addFriendResponse.json();
+  
+      if (!addFriendResponse.ok) {
+        customToast({ message: `Error adding friend: ${addFriendResult.message}`, type: "error" });
+        return;
+      }
+        setPendingRequests((prevRequests) =>
+        prevRequests.filter((user) => user.username !== friendUsername)
+      );
+  
+      customToast({ message: `You are now friends with ${friendUsername}!`, type: "success" });
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    }
+  };
+
   return (
     <aside className="bg-white shadow-md p-4 rounded-md flex flex-col h-full">
       <div className="flex-1 flex flex-col justify-center items-center pt-4">
