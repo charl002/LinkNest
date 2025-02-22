@@ -8,6 +8,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { customToast } from "./ui/customToast";
 import Image from "next/image";
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 
 
 interface User {
@@ -149,7 +151,7 @@ export default function Sidebar() {
         body: JSON.stringify({
           senderUsername: friendUsername,
           receiverUsername: senderUsername,
-          status: "accepted", // Updating status in the database
+          status: "accepted", 
         }),
       });
   
@@ -161,7 +163,7 @@ export default function Sidebar() {
       }
   
       // Step 2: Add to Friends Table
-      const addFriendResponse = await fetch("/api/addfriend", {
+      const addFriendResponse = await fetch("/api/postaddfriend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -230,24 +232,26 @@ export default function Sidebar() {
       <div className="flex-1 flex flex-col justify-center items-center border-b pb-4">
       <h2 className="text-lg font-semibold">Pending Friend Requests</h2>
         {pendingRequests.length > 0 ? (
-          <ul className="mt-2 w-full">
-            {pendingRequests.map((user) => (
-              <li key={user.id} className="flex justify-between items-center p-2 border-b">
-                <div className="flex items-center gap-3">
-                <Image 
-                  src={user.image} 
-                  alt={user.username} 
-                  width={40} 
-                  height={40} 
-                  className="rounded-full border"
-                  onError={(e) => console.error(`Error loading image for ${user.username}:`, e)}
-                />
-                  <span className="text-md font-medium">{user.username}</span>
-                </div>
-                <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
-              </li>
-            ))}
-          </ul>
+          <ScrollArea className="w-full max-h-60 overflow-y-auto">
+            <ul className="mt-2 w-full">
+              {pendingRequests.map((user) => (
+                <li key={user.id} className="flex justify-between items-center p-2 border-b">
+                  <div className="flex items-center gap-3">
+                    <Image 
+                      src={user.image} 
+                      alt={user.username} 
+                      width={40} 
+                      height={40} 
+                      className="rounded-full border"
+                      onError={(e) => console.error(`Error loading image for ${user.username}:`, e)}
+                    />
+                    <span className="text-md font-medium">{user.username}</span>
+                  </div>
+                  <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
         ) : (
           <p className="text-gray-500">No pending requests</p>
         )}
