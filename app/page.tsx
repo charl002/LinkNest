@@ -54,8 +54,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-6 p-6 w-full">
-      <section className="flex flex-col space-y-6 max-w-2xl w-full">
+    <div className="flex flex-col items-center gap-6 p-6 w-full h-screen">
+      <section className="flex flex-col space-y-6 max-w-2xl w-full h-full overflow-y-auto">
         {posts.map((post, index) => (
           <Post key={`${post.id}-${index}`} {...post} profilePicture={post.avatar}/>
         ))}

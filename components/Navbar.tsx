@@ -1,11 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { doLogout } from "@/app/actions"
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import Logout from "./Logout";
 import LoginForm from "./LoginForm";
 import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const Navbar = () => {
 
@@ -45,22 +54,42 @@ const Navbar = () => {
           {session?.user ? (
             // If user is logged in, show profile image, username & logout button
             <>
-            <Link href={`/profile/${encodeURIComponent(userName)}`}>
-              <div className="flex items-center space-x-3 cursor-pointer">
-                  <Image
-                    src={userImage}
-                    alt="User Profile"
-                    width={40}
-                    height={40}
-                    className="rounded-full border border-gray-300"
-                  />
-                  <div className="flex flex-col">
-                    <p className="text-gray-700 font-medium">{name}</p>
-                    <p className="text-gray-500 text-sm">@{userName}</p>
-                </div>
-                </div>
-              </Link>
-              <Logout />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                  <div className="flex items-center space-x-3 cursor-pointer">
+                    <Image
+                      src={userImage}
+                      alt="User Profile"
+                      width={40}
+                      height={40}
+                      className="rounded-full border border-gray-300"
+                    />
+                    <div className="flex flex-col">
+                      <p className="text-gray-700 font-medium">{name}</p>
+                      <p className="text-gray-500 text-sm">@{userName}</p>
+                    </div>
+                  </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                      <Link href={`/profile/${encodeURIComponent(userName)}`}>
+                        <DropdownMenuItem>
+                          Profile
+                        </DropdownMenuItem>
+                      </Link>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <form action={doLogout}>
+                      <DropdownMenuItem>
+                        <button type="submit" className="w-full text-left">
+                          Log out
+                        </button>
+                      </DropdownMenuItem>
+                    </form>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </>
           ) : (
             // If no user, show login button
