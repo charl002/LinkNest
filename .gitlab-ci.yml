@@ -30,19 +30,50 @@ lint-server:
 build-frontend:
   stage: build
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "deploy"
-  before_script:
-    - apt-get update && apt-get install -y curl
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "Deployment"
   script:
     - npm install && npm run build
-    - curl -X POST https://api.render.com/deploy/srv-{RENDER_SERVICE}key={RENDER_API_KEY}
   artifacts:
     expire_in: 1 day
     when: on_success
     paths:
       - .next/
 
+build-app-archive:
+  stage: release
+  variables:
+    RELEASE_FILE: release-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.zip
+  dependencies:
+    - build-frontend
+  before_script:
+    - npm ci --omit=dev
+  script:
+    - apt-get update && apt-get install -y zip
+    - zip -r $CI_PROJECT_DIR/$RELEASE_FILE .next public package.json next.config.js node_modules
+  artifacts:
+    expire_in: 1 day
+    when: on_success
+    paths:
+      - $RELEASE_FILE
+
 deploy:
   stage: deploy
+  image:  mcr.microsoft.com/azure-cli
+  variables:
+    RELEASE_FILE: release-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.zip
+  dependencies:
+    - build-app-archive
+  before_script:
+    - "az login --allow-no-subscriptions --service-principal -u $AZ_SP_ID -p $AZ_SP_SECRET --tenant $AZ_TENANT"
   script:
-    - echo "Deployment to Render triggered."
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings WEBSITE_RUN_FROM_PACKAGE=1"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings AZURE_SAS=$AZURE_SAS"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings AZURE_BLOB_CONTAINER=$AZURE_BLOB_CONTAINER"
+    - "az webapp deployment source config-zip --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --src $RELEASE_FILE"
