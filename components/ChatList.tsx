@@ -49,7 +49,7 @@ export default function ChatList() {
         const response = await fetch(`/api/getfriends?username=${currentUser}`);
         const data = await response.json();
 
-        if (!response.ok || !Array.isArray(data.friends)) {
+        if (!response.ok) {
           console.error("Error fetching friends:", data);
           return;
         }
