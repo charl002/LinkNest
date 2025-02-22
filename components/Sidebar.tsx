@@ -160,7 +160,19 @@ export default function Sidebar() {
         </Dialog>
       </div>
       <div className="flex-1 flex flex-col justify-center items-center border-b pb-4">
-        <h2 className="text-lg font-semibold">Sidebar Bottom</h2>
+      <h2 className="text-lg font-semibold">Pending Friend Requests</h2>
+        {pendingRequests.length > 0 ? (
+          <ul className="mt-2 w-full">
+            {pendingRequests.map((user) => (
+              <li key={user.id} className="flex justify-between items-center p-2 border-b">
+                <span>{user.username}</span>
+                <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500">No pending requests</p>
+        )}
       </div>
     </aside>
   );
