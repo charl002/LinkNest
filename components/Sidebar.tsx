@@ -97,43 +97,48 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="bg-white shadow-md p-4 rounded-md flex flex-col space-y-4">
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button> Add A Friend! </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add a Friend</DialogTitle>
-            <DialogDescription>Enter your friend&apos;s name below.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="friend-name">Friend&apos;s Name</Label>
-            <Input
-              id="friend-name"
-              placeholder="Enter name..."
-              value={friendName}
-              onChange={(e) => setFriendName(e.target.value)}
-            />
-            {filteredUsers.length > 0 && (
-              <ul className="bg-gray-100 p-2 rounded-md max-h-40 overflow-y-auto">
-                {filteredUsers.map(user => (
-                  <li 
-                    key={user.id} 
-                    className="p-2 hover:bg-gray-200 cursor-pointer"
-                    onClick={() => setFriendName(user.username)}
-                  >
-                    {user.username}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <Button onClick={handleAddFriend} disabled={isLoading}>
-              {isLoading ? "Adding..." : "Add Friend"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+    <aside className="bg-white shadow-md p-4 rounded-md flex flex-col h-full">
+      <div className="flex-1 flex flex-col justify-center items-center pt-4">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button> Add A Friend! </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add a Friend</DialogTitle>
+              <DialogDescription>Enter your friend&apos;s name below.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="friend-name">Friend&apos;s Name</Label>
+              <Input
+                id="friend-name"
+                placeholder="Enter name..."
+                value={friendName}
+                onChange={(e) => setFriendName(e.target.value)}
+              />
+              {filteredUsers.length > 0 && (
+                <ul className="bg-gray-100 p-2 rounded-md max-h-40 overflow-y-auto">
+                  {filteredUsers.map(user => (
+                    <li 
+                      key={user.id} 
+                      className="p-2 hover:bg-gray-200 cursor-pointer"
+                      onClick={() => setFriendName(user.username)}
+                    >
+                      {user.username}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button onClick={handleAddFriend} disabled={isLoading}>
+                {isLoading ? "Adding..." : "Add Friend"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <div className="flex-1 flex flex-col justify-center items-center border-b pb-4">
+        <h2 className="text-lg font-semibold">Sidebar Bottom</h2>
+      </div>
     </aside>
   );
 }
