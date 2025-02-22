@@ -21,6 +21,7 @@ export default function Sidebar() {
   const [friendName, setFriendName] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const currentUser = users.find(user => user.email === session?.user?.email);
@@ -55,6 +56,28 @@ export default function Sidebar() {
       ));
     }
   }, [friendName, users]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    async function fetchPendingRequests() {
+      try{
+        const response = await fetch(`/api/getpendingrequests?username=${senderUsername}`);
+        const data = await response.json();
+
+        if (data && Array.isArray(data.pendingRequests)) {
+          setPendingRequests(data.pendingRequests as User[]);
+        } else {
+          console.error("Unexpected API response:", data);
+          setPendingRequests([]);
+        }
+      } catch (error) {
+        console.error("Error fetching pending requests:", error);
+        setPendingRequests([]);
+      }
+    }
+
+    fetchPendingRequests();
+  }, [currentUser, senderUsername]);
 
   const handleAddFriend = async () => {
     if (!session?.user?.name || !friendName) {
