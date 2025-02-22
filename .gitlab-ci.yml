@@ -2,6 +2,7 @@ stages:
   - lint
   - test
   - build
+  - release
   - deploy
 
 image: node:lts-bullseye-slim
