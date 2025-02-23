@@ -4,9 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "node server.ts",
+    "dev": "node --loader ts-node/esm ./server.ts",
     "build": "next build",
-    "start": "node server.ts",
+    "start": "node --loader ts-node/esm ./server.ts",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch"
