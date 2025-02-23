@@ -12,6 +12,8 @@ interface PostProps {
 }
 
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture }: PostProps) {
+    const defaultImageUrl = "/defaultProfilePic.jpg";
+
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
         <div className="flex items-center space-x-2">
@@ -26,7 +28,13 @@ export default function Post({ title, username, description, tags, comments, lik
             />
           ) : (
             <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
-              No Image
+              <Image 
+                src={defaultImageUrl} 
+                alt="Default Profile" 
+                width={40} 
+                height={40} 
+                className="rounded-full" 
+              />
             </div>
           )}
           <p className="font-bold">{username}</p>
