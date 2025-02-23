@@ -48,14 +48,17 @@ build-app-archive:
     - build-frontend
   before_script:
     - npm ci --omit=dev
+    - npm prune --production
+    - rm -rf node_modules/.cache .next/cache
   script:
     - apt-get update && apt-get install -y zip
-    - zip -r $CI_PROJECT_DIR/$RELEASE_FILE .next public package.json next.config.js node_modules
+    - zip -r $CI_PROJECT_DIR/$RELEASE_FILE .next public package.json package-lock.json next.config.js node_modules server.ts
   artifacts:
     expire_in: 1 day
     when: on_success
     paths:
       - $RELEASE_FILE
+
 
 deploy:
   stage: deploy
