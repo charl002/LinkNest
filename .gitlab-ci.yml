@@ -7,6 +7,12 @@ stages:
 
 image: node:lts-bullseye-slim
 
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .next/cache/
+
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'push'
@@ -16,27 +22,50 @@ workflow:
     - if: $CI_COMMIT_BRANCH
       when: always
 
+
+install-dependencies:
+  stage: build
+  script:
+    - npm ci
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - node_modules/
+    
 test-server:
   stage: test
+  dependencies:
+    - install-dependencies
   script:
-    - npm install && npm run test
+    - npm run test
+  allow_failure: false
+  
+lint-server:
+  stage: lint
+  dependencies:
+    - install-dependencies
+  script:
+    - npx eslint .
   allow_failure: false
 
-lint-server: 
+check-unused-packages:
   stage: lint
-  script: 
-    - npm install && npx eslint
-  allow_failure: false
+  dependencies:
+    - install-dependencies
+  script:
+    - npx depcheck || true
+  allow_failure: true
 
 build-frontend:
   stage: build
+  dependencies:
+    - install-dependencies
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "Deployment"
   script:
-    - npm install && npm run build
+    - npm run build
   artifacts:
     expire_in: 1 day
-    when: on_success
     paths:
       - .next/
 
@@ -47,18 +76,16 @@ build-app-archive:
   dependencies:
     - build-frontend
   before_script:
-    - npm ci --omit=dev
     - npm prune --production
-    - rm -rf node_modules/.cache .next/cache
+    - npm dedupe 
+    - rm -rf node_modules/.cache .next/cache node_modules/.bin
   script:
     - apt-get update && apt-get install -y zip
     - zip -r $CI_PROJECT_DIR/$RELEASE_FILE .next public package.json package-lock.json next.config.js node_modules server.ts
   artifacts:
     expire_in: 1 day
-    when: on_success
     paths:
       - $RELEASE_FILE
-
 
 deploy:
   stage: deploy
@@ -87,4 +114,5 @@ deploy:
     - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings AUTH_SECRET=$AUTH_SECRET"
     - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings BLUESKY_USERNAME=$BLUESKY_USERNAME"
     - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings BLUESKY_PASSWORD=$BLUESKY_PASSWORD"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NODE_ENV=production"
     - "az webapp deployment source config-zip --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --src $RELEASE_FILE"
