@@ -63,7 +63,7 @@ build-frontend:
   dependencies:
     - install-dependencies
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "Deployment"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "azure-deploy"
   script:
     - npm run build
   artifacts:
