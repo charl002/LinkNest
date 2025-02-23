@@ -24,9 +24,9 @@ interface Post {
 export async function GET(){
     try{
         const { results: postsResults, error: postsError } = await getAllDocuments("posts");
-        console.log("Posts Results:", postsResults);
+        // console.log("Posts Results:", postsResults); // Comment this out
         const { results: usersResults, error: usersError } = await getAllDocuments("users");
-        console.log("Users Results:", usersResults);
+        // console.log("Users Results:", usersResults); // Comment this out
 
         if (postsError || !postsResults) {
             return NextResponse.json({ message: "Error fetching posts", error: postsError }, { status: 500 });

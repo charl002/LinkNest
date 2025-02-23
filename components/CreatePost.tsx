@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 // import Image from "next/image";
 import { useSession } from "next-auth/react"; 
 
@@ -11,8 +11,33 @@ const CreatePost = () => {
     const [hashtags, setHashtags] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [message, setMessage] = useState("");
+    const [username, setUsername] = useState<string>("Anonymous");
     // const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    useEffect(() => {
+        const fetchUsername = async () => {
+            if (session?.user?.email) {
+                try {
+                    const response = await fetch(`/api/getsingleuser?email=${session.user.email}`);
+                    
+                    // Check if the response is OK (status code 200)
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    console.log("Fetched data:", result); // Log the fetched data for debugging
+                    setUsername(result.data.username || "Anonymous"); // Access username from result.data
+                } catch (error) {
+                    console.error("Error fetching username:", error);
+                    setUsername("Anonymous"); // Fallback in case of error
+                }
+            }
+        };
+
+        fetchUsername();
+    }, [session]);
 
     const uploadPost = async (formData: FormData) => {
         const response = await fetch("/api/postuploadpost", {
@@ -48,7 +73,7 @@ const CreatePost = () => {
         }
 
         const formData = new FormData();
-        formData.append("username", session?.user?.name || "Anonymous");
+        formData.append("username", username);
         formData.append("title", title);
         formData.append("text", text);
         hashtags.split(" ").forEach(tag => formData.append("tags", tag));

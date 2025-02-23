@@ -198,11 +198,15 @@ export default function UserCheck() {
             <Sidebar />
             <section className="flex flex-col space-y-6 h-full overflow-y-auto">
                 {posts.map((post, index) => (
-                <Post key={`${post.id}-${index}`} {...post} profilePicture={post.profilePicture}/>
+                    <Post 
+                        key={`${post.id}-${index}`} 
+                        {...post} 
+                        profilePicture={post.profilePicture || ""}
+                    />
                 ))}
             </section>
             <ChatList />
             <Toaster position="bottom-center" richColors></Toaster>
         </div>
-      ); 
+    );
 }

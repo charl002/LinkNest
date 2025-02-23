@@ -24,7 +24,11 @@ export default function Post({ title, username, description, tags, comments, lik
               className="rounded-full" 
               layout="fixed"
             />
-          ) : null}
+          ) : (
+            <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+              No Image
+            </div>
+          )}
           <p className="font-bold">{username}</p>
         </div>
         {images.length > 0 ? (
