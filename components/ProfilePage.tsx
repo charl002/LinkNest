@@ -7,9 +7,8 @@ interface UserData {
   id: string;
   data: {
     name: string;
-    email: string;
-    image: string;
     username: string;
+    image: string;
     description: string;
   };
 }
@@ -41,47 +40,49 @@ export default function ProfilePage({ user }: { user: string }) {
   }, [user]);
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 text-center border border-gray-300">
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+    <div className="bg-white min-h-screen w-full text-gray-800">
+      {loading && <p className="text-center py-6">Loading...</p>}
+      {error && <p className="text-red-500 text-center py-6">{error}</p>}
 
       {userData && (
-        <div>
-          <div className="flex items-center justify-around my-4">
-            <div className="flex flex-col items-center">
-              <p className="font-bold text-lg">{userData.data.username}</p>
+        <div className="w-full h-full mx-auto border border-gray-300 shadow-sm rounded-lg overflow-hidden">
+      
+          <div className="w-full h-32 bg-gray-300" />
+
+          <div className="p-4 relative">
+    
+            <div className="absolute -top-12 left-4">
               <Image
                 src={userData.data.image}
                 alt="User Profile"
                 width={80}
                 height={80}
-                className="rounded-full border border-gray-400 mt-2"
+                className="rounded-full border-4 border-white shadow-md"
               />
             </div>
+
+            <div className="mt-8 flex justify-between items-center">
+              <div>
+                <p className="text-lg font-bold">{userData.data.name}</p>
+                <p className="text-gray-500">@{userData.data.username}</p>
+                <br/>
+                <p className="text-gray-700">{userData.data.description}</p>
+              </div>
+              <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Profile settings</button>
+            </div>
+
+            <div className="mt-3 flex space-x-6 text-gray-500 text-sm">
+              <p><span className="font-bold text-black">10</span> Posts</p>
+              <p><span className="font-bold text-black">45</span> Friends</p>
+            </div>
+
+            <div className="mt-4 flex border-b text-sm">
+              <p className="text-blue-500 font-semibold border-b-2 border-blue-500 pb-2 px-4">Posts</p>
+            </div>
+          </div>
+
+          <div className="p-4 space-y-6">
             
-            <div className="text-center">
-              <p className="font-semibold">Posts</p>
-              <p>10</p>
-            </div>
-            <div className="text-center">
-              <p className="font-semibold">Followers</p>
-              <p>100</p>
-            </div>
-            <div className="text-center">
-              <p className="font-semibold">Following</p>
-              <p>200</p>
-            </div>
-          </div>
-
-          <div className="ml-4 text-left">
-            <p className="font-semibold">{userData.data.name}</p>
-            <p className="text-gray-600">{userData.data.description}</p>
-          </div>
-
-          <br/>
-          <h3 className="font-semibold mt-4">Posts</h3>
-          <div className="w-full h-40 bg-gray-200 rounded-md flex items-center justify-center mt-2">
-            <p className="text-gray-500">Post Placeholder</p>
           </div>
         </div>
       )}
