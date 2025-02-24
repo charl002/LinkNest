@@ -21,17 +21,16 @@ const CreatePost = () => {
                 try {
                     const response = await fetch(`/api/getsingleuser?email=${session.user.email}`);
                     
-                    // Check if the response is OK (status code 200)
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
 
                     const result = await response.json();
-                    console.log("Fetched data:", result); // Log the fetched data for debugging
+                    console.log("Fetched data:", result); 
                     setUsername(result.data.username || "Anonymous"); // Access username from result.data
                 } catch (error) {
                     console.error("Error fetching username:", error);
-                    setUsername("Anonymous"); // Fallback in case of error
+                    setUsername("Anonymous"); 
                 }
             }
         };
@@ -57,17 +56,12 @@ const CreatePost = () => {
             return;
         }
         
-        if (!selectedFile) {
-            setMessage("Please select an image or video.");
-            return;
-        }
-    
         const allowedTypes = [
             "image/png", "image/jpeg", "image/jpg", 
             "video/mp4", "video/webm", "video/ogg"
         ];
-        
-        if (!allowedTypes.includes(selectedFile.type)) {
+    
+        if (selectedFile && !allowedTypes.includes(selectedFile.type)) {
             setMessage("Only PNG, JPG images or MP4, WEBM, OGG videos are allowed.");
             return;
         }
@@ -77,7 +71,10 @@ const CreatePost = () => {
         formData.append("title", title);
         formData.append("text", text);
         hashtags.split(" ").forEach(tag => formData.append("tags", tag));
-        formData.append("file", selectedFile);
+
+        if (selectedFile) {
+            formData.append("file", selectedFile);
+        }
 
         const result = await uploadPost(formData);
 

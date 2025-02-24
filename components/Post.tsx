@@ -39,7 +39,7 @@ export default function Post({ title, username, description, tags, comments, lik
           )}
           <p className="font-bold">{username}</p>
         </div>
-        {images.length > 0 ? (
+        {images.length > 0 && images[0].url ? (
           <Image 
             src={images[0].url} 
             alt={images[0].alt} 
