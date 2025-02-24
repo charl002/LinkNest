@@ -72,21 +72,27 @@ export default function UserCheck() {
 
         const fetchPosts = async () => {
             try {
-                const response = await fetch('/api/bluesky/getfromdb');
-                const newsresponse = await fetch('/api/news/getfromdb');
-                const customResponse = await fetch('/api/getuserpost');
-                const data = await response.json();
-                const newsdata = await newsresponse.json();
-                const customData = await customResponse.json();
+                const [response, newsResponse, customResponse] = await Promise.all([
+                    fetch('/api/bluesky/getfromdb'),
+                    fetch('/api/news/getfromdb'),
+                    fetch('/api/getuserpost')
+                ]);
+    
+                const [data, newsData, customData] = await Promise.all([
+                    response.json(),
+                    newsResponse.json(),
+                    customResponse.json()
+                ]);
+                
                 let allPosts: Post[] = [];
 
                 if (data.success) {
                     // Add Bluesky posts to allPosts
                     allPosts = allPosts.concat(data.posts);
                 }
-                if (newsdata.success) {
+                if (newsData.success) {
                     // Add News posts to allPosts
-                    allPosts = allPosts.concat(newsdata.posts);
+                    allPosts = allPosts.concat(newsData.posts);
                 }
                 if (customData.success){
                     allPosts = allPosts.concat(customData.posts);

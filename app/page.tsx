@@ -22,21 +22,25 @@ export default function Home() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch('/api/bluesky/getfromdb');
-        const newsresponse = await fetch('/api/news/getfromdb');
-        const data = await response.json();
-        const newsdata = await newsresponse.json();
+        const [response, newsResponse, customResponse] = await Promise.all([
+          fetch('/api/bluesky/getfromdb'),
+          fetch('/api/news/getfromdb'),
+          fetch('/api/getuserpost')
+      ]);
 
-        const customResponse = await fetch('/api/getuserpost');
-        const customData = await customResponse.json();
+      const [data, newsData, customData] = await Promise.all([
+          response.json(),
+          newsResponse.json(),
+          customResponse.json()
+      ]);
 
         let allPosts: Post[] = [];
 
         if (data.success) {
           allPosts = allPosts.concat(data.posts);
         }
-        if (newsdata.success) {
-          allPosts = allPosts.concat(newsdata.posts);
+        if (newsData.success) {
+          allPosts = allPosts.concat(newsData.posts);
         }
         if (customData.success){
           allPosts = allPosts.concat(customData.posts);
