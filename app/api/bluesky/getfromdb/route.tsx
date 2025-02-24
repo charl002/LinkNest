@@ -41,7 +41,7 @@ export async function GET() {
         images: data.images || [],
         createdAt: data.createdAt,
         id: doc.id,
-        avatar: data.author.avatar
+        profilePicture: data.author.avatar
       };
     });
 

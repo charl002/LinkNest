@@ -9,7 +9,7 @@ const Profile = async (props : { params: ProfileParams }) => {
     const user = decodeURIComponent(username);
 
     return (
-        <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full">
+        <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full">
             <Sidebar />
             <ProfilePage user={user} />
             <ChatList />

@@ -13,11 +13,11 @@ interface Post {
     username: string;
     description: string;
     tags: string[];
-    comments: string[];
+    comments: { comment: string; username: string; date: string; likes: number }[];
     likes: number;
     images: { url: string; alt: string; thumb: string }[];
     createdAt: string;
-    avatar: string;
+    profilePicture: string;
 }
 
 export default function UserCheck() {
@@ -27,6 +27,7 @@ export default function UserCheck() {
     const [description, setDescription] = useState("");
     const [usernameError, setUsernameError] = useState("");
     const [posts, setPosts] = useState<Post[]>([]);
+    const [loadingPosts, setLoadingPosts] = useState(true);
 
     useEffect(() => {
         if (!session?.user) return;
@@ -71,27 +72,39 @@ export default function UserCheck() {
         if (!session?.user) return;
 
         const fetchPosts = async () => {
+            setLoadingPosts(true);
             try {
-                const response = await fetch('/api/bluesky/getfromdb');
-                const newsresponse = await fetch('/api/news/getfromdb');
-                const data = await response.json();
-                const newsdata = await newsresponse.json();
+                const [response, newsResponse, customResponse] = await Promise.all([
+                    fetch('/api/bluesky/getfromdb'),
+                    fetch('/api/news/getfromdb'),
+                    fetch('/api/getuserpost')
+                ]);
+    
+                const [data, newsData, customData] = await Promise.all([
+                    response.json(),
+                    newsResponse.json(),
+                    customResponse.json()
+                ]);
+                
                 let allPosts: Post[] = [];
 
                 if (data.success) {
-                    // Add Bluesky posts to allPosts
                     allPosts = allPosts.concat(data.posts);
                 }
-                if (newsdata.success) {
-                    // Add News posts to allPosts
-                    allPosts = allPosts.concat(newsdata.posts);
+
+                if (newsData.success) {
+                    allPosts = allPosts.concat(newsData.posts);
+                }
+                if (customData.success) {
+                    allPosts = allPosts.concat(customData.posts);
                 }
 
-                // Randomize the order of all posts
                 const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
                 setPosts(shuffledPosts);
             } catch (err) {
                 console.error("Error fetching posts:", err);
+            } finally {
+                setLoadingPosts(false);
             }
         };
 
@@ -188,16 +201,24 @@ export default function UserCheck() {
         );
     }
 
+    if (loadingPosts) {
+        return <div>Loading posts...</div>;
+    }
+
     return (
-        <div className="grid grid-cols-[250px_1fr_250px] gap-6 p-6 w-full h-screen">
+        <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen">
             <Sidebar />
             <section className="flex flex-col space-y-6 h-full overflow-y-auto">
                 {posts.map((post, index) => (
-                <Post key={`${post.id}-${index}`} {...post} profilePicture={post.avatar}/>
+                    <Post 
+                        key={`${post.id}-${index}`} 
+                        {...post} 
+                        profilePicture={post.profilePicture || ""}
+                    />
                 ))}
             </section>
             <ChatList />
             <Toaster position="bottom-center" richColors></Toaster>
         </div>
-      ); 
+    );
 }

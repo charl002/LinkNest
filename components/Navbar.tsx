@@ -79,6 +79,11 @@ const Navbar = () => {
                           Profile
                         </DropdownMenuItem>
                       </Link>
+                      <Link href="/createpost">
+                        <DropdownMenuItem>
+                          Create Post
+                        </DropdownMenuItem>
+                      </Link>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <form action={doLogout}>
