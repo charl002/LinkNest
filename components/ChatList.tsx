@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 interface User {
   id: string;
@@ -78,7 +79,7 @@ export default function ChatList() {
 
   return (
     <aside className="bg-white shadow-md p-4 rounded-md">
-      <h2 className="text-lg font-semibold mb-4">Chat</h2>
+      <h2 className="text-lg font-semibold mb-4">Friends</h2>
       <ScrollArea className="w-full max-h-60 overflow-y-auto">
         <div className="flex flex-col space-y-2">
           {friends.length > 0 ? (
@@ -87,6 +88,7 @@ export default function ChatList() {
                 key={user.id} 
                 className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
               >
+                <Link href={`/profile/${encodeURIComponent(user.username)}`}>
                 <div className="flex items-center space-x-2">
                   <Image 
                     src={user.image} 
@@ -97,6 +99,7 @@ export default function ChatList() {
                   />
                   <p>{user.username}</p>
                 </div>
+                </Link>
                 <Button>Chat</Button>
               </div>
             ))
