@@ -27,6 +27,7 @@ export default function UserCheck() {
     const [description, setDescription] = useState("");
     const [usernameError, setUsernameError] = useState("");
     const [posts, setPosts] = useState<Post[]>([]);
+    const [loadingPosts, setLoadingPosts] = useState(true);
 
     useEffect(() => {
         if (!session?.user) return;
@@ -71,6 +72,7 @@ export default function UserCheck() {
         if (!session?.user) return;
 
         const fetchPosts = async () => {
+            setLoadingPosts(true);
             try {
                 const [response, newsResponse, customResponse] = await Promise.all([
                     fetch('/api/bluesky/getfromdb'),
@@ -87,22 +89,22 @@ export default function UserCheck() {
                 let allPosts: Post[] = [];
 
                 if (data.success) {
-                    // Add Bluesky posts to allPosts
                     allPosts = allPosts.concat(data.posts);
                 }
+
                 if (newsData.success) {
-                    // Add News posts to allPosts
                     allPosts = allPosts.concat(newsData.posts);
                 }
-                if (customData.success){
+                if (customData.success) {
                     allPosts = allPosts.concat(customData.posts);
-                  }
+                }
 
-                // Randomize the order of all posts
                 const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
                 setPosts(shuffledPosts);
             } catch (err) {
                 console.error("Error fetching posts:", err);
+            } finally {
+                setLoadingPosts(false);
             }
         };
 
@@ -197,6 +199,10 @@ export default function UserCheck() {
                 </form>
             </div>
         );
+    }
+
+    if (loadingPosts) {
+        return <div>Loading posts...</div>;
     }
 
     return (
