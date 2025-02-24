@@ -1,8 +1,18 @@
 stages:
+  - dependencies
   - lint
   - test
+  - build
+  - release
+  - deploy
 
 image: node:lts-bullseye-slim
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .next/cache/
 
 workflow:
   rules:
@@ -13,14 +23,98 @@ workflow:
     - if: $CI_COMMIT_BRANCH
       when: always
 
+
+install-dependencies:
+  stage: dependencies
+  script:
+    - npm install
+    - npm ci
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - node_modules/
+    
 test-server:
   stage: test
+  dependencies:
+    - install-dependencies
   script:
-    - npm install && npm run test
+    - npm run test
+  allow_failure: false
+  
+lint-server:
+  stage: lint
+  dependencies:
+    - install-dependencies
+  script:
+    - npx eslint .
   allow_failure: false
 
-lint-server: 
+check-unused-packages:
   stage: lint
-  script: 
-    - npm install && npx eslint
-  allow_failure: false
+  dependencies:
+    - install-dependencies
+  script:
+    - npx depcheck || true
+  allow_failure: true
+
+build-frontend:
+  stage: build
+  dependencies:
+    - install-dependencies
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "azure-deploy"
+  script:
+    - npm run build
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .next/
+
+build-app-archive:
+  stage: release
+  variables:
+    RELEASE_FILE: release-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.zip
+  dependencies:
+    - build-frontend
+  before_script:
+    - npm prune --production
+    - npm dedupe 
+    - rm -rf node_modules/.cache .next/cache node_modules/.bin
+  script:
+    - apt-get update && apt-get install -y zip
+    - zip -r $CI_PROJECT_DIR/$RELEASE_FILE .next public package.json package-lock.json next.config.js node_modules server.ts
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - $RELEASE_FILE
+
+deploy:
+  stage: deploy
+  image:  mcr.microsoft.com/azure-cli
+  variables:
+    RELEASE_FILE: release-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.zip
+  dependencies:
+    - build-app-archive
+  before_script:
+    - "az login --allow-no-subscriptions --service-principal -u $AZ_SP_ID -p $AZ_SP_SECRET --tenant $AZ_TENANT"
+  script:
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings WEBSITE_RUN_FROM_PACKAGE=1"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_API_KEY=$NEXT_PUBLIC_FIREBASE_API_KEY"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_PROJECT_ID=$NEXT_PUBLIC_FIREBASE_PROJECT_ID"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=$NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings AZURE_SAS=$AZURE_SAS"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings AZURE_STORAGE_ACCOUNT=$AZURE_STORAGE_ACCOUNT"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings AZURE_BLOB_CONTAINER=$AZURE_BLOB_CONTAINER"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEXT_PUBLIC_AGORA_APP_ID=$NEXT_PUBLIC_AGORA_APP_ID"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NEWS_API_TOKEN=$NEWS_API_TOKEN"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings AUTH_SECRET=$AUTH_SECRET"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings BLUESKY_USERNAME=$BLUESKY_USERNAME"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings BLUESKY_PASSWORD=$BLUESKY_PASSWORD"
+    - "az webapp config appsettings set --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --settings NODE_ENV=production"
+    - "az webapp deployment source config-zip --resource-group $RESOURCE_GROUP_NAME --name $APP_NAME --src $RELEASE_FILE"
