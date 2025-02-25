@@ -3,8 +3,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-const hostname = process.env.HOST || "localhost";
-const port = Number(process.env.ENV) || 3000;
+const hostname = process.env.WEBSITE_HOSTNAME || 'localhost';
+const port = Number(process.env.PORT) || 3000;
 const protocol = process.env.PROTOCOL || "ws";
 
 const SocketContext = createContext<Socket | null>(null);
