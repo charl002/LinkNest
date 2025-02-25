@@ -15,6 +15,7 @@ interface UserData {
 
 export default function ProfilePage({ user }: { user: string }) {
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [friendsCount, setFriendsCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +37,23 @@ export default function ProfilePage({ user }: { user: string }) {
       }
     }
 
+    async function fetchFriends() {
+      try {
+        const response = await fetch(`/api/getfriends?username=${user}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to fetch friends");
+        }
+
+        setFriendsCount(result.friends.length);
+      } catch (err) {
+        console.error("Error fetching friends:", err);
+      }
+    }
+
     fetchUser();
+    fetchFriends();
   }, [user]);
 
   return (
@@ -47,10 +64,16 @@ export default function ProfilePage({ user }: { user: string }) {
       {userData && (
         <div className="w-full h-full mx-auto border border-gray-300 shadow-sm rounded-lg overflow-hidden">
       
-          <div className="w-full h-32 bg-gray-300" />
+          <div className="w-full h-32 bg-gray-300 relative">
+            <Image
+              src={userData.data.image}
+              alt="User Profile"
+              layout="fill"
+              objectFit="cover"
+            />
+          </div>
 
           <div className="p-4 relative">
-    
             <div className="absolute -top-12 left-4">
               <Image
                 src={userData.data.image}
@@ -65,25 +88,31 @@ export default function ProfilePage({ user }: { user: string }) {
               <div>
                 <p className="text-lg font-bold">{userData.data.name}</p>
                 <p className="text-gray-500">@{userData.data.username}</p>
-                <br/>
+                <br />
                 <p className="text-gray-700">{userData.data.description}</p>
               </div>
-              <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">Profile settings</button>
+              <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
+                Profile settings
+              </button>
             </div>
 
             <div className="mt-3 flex space-x-6 text-gray-500 text-sm">
-              <p><span className="font-bold text-black">10</span> Posts</p>
-              <p><span className="font-bold text-black">45</span> Friends</p>
+              <p>
+                <span className="font-bold text-black">10</span> Posts
+              </p>
+              <p>
+                <span className="font-bold text-black">{friendsCount}</span> Friends
+              </p>
             </div>
 
             <div className="mt-4 flex border-b text-sm">
-              <p className="text-blue-500 font-semibold border-b-2 border-blue-500 pb-2 px-4">Posts</p>
+              <p className="text-blue-500 font-semibold border-b-2 border-blue-500 pb-2 px-4">
+                Posts
+              </p>
             </div>
           </div>
 
-          <div className="p-4 space-y-6">
-            
-          </div>
+          <div className="p-4 space-y-6"></div>
         </div>
       )}
     </div>
