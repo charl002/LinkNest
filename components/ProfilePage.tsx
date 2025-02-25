@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Post from "./Post"; 
+import { useSession } from "next-auth/react";
 
 interface UserData {
   id: string;
   data: {
     name: string;
     username: string;
+    email: string;
     image: string;
     description: string;
   };
@@ -34,6 +36,8 @@ export default function ProfilePage({ user }: { user: string }) {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const email = session?.user?.email;
 
   useEffect(() => {
     async function fetchUser() {
@@ -125,9 +129,11 @@ export default function ProfilePage({ user }: { user: string }) {
                 <br />
                 <p className="text-gray-700">{userData.data.description}</p>
               </div>
-              <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
-                Profile settings
-              </button>
+              {userData.data.email === email && (
+                <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
+                  Profile settings
+                </button>
+              )}
             </div>
 
             <div className="mt-3 flex space-x-6 text-gray-500 text-sm">
