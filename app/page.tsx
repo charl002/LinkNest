@@ -1,5 +1,6 @@
 "use client";
 
+import LoadingLogo from "@/components/LoadingLogo";
 import Post from "@/components/Post";
 import { useEffect, useState } from "react";
 
@@ -61,8 +62,8 @@ export default function Home() {
   }, []);
 
   if (loadingPosts) {
-    return <div>Loading posts...</div>;
-  }
+    return <LoadingLogo></LoadingLogo>
+}
 
   return (
     <div className="flex flex-col items-center gap-6 p-6 w-full h-screen">

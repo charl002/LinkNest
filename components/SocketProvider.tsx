@@ -5,7 +5,7 @@ import { io, Socket } from "socket.io-client";
 
 const hostname = process.env.WEBSITE_HOSTNAME || 'localhost';
 const port = Number(process.env.PORT) || 3000;
-const protocol = process.env.PROTOCOL || "ws";
+const protocol = process.env.NODE_ENV === "production" ? "wss" : "ws";
 
 const SocketContext = createContext<Socket | null>(null);
 
