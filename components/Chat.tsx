@@ -36,13 +36,32 @@ export default function Chat() {
     };
   }, [socket, currentUsername, friendUsername]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (socket && input.trim() && friendUsername && currentUsername) {
       socket.emit("privateMessage", {
         senderId: currentUsername,
         receiverId: friendUsername,
         message: input,
       });
+
+      try{
+        const response = await fetch("/api/postmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json"},
+          body: JSON.stringify({
+            senderUsername: currentUsername,
+            receiverUsername: friendUsername,
+            message: input,
+          }),
+        });
+
+      const data = await response.json();
+      if (!response.ok) {
+        console.error("Error storing message:", data.message);
+      }
+      } catch (error) {
+        console.error("Error storing message:", error);
+      }
 
       setMessages((prev) => [...prev, { sender: "You", message: input }]);
       setInput("");
