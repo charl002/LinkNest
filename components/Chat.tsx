@@ -1,29 +1,43 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useSocket } from "@/components/SocketProvider";
 import { useEffect, useState } from "react";
 
 export default function Chat() {
   const socket = useSocket();
-  const [messages, setMessages] = useState<string[]>([]);
+  const searchParams = useSearchParams();
+  const friendUsername = searchParams.get("friend");
+  const currentUsername = searchParams.get("user");
+
+  const [messages, setMessages] = useState<{ sender: string; message: string }[]>([]);
   const [input, setInput] = useState("");
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !friendUsername) return;
 
-    socket.on("message", (msg: string) => {
-      setMessages((prev) => [...prev, msg]);
+    socket.emit("register", currentUsername);
+
+    socket.on("privateMessage", ({ senderId, message }) => {
+      if (senderId === friendUsername) {
+        setMessages((prev) => [...prev, { sender: senderId, message }]);
+      }
     });
 
     return () => {
-      socket.off("message");
+      socket.off("privateMessage");
     };
-  }, [socket]);
+  }, [socket, currentUsername, friendUsername]);
 
   const sendMessage = () => {
-    if (socket && input.trim()) {
-      socket.emit("message", input);
-      setMessages((prev) => [...prev, `You: ${input}`]);
+    if (socket && input.trim() && friendUsername && currentUsername) {
+      socket.emit("privateMessage", {
+        senderId: currentUsername,
+        receiverId: friendUsername,
+        message: input,
+      });
+
+      setMessages((prev) => [...prev, { sender: "You", message: input }]);
       setInput("");
     }
   };
@@ -33,7 +47,9 @@ export default function Chat() {
       <h1>Chat</h1>
       <div>
         {messages.map((msg, index) => (
-          <p key={index}>{msg}</p>
+          <p key={index}>
+            <strong>{msg.sender}:</strong> {msg.message}
+          </p>
         ))}
       </div>
       <input
