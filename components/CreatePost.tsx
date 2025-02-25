@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-// import Image from "next/image";
+import Image from "next/image";
 import { useSession } from "next-auth/react"; 
 import { customToast } from "./ui/customToast";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,6 @@ const CreatePost = () => {
     const [hashtags, setHashtags] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [username, setUsername] = useState<string>("Anonymous");
-    // const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [progress, setProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
@@ -98,7 +97,6 @@ const CreatePost = () => {
             if (result.postId){
                 setProgress(100);
                 customToast({ message: "Post uploaded successfully!", type: "success" });
-                // setUploadedImageUrl(result.fileUrl); 
                 setTitle("");
                 setText("");
                 setHashtags("");
@@ -163,14 +161,61 @@ const CreatePost = () => {
                 />
                 </div>
         
-                <div>
-                <label className="block text-gray-700 font-semibold">Upload Image/Video:</label>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
-                />
+                <div className="w-full">
+                    <label className="block text-gray-700 font-semibold mb-2">Upload Image/Video:</label>
+                    <div 
+                        className="border-2 border-dashed border-gray-400 bg-white rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-all flex flex-col items-center justify-center"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDrop={(e) => {
+                            e.preventDefault();
+                            setSelectedFile(e.dataTransfer.files[0]);
+                        }}
+                        onDragOver={(e) => e.preventDefault()}
+                    >
+                        {selectedFile ? (
+                            <>
+                                {selectedFile.type.startsWith("image/") ? (
+                                    <Image 
+                                        src={URL.createObjectURL(selectedFile)} 
+                                        alt="Preview"
+                                        width={40} 
+                                        height={40} 
+                                        className="w-32 h-32 object-cover mx-auto rounded-md shadow-md"
+                                    />
+                                ) : (
+                                    <p className="text-gray-600">{selectedFile.name}</p>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600">
+                                    Click to Upload
+                                </div>
+                                <p className="text-gray-500 mt-2">or drag & drop here</p>
+                                <p className="text-xs text-gray-400">(PNG, JPG, MP4, WEBM supported)</p>
+                            </>
+                        )}
+                    </div>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                    />
+
+                    {selectedFile && (
+                        <div className="mt-3 flex justify-between items-center">
+                            <p className="text-sm text-gray-500">{selectedFile.name}</p>
+                            <button 
+                                type="button"
+                                className="text-red-500 text-sm font-medium hover:underline"
+                                onClick={() => setSelectedFile(null)}
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    )}
                 </div>
         
                 {isUploading && (
