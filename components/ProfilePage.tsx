@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Post from "./Post"; 
 
 interface UserData {
   id: string;
@@ -13,10 +14,24 @@ interface UserData {
   };
 }
 
+interface PostData {
+  id: string;
+  title: string;
+  username: string;
+  description: string;
+  tags: string[];
+  comments: { comment: string; username: string; date: string; likes: number }[];
+  likes: number;
+  images: { url: string; alt: string; thumb: string }[];
+  createdAt: string;
+  profilePicture: string;
+}
+
 export default function ProfilePage({ user }: { user: string }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [friendsCount, setFriendsCount] = useState<number>(0);
   const [postsCount, setPostsCount] = useState<number>(0);
+  const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,6 +78,7 @@ export default function ProfilePage({ user }: { user: string }) {
         }
 
         setPostsCount(result.posts.length);
+        setPosts(result.posts);
       } catch (err) {
         console.error("Error fetching friends:", err);
       }
@@ -132,7 +148,17 @@ export default function ProfilePage({ user }: { user: string }) {
             </div>
           </div>
 
-          <div className="p-4 space-y-6"></div>
+          <div className="p-4 space-y-6">
+            {postsCount > 0 ? (posts.map((post, index) => 
+              <Post 
+                  key={`${post.id}-${index}`} 
+                  {...post} 
+                  profilePicture={userData.data.image || ""}
+              />)
+              ) : (
+              <p className="text-gray-600">No posts available.</p>
+          )}
+          </div>
         </div>
       )}
     </div>
