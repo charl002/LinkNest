@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { customToast } from "@/components/ui/customToast";
 
 interface UserData {
   id: string;
@@ -50,6 +51,8 @@ export default function ProfilePage({ user }: { user: string }) {
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
   const email = session?.user?.email;
+  const [username, setUsername] = useState("");
+  const [description, setDescription] = useState("");
 
   useEffect(() => {
     async function fetchUser() {
@@ -62,6 +65,8 @@ export default function ProfilePage({ user }: { user: string }) {
         }
 
         setUserData(result);
+        setUsername(result.data.username);
+        setDescription(result.data.description);
       } catch (err) {
         setError((err as Error).message + " in LinkNest");
       } finally {
@@ -106,6 +111,39 @@ export default function ProfilePage({ user }: { user: string }) {
     fetchFriends();
   }, [user]);
 
+  const handleSaveChanges = async () => {
+    if (!userData) return;
+
+    try {
+      const response = await fetch("/api/updateuser", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: userData.id,
+          username,
+          description,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to update profile");
+      }
+
+      // Update local state
+      setUserData((prev) =>
+        prev ? { ...prev, data: { ...prev.data, username, description } } : null
+      );
+
+      customToast({ message: "Profile updated successfully!", type: "success" });
+    } catch (err) {
+      customToast({ message: "Error updating profile: " + (err as Error).message, type: "error" });
+    }
+  };
+
   return (
     <div className="bg-white min-h-screen w-full text-gray-800">
       {loading && <p className="text-center py-6">Loading...</p>}
@@ -143,37 +181,49 @@ export default function ProfilePage({ user }: { user: string }) {
               </div>
               {userData.data.email === email ? (
                 <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
-                      Profile settings
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Edit profile</DialogTitle>
-                      <DialogDescription>
-                        Make changes to your profile here. Click save when you are done.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">
-                          Username
-                        </Label>
-                        <Input id="username" value={userData.data.username} className="col-span-3" />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">
-                          Description
-                        </Label>
-                        <Input id="description" value={userData.data.description} className="col-span-3" />
-                      </div>
+                <DialogTrigger asChild>
+                  <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
+                    Profile settings
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Edit profile</DialogTitle>
+                    <DialogDescription>
+                      Make changes to your profile here. Click save when you are done.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="username" className="text-right">
+                        Username
+                      </Label>
+                      <Input
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="col-span-3"
+                      />
                     </div>
-                    <DialogFooter>
-                      <Button type="submit">Save changes</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="description" className="text-right">
+                        Description
+                      </Label>
+                      <Input
+                        id="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="col-span-3"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="button" onClick={handleSaveChanges}>
+                      Save changes
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               ) : (
                 <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
                   Add Friend

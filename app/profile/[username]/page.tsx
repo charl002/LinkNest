@@ -1,6 +1,7 @@
 import Sidebar from "../../../components/Sidebar";
 import ChatList from "../../../components/ChatList";
 import ProfilePage from "../../../components/ProfilePage";
+import { Toaster } from "sonner";
 
 type ProfileParams = Promise<{ username: string }>
 
@@ -13,6 +14,7 @@ const Profile = async (props : { params: ProfileParams }) => {
             <Sidebar />
             <ProfilePage user={user} />
             <ChatList />
+            <Toaster position="bottom-center" richColors></Toaster>
         </div>
     );
 };
