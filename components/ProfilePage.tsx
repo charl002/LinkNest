@@ -53,6 +53,7 @@ export default function ProfilePage({ user }: { user: string }) {
   const email = session?.user?.email;
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -139,6 +140,7 @@ export default function ProfilePage({ user }: { user: string }) {
       );
 
       customToast({ message: "Profile updated successfully!", type: "success" });
+      setIsDialogOpen(false);
     } catch (err) {
       customToast({ message: "Error updating profile: " + (err as Error).message, type: "error" });
     }
@@ -180,7 +182,7 @@ export default function ProfilePage({ user }: { user: string }) {
                 <p className="text-gray-700">{userData.data.description}</p>
               </div>
               {userData.data.email === email ? (
-                <Dialog>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
                     Profile settings
@@ -201,7 +203,7 @@ export default function ProfilePage({ user }: { user: string }) {
                       <Input
                         id="username"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        readOnly
                         className="col-span-3"
                       />
                     </div>
