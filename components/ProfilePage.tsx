@@ -101,7 +101,8 @@ export default function ProfilePage({ user }: { user: string }) {
                 <span className="font-bold text-black">10</span> Posts
               </p>
               <p>
-                <span className="font-bold text-black">{friendsCount}</span> Friends
+                <span className="font-bold text-black">{friendsCount}</span> 
+                {friendsCount === 1 ? " Friend" : " Friends"}
               </p>
             </div>
 
