@@ -7,6 +7,11 @@ import ChatList from "./ChatList";
 import { Toaster } from "sonner";
 import Sidebar from "./Sidebar";
 
+interface Message {
+  sender: string;
+  message: string;
+}
+
 export default function Chat() {
   const socket = useSocket();
   const searchParams = useSearchParams();
@@ -19,6 +24,32 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (!currentUsername || !friendUsername) return;
+
+    async function fetchPreviousMessages() {
+      try {
+        const response = await fetch(`/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`);
+        const data = await response.json();
+        console.log(data);
+        if (!response.ok) {
+          console.error("Error fetching previous messages:", data.message);
+          return;
+        }
+
+        setMessages(
+          data.messages.map((msg: Message) => ({
+            sender: msg.sender,
+            message: msg.message,
+          }))
+        );
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    }
+
+    fetchPreviousMessages();
+  }, [currentUsername, friendUsername]);
 
   useEffect(() => {
     if (!socket || !friendUsername) return;
@@ -63,7 +94,7 @@ export default function Chat() {
         console.error("Error storing message:", error);
       }
 
-      setMessages((prev) => [...prev, { sender: "You", message: input }]);
+      setMessages((prev) => [...prev, { sender: currentUsername, message: input }]);
       setInput("");
     }
   };
@@ -85,7 +116,7 @@ export default function Chat() {
             <div
               key={index}
               className={`p-2 rounded-lg max-w-[75%] break-words w-fit ${
-                msg.sender === "You"
+                msg.sender === currentUsername
                   ? "bg-blue-500 text-white ml-auto" 
                   : "bg-gray-300 text-black mr-auto" 
               }`}

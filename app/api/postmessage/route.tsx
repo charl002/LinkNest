@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
         const date = `${datePart} ${timePart}`
 
-        const data = { sender: senderUsername, reciever: receiverUsername, message: message, seen: false, date };
+        const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date };
 
         const { result: docId, error } = await addData("messages", data);
 
