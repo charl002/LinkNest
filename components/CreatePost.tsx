@@ -3,17 +3,22 @@
 import { useState, useRef, useEffect } from "react";
 // import Image from "next/image";
 import { useSession } from "next-auth/react"; 
+import { customToast } from "./ui/customToast";
+import { useRouter } from "next/navigation";
+import { Progress } from "@/components/ui/progress";
 
 const CreatePost = () => {
+    const router = useRouter();
     const {data: session } = useSession()
     const [title, setTitle] = useState("");
     const [text, setText] = useState("");
     const [hashtags, setHashtags] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [message, setMessage] = useState("");
     const [username, setUsername] = useState<string>("Anonymous");
     // const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [progress, setProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         const fetchUsername = async () => {
@@ -39,11 +44,13 @@ const CreatePost = () => {
     }, [session]);
 
     const uploadPost = async (formData: FormData) => {
+        setProgress(20);
         const response = await fetch("/api/postuploadpost", {
             method: "POST",
             body: formData,
         });
 
+        setProgress(80);
         const data = await response.json();
         return data;
     };
@@ -52,7 +59,7 @@ const CreatePost = () => {
         e.preventDefault();
     
         if (!title || !text) {
-            setMessage("Title and description are required.");
+            customToast({ message: "Title and description are required.", type: "error" });
             return;
         }
         
@@ -62,7 +69,7 @@ const CreatePost = () => {
         ];
     
         if (selectedFile && !allowedTypes.includes(selectedFile.type)) {
-            setMessage("Only PNG, JPG images or MP4, WEBM, OGG videos are allowed.");
+            customToast({ message: "Only PNG, JPG images or MP4, WEBM, OGG videos are allowed.", type: "error" });
             return;
         }
 
@@ -76,22 +83,47 @@ const CreatePost = () => {
             formData.append("file", selectedFile);
         }
 
-        const result = await uploadPost(formData);
+        try {
+            setIsUploading(true);
+            setProgress(5);
 
-        if (result.postId){
-            setMessage("Post uploaded successfully")
-            // setUploadedImageUrl(result.fileUrl);
-            setTitle("");
-            setText("");
-            setHashtags("");
-            setSelectedFile(null);
+            const progressInterval = setInterval(() => {
+                setProgress((prev) => Math.min(prev + 10, 90));
+            }, 300);
 
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
-            } else {
-            setMessage("Error uploading post. Please try again.");
-            }
+            const result = await uploadPost(formData);
+
+            clearInterval(progressInterval);
+
+            if (result.postId){
+                setProgress(100);
+                customToast({ message: "Post uploaded successfully!", type: "success" });
+                // setUploadedImageUrl(result.fileUrl); 
+                setTitle("");
+                setText("");
+                setHashtags("");
+                setSelectedFile(null);
+
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+
+                setTimeout(() => {
+                    setIsUploading(false);
+                    router.push("/home");
+                }, 1500);
+
+                } else {
+                    customToast({ message: "Error uploading post. Please try again.", type: "error" });
+                    setIsUploading(false);
+                    setProgress(0);
+                }
+            } catch (error) {
+                console.error("Error uploading post:", error);
+                customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+                setIsUploading(false);
+                setProgress(0);
+            }    
     };
 
     return (
@@ -141,15 +173,20 @@ const CreatePost = () => {
                 />
                 </div>
         
+                {isUploading && (
+                    <div className="mt-4">
+                        <Progress value={progress} className="h-2 bg-gray-300" />
+                    </div>
+                )}
+
                 <button
-                type="submit"
-                className="w-full bg-blue-500 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-600"
+                    type="submit"
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-600"
+                    disabled={isUploading}
                 >
-                Publish
+                    Publish
                 </button>
-            </form>
-        
-            {message && <p className="mt-6 text-center text-red-500 text-lg">{message}</p>}
+            </form>        
         </div>
     );
 };
