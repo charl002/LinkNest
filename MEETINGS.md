@@ -20,8 +20,36 @@ I fixed the Jest testings since it was causing issues for the pipeline. I also a
 
 Adbullah worked on the **Gitlab CI** and the layout for the home page. He is going to work next on the POST API and the GET for the custom posts users can make.
 
+Author: Thiha
+
 ### 2025-02-21
 
 We had a retrospective meeting with Jaya, and we discussed together in a group what we worked on and if we felt like the tasks were equal. After everyone opinions, we have come to a conclusion that we should seperate the tasks in a way that not a certain group of people work on the front while the other group works on the back. This issue arised due to having our product manager being sick at the start of the sprint, so we will fix that next time.
 
 As of what we will do next, we will try to fix the Azure deployment for submission.
+
+Author: Thiha
+
+### 2025-02-24
+
+We started the sprint 2 planning, and assigned tasks to everyone equally. We also started adding more issues in the backlog so when we are finishing our issues, we are able to keep working on new features to add for the project.
+
+Author: Thiha
+
+### 2025-02-25
+
+Today we will decide on which feature we will champion. 
+
+Charles will do Automation and Moderation. He is planning to implement the likes and comments with posts with Abulluah.
+
+Adbullah will focus on performance. As mentioned before, he will help Charles do the likes and comments.
+
+Ahmed is going to champion Accessibility & Internalization, and for the next step, he is going to store the messages in the database.
+
+Mohammed will finish up the profile page and the video chatting between users.
+
+Thiha will focus on the front-end testing and improving the community aspect of the application.
+
+As in group, we will also focus on adding tests for the API Routes we created.
+
+Author: Thiha
