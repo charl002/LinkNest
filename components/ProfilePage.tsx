@@ -51,7 +51,7 @@ export default function ProfilePage({ user }: { user: string }) {
 
         setUserData(result);
       } catch (err) {
-        setError((err as Error).message);
+        setError((err as Error).message + " in LinkNest");
       } finally {
         setLoading(false);
       }
