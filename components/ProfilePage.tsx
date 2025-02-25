@@ -16,6 +16,7 @@ interface UserData {
 export default function ProfilePage({ user }: { user: string }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [friendsCount, setFriendsCount] = useState<number>(0);
+  const [postsCount, setPostsCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,6 +53,23 @@ export default function ProfilePage({ user }: { user: string }) {
       }
     }
 
+    async function fetchPosts() {
+      try {
+        const response = await fetch(`/api/getpostbyusername?username=${user}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to fetch friends");
+        }
+
+        setPostsCount(result.posts.length);
+      } catch (err) {
+        console.error("Error fetching friends:", err);
+      }
+    }
+
+    
+    fetchPosts();
     fetchUser();
     fetchFriends();
   }, [user]);
@@ -98,11 +116,12 @@ export default function ProfilePage({ user }: { user: string }) {
 
             <div className="mt-3 flex space-x-6 text-gray-500 text-sm">
               <p>
-                <span className="font-bold text-black">10</span> Posts
+                <span className="font-bold text-black">{postsCount}</span>
+                {postsCount === 1 || postsCount == 0 ? " Post" : " Posts"}
               </p>
               <p>
                 <span className="font-bold text-black">{friendsCount}</span> 
-                {friendsCount === 1 ? " Friend" : " Friends"}
+                {friendsCount === 1 || friendsCount == 0 ? " Friend" : " Friends"}
               </p>
             </div>
 

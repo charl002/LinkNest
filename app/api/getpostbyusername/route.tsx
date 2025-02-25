@@ -17,10 +17,6 @@ export async function GET(req: Request) {
         const q = query(postsRef, where("username", "==", username));
         const querySnapshot = await getDocs(q);
 
-        if (querySnapshot.empty) {
-            return NextResponse.json({ message: "No posts found for this user", posts: [] }, { status: 404 });
-        }
-
         const posts = querySnapshot.docs.map(doc => {
             const data = doc.data();
             return {
