@@ -6,7 +6,6 @@ import ChatList from "./ChatList";
 import Sidebar from "./Sidebar";
 import Post from "./Post";
 import { Toaster } from "sonner";
-import LoadingLogo from "./LoadingLogo";
 
 interface Post {
     id: string;
@@ -203,7 +202,7 @@ export default function UserCheck() {
     }
 
     if (loadingPosts) {
-        return <LoadingLogo></LoadingLogo>
+        return <div>Loading posts...</div>;
     }
 
     return (

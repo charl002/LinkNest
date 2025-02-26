@@ -9,8 +9,6 @@ const port = Number(process.env.PORT) || 3000;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-const userSockets: Record<string, string> = {};
-
 app.prepare().then(() => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
@@ -27,37 +25,12 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("User connected", socket.id);
 
-    socket.on("register", (userId) => {
-      userSockets[userId] = socket.id;
-      console.log(`User ${userId} connected with socket ID ${socket.id}`);
-    });
-
-    socket.on("sendFriendRequest", ({ senderId, receiverId }) => {
-      const receiverSocketId = userSockets[receiverId];
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("friendRequestReceived", {
-          senderId,
-          message: `${senderId} sent you a friend request!`,
-        });
-      } else {
-        console.log(`User ${receiverId} not found or not connected`);
-      }
-    });
-
-    socket.on("privateMessage", ({ senderId, receiverId, message }) => {
-      const receiverSocketId = userSockets[receiverId];
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("privateMessage", { senderId, message });
-      }
+    socket.on("message", (msg) => {
+      socket.broadcast.emit("message", msg);
     });
 
     socket.on("disconnect", () => {
-      Object.keys(userSockets).forEach((userId) => {
-        if (userSockets[userId] === socket.id) {
-          delete userSockets[userId];
-          console.log(`User ${userId} disconnected`);
-        }
-      });
+      console.log("User disconnected", socket.id);
     });
   });
 
