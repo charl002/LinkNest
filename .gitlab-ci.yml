@@ -63,7 +63,7 @@ build-frontend:
   dependencies:
     - install-dependencies
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging"
   script:
     - npm run build
   artifacts:
@@ -77,8 +77,6 @@ build-app-archive:
     RELEASE_FILE: release-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.zip
   dependencies:
     - build-frontend
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
   before_script:
     - npm prune --production
     - npm dedupe 
@@ -98,8 +96,6 @@ deploy:
     RELEASE_FILE: release-$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.zip
   dependencies:
     - build-app-archive
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
   before_script:
     - "az login --allow-no-subscriptions --service-principal -u $AZ_SP_ID -p $AZ_SP_SECRET --tenant $AZ_TENANT"
   script:
