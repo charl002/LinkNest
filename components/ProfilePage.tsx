@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Post from "./Post"; 
 import { useSession } from "next-auth/react";
@@ -54,6 +54,10 @@ export default function ProfilePage({ user }: { user: string }) {
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const fileInputRef1 = useRef<HTMLInputElement | null>(null);
+  const [background, setBackground] = useState<File | null>(null);
+  const fileInputRef2 = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -111,6 +115,7 @@ export default function ProfilePage({ user }: { user: string }) {
     fetchUser();
     fetchFriends();
   }, [user]);
+
 
   const handleSaveChanges = async () => {
     if (!userData) return;
@@ -196,6 +201,28 @@ export default function ProfilePage({ user }: { user: string }) {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="username" className="text-right">
+                        Photo
+                      </Label>
+                      <Input
+                          type="file"
+                          ref={fileInputRef1}
+                          onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
+                          className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="username" className="text-right">
+                        Background
+                      </Label>
+                      <Input
+                          type="file"
+                          ref={fileInputRef2}
+                          onChange={(e) => setBackground(e.target.files?.[0] || null)}
+                          className="col-span-3"
+                      />
+                    </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                       <Label htmlFor="username" className="text-right">
                         Username
