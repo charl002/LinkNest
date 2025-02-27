@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { customToast } from "@/components/ui/customToast";
+import Link from "next/link";
 
 interface UserData {
   id: string;
@@ -44,6 +45,7 @@ interface PostData {
 
 export default function ProfilePage({ user }: { user: string }) {
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [friends, setFriends] = useState<string[]>([]);
   const [friendsCount, setFriendsCount] = useState<number>(0);
   const [postsCount, setPostsCount] = useState<number>(0);
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -58,6 +60,7 @@ export default function ProfilePage({ user }: { user: string }) {
   const fileInputRef1 = useRef<HTMLInputElement | null>(null);
   const [background, setBackground] = useState<File | null>(null);
   const fileInputRef2 = useRef<HTMLInputElement | null>(null);
+  const [isFriendsDialogOpen, setIsFriendsDialogOpen] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -89,6 +92,7 @@ export default function ProfilePage({ user }: { user: string }) {
         }
 
         setFriendsCount(result.friends.length);
+        setFriends(result.friends);
       } catch (err) {
         console.error("Error fetching friends:", err);
       }
@@ -265,10 +269,39 @@ export default function ProfilePage({ user }: { user: string }) {
                 <span className="font-bold text-black">{postsCount}</span>
                 {postsCount === 1 || postsCount == 0 ? " Post" : " Posts"}
               </p>
-              <p>
-                <span className="font-bold text-black">{friendsCount}</span> 
+              <p 
+                className="cursor-pointer hover:underline"
+                onClick={() => setIsFriendsDialogOpen(true)}
+              >
+                <span className="font-bold text-black">{friendsCount}</span>
                 {friendsCount === 1 || friendsCount == 0 ? " Friend" : " Friends"}
               </p>
+
+              <Dialog open={isFriendsDialogOpen} onOpenChange={setIsFriendsDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Friends List</DialogTitle>
+                  </DialogHeader>
+                  <div className="max-h-60 overflow-y-auto">
+                    {friends.length > 0 ? (
+                      <ul className="space-y-2">
+                        {friends.map((friend, index) => (
+                          <Link key={index} href={`/profile/${encodeURIComponent(friend)}`}>
+                            <li className="p-2 border-b text-gray-700">
+                              {friend}
+                            </li>
+                          </Link>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500">No friends yet.</p>
+                    )}
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={() => setIsFriendsDialogOpen(false)}>Close</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
 
             <div className="mt-4 flex border-b text-sm">
