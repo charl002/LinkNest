@@ -1,7 +1,7 @@
 stages:
   - dependencies
-  # - lint
-  # - test
+  - lint
+  - test
   - build
   - release
   - deploy
@@ -34,36 +34,36 @@ install-dependencies:
     paths:
       - node_modules/
     
-# test-server:
-#   stage: test
-#   dependencies:
-#     - install-dependencies
-#   script:
-#     - npm run test
-#   allow_failure: false
+test-server:
+  stage: test
+  dependencies:
+    - install-dependencies
+  script:
+    - npm run test
+  allow_failure: false
   
-# lint-server:
-#   stage: lint
-#   dependencies:
-#     - install-dependencies
-#   script:
-#     - npx eslint .
-#   allow_failure: false
+lint-server:
+  stage: lint
+  dependencies:
+    - install-dependencies
+  script:
+    - npx eslint .
+  allow_failure: false
 
-# check-unused-packages:
-#   stage: lint
-#   dependencies:
-#     - install-dependencies
-#   script:
-#     - npx depcheck || true
-#   allow_failure: true
+check-unused-packages:
+  stage: lint
+  dependencies:
+    - install-dependencies
+  script:
+    - npx depcheck || true
+  allow_failure: true
 
 build-frontend:
   stage: build
   dependencies:
     - install-dependencies
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_COMMIT_BRANCH == "feature-chatting-prod-fix"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
   script:
     - npm run build
   artifacts:
@@ -78,7 +78,7 @@ build-app-archive:
   dependencies:
     - build-frontend
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_COMMIT_BRANCH == "feature-chatting-prod-fix"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
   before_script:
     - npm prune --production
     - npm dedupe 
@@ -99,7 +99,7 @@ deploy:
   dependencies:
     - build-app-archive
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_COMMIT_BRANCH == "feature-chatting-prod-fix"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
   before_script:
     - "az login --allow-no-subscriptions --service-principal -u $AZ_SP_ID -p $AZ_SP_SECRET --tenant $AZ_TENANT"
   script:
