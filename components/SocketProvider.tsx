@@ -3,9 +3,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-const hostname = process.env.WEBSITE_HOSTNAME || 'localhost';
-const port = Number(process.env.PORT) || 3000;
-const protocol = process.env.PROTOCOL || "ws";
+const isDev = process.env.NODE_ENV !== "production";
+const socketUrl = isDev 
+  ? "ws://localhost:3000" 
+  : "wss://linknest-fkd5eba5dqbrhzd7.canadacentral-01.azurewebsites.net";
 
 const SocketContext = createContext<Socket | null>(null);
 
@@ -14,10 +15,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Might break when on production
-    const socketInstance: Socket = io(`${protocol}://${hostname}:${port}`, {
+    const socketInstance: Socket = io(socketUrl, {
       transports: ["websocket", "polling"],
     });
-
+    
     setSocket(socketInstance);
 
     socketInstance.on("connect", () => {
