@@ -6,7 +6,6 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -20,7 +19,6 @@ export default function ChatList() {
   const { data: session } = useSession();
   const [friends, setFriends] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const router = useRouter(); // Use Next.js router
 
   useEffect(() => {
     async function fetchUsers() {
@@ -79,11 +77,6 @@ export default function ChatList() {
     fetchFriends();
   }, [currentUser]);
 
-  const openChat = (friendUsername: string, currentUsername: string | null) => {
-    if (!currentUsername) return;
-    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  };
-
   return (
     <aside className="bg-white shadow-md p-4 rounded-md">
       <h2 className="text-lg font-semibold mb-4">Friends</h2>
@@ -96,18 +89,18 @@ export default function ChatList() {
                 className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
               >
                 <Link href={`/profile/${encodeURIComponent(user.username)}`}>
-                  <div className="flex items-center space-x-2">
-                    <Image 
-                      src={user.image} 
-                      alt={user.username} 
-                      width={40} 
-                      height={40} 
-                      className="rounded-full border"
-                    />
-                    <p>{user.username}</p>
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Image 
+                    src={user.image} 
+                    alt={user.username} 
+                    width={40} 
+                    height={40} 
+                    className="rounded-full border"
+                  />
+                  <p>{user.username}</p>
+                </div>
                 </Link>
-                <Button onClick={() => openChat(user.username, currentUser)}>Chat</Button>
+                <Button>Chat</Button>
               </div>
               
             ))
