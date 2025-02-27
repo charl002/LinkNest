@@ -1,19 +1,23 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-// import Image from "next/image";
+import Image from "next/image";
 import { useSession } from "next-auth/react"; 
+import { customToast } from "./ui/customToast";
+import { useRouter } from "next/navigation";
+import { Progress } from "@/components/ui/progress";
 
 const CreatePost = () => {
+    const router = useRouter();
     const {data: session } = useSession()
     const [title, setTitle] = useState("");
     const [text, setText] = useState("");
     const [hashtags, setHashtags] = useState("");
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [message, setMessage] = useState("");
     const [username, setUsername] = useState<string>("Anonymous");
-    // const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [progress, setProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         const fetchUsername = async () => {
@@ -39,11 +43,13 @@ const CreatePost = () => {
     }, [session]);
 
     const uploadPost = async (formData: FormData) => {
+        setProgress(20);
         const response = await fetch("/api/postuploadpost", {
             method: "POST",
             body: formData,
         });
 
+        setProgress(80);
         const data = await response.json();
         return data;
     };
@@ -52,7 +58,7 @@ const CreatePost = () => {
         e.preventDefault();
     
         if (!title || !text) {
-            setMessage("Title and description are required.");
+            customToast({ message: "Title and description are required.", type: "error" });
             return;
         }
         
@@ -62,7 +68,7 @@ const CreatePost = () => {
         ];
     
         if (selectedFile && !allowedTypes.includes(selectedFile.type)) {
-            setMessage("Only PNG, JPG images or MP4, WEBM, OGG videos are allowed.");
+            customToast({ message: "Only PNG, JPG images or MP4, WEBM, OGG videos are allowed.", type: "error" });
             return;
         }
 
@@ -76,22 +82,46 @@ const CreatePost = () => {
             formData.append("file", selectedFile);
         }
 
-        const result = await uploadPost(formData);
+        try {
+            setIsUploading(true);
+            setProgress(5);
 
-        if (result.postId){
-            setMessage("Post uploaded successfully")
-            // setUploadedImageUrl(result.fileUrl);
-            setTitle("");
-            setText("");
-            setHashtags("");
-            setSelectedFile(null);
+            const progressInterval = setInterval(() => {
+                setProgress((prev) => Math.min(prev + 10, 90));
+            }, 300);
 
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
-            } else {
-            setMessage("Error uploading post. Please try again.");
-            }
+            const result = await uploadPost(formData);
+
+            clearInterval(progressInterval);
+
+            if (result.postId){
+                setProgress(100);
+                customToast({ message: "Post uploaded successfully!", type: "success" });
+                setTitle("");
+                setText("");
+                setHashtags("");
+                setSelectedFile(null);
+
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+
+                setTimeout(() => {
+                    setIsUploading(false);
+                    router.push("/home");
+                }, 1500);
+
+                } else {
+                    customToast({ message: "Error uploading post. Please try again.", type: "error" });
+                    setIsUploading(false);
+                    setProgress(0);
+                }
+            } catch (error) {
+                console.error("Error uploading post:", error);
+                customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+                setIsUploading(false);
+                setProgress(0);
+            }    
     };
 
     return (
@@ -131,25 +161,77 @@ const CreatePost = () => {
                 />
                 </div>
         
-                <div>
-                <label className="block text-gray-700 font-semibold">Upload Image/Video:</label>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
-                />
+                <div className="w-full">
+                    <label className="block text-gray-700 font-semibold mb-2">Upload Image/Video:</label>
+                    <div 
+                        className="border-2 border-dashed border-gray-400 bg-white rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-all flex flex-col items-center justify-center"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDrop={(e) => {
+                            e.preventDefault();
+                            setSelectedFile(e.dataTransfer.files[0]);
+                        }}
+                        onDragOver={(e) => e.preventDefault()}
+                    >
+                        {selectedFile ? (
+                            <>
+                                {selectedFile.type.startsWith("image/") ? (
+                                    <Image 
+                                        src={URL.createObjectURL(selectedFile)} 
+                                        alt="Preview"
+                                        width={40} 
+                                        height={40} 
+                                        className="w-32 h-32 object-cover mx-auto rounded-md shadow-md"
+                                    />
+                                ) : (
+                                    <p className="text-gray-600">{selectedFile.name}</p>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600">
+                                    Click to Upload
+                                </div>
+                                <p className="text-gray-500 mt-2">or drag & drop here</p>
+                                <p className="text-xs text-gray-400">(PNG, JPG, MP4, WEBM supported)</p>
+                            </>
+                        )}
+                    </div>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                    />
+
+                    {selectedFile && (
+                        <div className="mt-3 flex justify-between items-center">
+                            <p className="text-sm text-gray-500">{selectedFile.name}</p>
+                            <button 
+                                type="button"
+                                className="text-red-500 text-sm font-medium hover:underline"
+                                onClick={() => setSelectedFile(null)}
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    )}
                 </div>
         
+                {isUploading && (
+                    <div className="mt-4">
+                        <Progress value={progress} className="h-2 bg-gray-300" />
+                    </div>
+                )}
+
                 <button
-                type="submit"
-                className="w-full bg-blue-500 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-600"
+                    type="submit"
+                    className="w-full bg-blue-500 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-600"
+                    disabled={isUploading}
                 >
-                Publish
+                    Publish
                 </button>
-            </form>
-        
-            {message && <p className="mt-6 text-center text-red-500 text-lg">{message}</p>}
+            </form>        
         </div>
     );
 };

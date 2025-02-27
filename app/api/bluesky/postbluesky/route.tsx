@@ -44,7 +44,9 @@ export async function POST() {
 
       const postWithLikes = {
         ...post,
-        likes: 0
+        comments: [],
+        likes: 0,
+        likedBy: []
       };
 
       const { result, error } = await addData('bluesky', postWithLikes);
