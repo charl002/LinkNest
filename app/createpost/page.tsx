@@ -1,6 +1,7 @@
 import ChatList from "@/components/ChatList";
 import CreatePost from "@/components/CreatePost";
 import Sidebar from "@/components/Sidebar";
+import { Toaster } from "sonner";
 
 export default function CreatePostPage() {
     return (
@@ -10,6 +11,7 @@ export default function CreatePostPage() {
                 <CreatePost />
             </div>
             <ChatList />
+            <Toaster position="bottom-center" richColors></Toaster>
         </div>
     );
 }

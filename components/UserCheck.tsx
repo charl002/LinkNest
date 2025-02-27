@@ -19,6 +19,8 @@ interface Post {
     images: { url: string; alt: string; thumb: string }[];
     createdAt: string;
     profilePicture: string;
+    postType: 'posts' | 'bluesky' | 'news';
+    likedBy: string[];
 }
 
 export default function UserCheck() {
@@ -203,7 +205,7 @@ export default function UserCheck() {
     }
 
     if (loadingPosts) {
-        return <LoadingLogo></LoadingLogo>
+        return <LoadingLogo/>;
     }
 
     return (
@@ -215,6 +217,8 @@ export default function UserCheck() {
                         key={`${post.id}-${index}`} 
                         {...post} 
                         profilePicture={post.profilePicture || ""}
+                        documentId={post.id}
+                        postType={post.postType}
                     />
                 ))}
             </section>

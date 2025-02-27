@@ -1,8 +1,8 @@
 "use client";
 
-import LoadingLogo from "@/components/LoadingLogo";
 import Post from "@/components/Post";
 import { useEffect, useState } from "react";
+import LoadingLogo from "../components/LoadingLogo";
 
 interface Post {
   id: string;
@@ -15,6 +15,8 @@ interface Post {
   images: { url: string; alt: string; thumb: string }[];
   createdAt: string;
   profilePicture: string;
+  postType: 'posts' | 'bluesky' | 'news';
+  likedBy: string[];
 }
 
 export default function Home() {
@@ -62,14 +64,15 @@ export default function Home() {
   }, []);
 
   if (loadingPosts) {
-    return <LoadingLogo/>
+    return <LoadingLogo></LoadingLogo>;
   }
 
   return (
     <div className="flex flex-col items-center gap-6 p-6 w-full h-screen">
       <section className="flex flex-col space-y-6 max-w-2xl w-full h-full overflow-y-auto">
         {posts.map((post, index) => (
-          <Post key={`${post.id}-${index}`} {...post} profilePicture={post.profilePicture} />
+          <Post key={`${post.id}-${index}`} {...post} profilePicture={post.profilePicture} documentId={post.id}
+          postType={post.postType}/>
         ))}
       </section>
     </div>
