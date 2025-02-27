@@ -11,6 +11,8 @@ interface NewsPost {
   published_at: string;
   source: string;
   likes: number;
+  likedBy: string[];
+  comments: { comment: string; username: string; date: string; likes: number }[];
 }
 
 export async function GET() {
@@ -32,13 +34,20 @@ export async function GET() {
         username: data.source, // Assuming source is used as username
         description: data.description,
         tags: data.keywords.split(',').map(tag => tag.trim()), // Split keywords into tags
-        comments: [], // Comments can be added later if needed
+        // comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number }) => ({
+        //   comment: comment.comment,
+        //   username: comment.username,
+        //   date: comment.date,
+        //   likes: comment.likes || 0
+        // })) || [], UNCOMMENT THIS WHEN YOU ADD COMMENTS TO NEWS POSTS
+        comments: [],
         likes: data.likes || 0,
         images: [{ url: data.image_url, alt: data.title, thumb: data.image_url }], // Create image object
         profilePicture: '', // Set profile picture if available
         published_at: data.published_at, // Add published_at to the returned object
         id: doc.id,
-        postType: 'news'
+        postType: 'news',
+        likedBy: data.likedBy
       };
     });
 

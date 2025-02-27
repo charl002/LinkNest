@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { useState} from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 interface PostProps {
     title: string;
@@ -12,15 +13,40 @@ interface PostProps {
     profilePicture: string;
     documentId: string;
     postType: 'posts' | 'bluesky' | 'news';
+    likedBy: string[];
 }
 
-export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType }: PostProps) {
+export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy }: PostProps) {
+    const { data: session } = useSession();
     const [likeCount, setLikeCount] = useState(likes);
     const [isLiked, setIsLiked] = useState(false);
+    const [sessionUsername, setSessionUsername] = useState('');
+
+    useEffect(() => {
+        const fetchSessionUsername = async () => {
+            if (!session?.user) return;
+            const sessionEmail = session.user.email;
+
+            const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
+            const sessionUser = await response.json();
+
+            if (response.ok) {
+                const username = sessionUser.data.username;
+                setSessionUsername(username);
+                setIsLiked(likedBy.includes(username));
+            } else {
+                console.error(sessionUser.message);
+            }
+        };
+
+        fetchSessionUsername();
+    }, [session, likedBy]);
 
     const handleToggleLike = async () => {
-        setIsLiked(prev => !prev);
-        const incrementValue = !isLiked;
+        if (!session?.user || !sessionUsername) return;
+
+        const newIsLiked = !isLiked;
+        const incrementValue = newIsLiked;
 
         try {
             const response = await fetch('/api/putlikes', {
@@ -28,12 +54,13 @@ export default function Post({ title, username, description, tags, comments, lik
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ id: documentId, type: postType, increment: incrementValue })
+                body: JSON.stringify({ id: documentId, type: postType, increment: incrementValue, username: sessionUsername })
             });
 
             const data = await response.json();
             if (response.ok) {
-                setLikeCount(prevCount => prevCount + (incrementValue ? 1 : -1));
+                setLikeCount(prevCount => newIsLiked ? prevCount + 1 : prevCount - 1);
+                setIsLiked(newIsLiked);
             } else {
                 console.error(data.message);
             }

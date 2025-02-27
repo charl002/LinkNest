@@ -19,6 +19,7 @@ interface Post {
     }[];
     fileUrl: string;
     likes: number;
+    likedBy: string[];
     comments: { comment: string; username: string; date: string; likes: number }[];
 }
 export async function GET(){
@@ -55,6 +56,7 @@ export async function GET(){
                 username: data.username,
                 description: data.text,
                 tags: data.tags || [],
+                likedBy: data.likedBy || [],
                 comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number }) => ({
                     comment: comment.comment,
                     username: comment.username,

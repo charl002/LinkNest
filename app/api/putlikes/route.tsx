@@ -3,15 +3,15 @@ import { incrementLikes } from "@/firebase/firestore/updateLikes"; // Adjust the
 
 export async function PUT(req: Request) {
     try {
-        const { id, type, increment } = await req.json(); // Expecting { id: string, type: 'posts' | 'bluesky' | 'news', increment: boolean }
+        const { id, type, increment, username } = await req.json(); // Expecting { id: string, type: 'posts' | 'bluesky' | 'news', increment: boolean, username: string }
 
         // Validate input
-        if (!id || !type) {
-            return NextResponse.json({ message: 'Missing id or type' }, { status: 400 });
+        if (!id || !type || !username) {
+            return NextResponse.json({ message: 'Missing id, type, or username' }, { status: 400 });
         }
 
         // Call the incrementLikes function
-        const message = await incrementLikes(id, type, increment);
+        const message = await incrementLikes(id, type, increment, username);
 
         return NextResponse.json({ message }, { status: 200 });
     } catch (error) {

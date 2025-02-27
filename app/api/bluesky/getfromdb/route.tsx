@@ -15,6 +15,8 @@ interface BlueskyPost {
     thumb: string;
   }[];
   likes: number;
+  likedBy: string[];
+  comments: { comment: string; username: string; date: string; likes: number }[];
 }
 
 export async function GET() {
@@ -36,13 +38,20 @@ export async function GET() {
         username: data.author.displayName,
         description: data.text,
         tags: [], // You might want to add tags extraction logic here
-        comments: [], // Comments can be added later if needed
+        // comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number }) => ({
+        //   comment: comment.comment,
+        //   username: comment.username,
+        //   date: comment.date,
+        //   likes: comment.likes || 0
+        // })) || [], UNCOMMENT THIS WHEN WE ADD COMMENTS TO BLUESKY POSTS
+        comments: [],
         likes: data.likes || 0,
         images: data.images || [],
         createdAt: data.createdAt,
         id: doc.id,
         profilePicture: data.author.avatar,
-        postType: 'bluesky'
+        postType: 'bluesky',
+        likedBy: data.likedBy
       };
     });
 

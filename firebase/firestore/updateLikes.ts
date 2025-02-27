@@ -1,10 +1,10 @@
 import firebase_app from "../config";
-import { getFirestore, doc, updateDoc, increment } from "firebase/firestore";
+import { getFirestore, doc, updateDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
 // Initialize Firestore
 const db = getFirestore(firebase_app);
 
-export async function incrementLikes(id: string, type: 'posts' | 'bluesky' | 'news', shouldIncrement: boolean = true): Promise<string> {
+export async function incrementLikes(id: string, type: 'posts' | 'bluesky' | 'news', shouldIncrement: boolean = true, username: string): Promise<string> {
     if (!id || !type) {
         throw new Error('Missing id or type');
     }
@@ -25,7 +25,8 @@ export async function incrementLikes(id: string, type: 'posts' | 'bluesky' | 'ne
 
     try {
         await updateDoc(postRef, {
-            likes: shouldIncrement ? increment(1) : increment(-1)
+            likes: shouldIncrement ? increment(1) : increment(-1),
+            likedBy: shouldIncrement ? arrayUnion(username) : arrayRemove(username)
         });
         return 'Likes updated successfully';
     } catch (error) {
