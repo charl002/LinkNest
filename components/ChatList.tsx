@@ -80,7 +80,7 @@ export default function ChatList() {
   return (
     <aside className="bg-white shadow-md p-4 rounded-md">
       <h2 className="text-lg font-semibold mb-4">Friends</h2>
-      <ScrollArea className="w-full max-h-60 overflow-y-auto">
+      <ScrollArea className="w-full max-h-120 overflow-y-auto">
         <div className="flex flex-col space-y-2">
           {friends.length > 0 ? (
             friends.map((user) => (

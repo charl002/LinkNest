@@ -30,6 +30,14 @@ interface UserData {
   };
 }
 
+interface Friend {
+  id: string;
+  image: string;
+  username: string;
+  name: string;
+  email: string;
+}
+
 interface PostData {
   id: string;
   title: string;
@@ -45,7 +53,7 @@ interface PostData {
 
 export default function ProfilePage({ user }: { user: string }) {
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [friends, setFriends] = useState<string[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsCount, setFriendsCount] = useState<number>(0);
   const [postsCount, setPostsCount] = useState<number>(0);
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -92,7 +100,22 @@ export default function ProfilePage({ user }: { user: string }) {
         }
 
         setFriendsCount(result.friends.length);
-        setFriends(result.friends);
+
+        const friendsData = await Promise.all(
+          result.friends.map(async (friendUsername: string) => {
+            const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+            const userData = await userResponse.json();
+
+            if (userResponse.ok) {
+              return { id: userData.id, ...userData.data };
+            } else {
+              console.error(`User ${friendUsername} not found`);
+              return null;
+            }
+          })
+        );
+
+        setFriends(friendsData.filter(Boolean));
       } catch (err) {
         console.error("Error fetching friends:", err);
       }
@@ -286,9 +309,16 @@ export default function ProfilePage({ user }: { user: string }) {
                     {friends.length > 0 ? (
                       <ul className="space-y-2">
                         {friends.map((friend, index) => (
-                          <Link key={index} href={`/profile/${encodeURIComponent(friend)}`}>
-                            <li className="p-2 border-b text-gray-700">
-                              {friend}
+                          <Link key={index} href={`/profile/${encodeURIComponent(friend.username)}`}>
+                            <li className="p-2 border-b text-gray-700 hover:bg-gray-200 cursor-pointer flex items-center">
+                              <Image 
+                                src={friend.image} 
+                                alt={friend.username} 
+                                width={40} 
+                                height={40} 
+                                className="rounded-full border"
+                              />
+                              <p className="text-sm font-medium ml-4">{friend.username}</p> 
                             </li>
                           </Link>
                         ))}
