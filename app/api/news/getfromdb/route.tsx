@@ -36,7 +36,9 @@ export async function GET() {
         likes: data.likes || 0,
         images: [{ url: data.image_url, alt: data.title, thumb: data.image_url }], // Create image object
         profilePicture: '', // Set profile picture if available
-        published_at: data.published_at // Add published_at to the returned object
+        published_at: data.published_at, // Add published_at to the returned object
+        id: doc.id,
+        postType: 'news'
       };
     });
 

@@ -41,7 +41,8 @@ export async function GET() {
         images: data.images || [],
         createdAt: data.createdAt,
         id: doc.id,
-        profilePicture: data.author.avatar
+        profilePicture: data.author.avatar,
+        postType: 'bluesky'
       };
     });
 

@@ -19,6 +19,7 @@ interface Post {
     images: { url: string; alt: string; thumb: string }[];
     createdAt: string;
     profilePicture: string;
+    postType: 'posts' | 'bluesky' | 'news';
 }
 
 export default function UserCheck() {
@@ -215,6 +216,8 @@ export default function UserCheck() {
                         key={`${post.id}-${index}`} 
                         {...post} 
                         profilePicture={post.profilePicture || ""}
+                        documentId={post.id}
+                        postType={post.postType}
                     />
                 ))}
             </section>
