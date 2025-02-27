@@ -49,6 +49,8 @@ interface PostData {
   images: { url: string; alt: string; thumb: string }[];
   createdAt: string;
   profilePicture: string;
+  postType: 'posts' | 'bluesky' | 'news';
+  likedBy: string[];
 }
 
 export default function ProfilePage({ user }: { user: string }) {
@@ -347,6 +349,8 @@ export default function ProfilePage({ user }: { user: string }) {
                   key={`${post.id}-${index}`} 
                   {...post} 
                   profilePicture={userData.data.image || ""}
+                  documentId={post.id}
+                  postType={post.postType}
               />)
               ) : (
               <p className="text-gray-600">No posts available.</p>

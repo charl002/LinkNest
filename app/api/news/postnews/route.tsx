@@ -45,7 +45,9 @@ export async function POST() {
       // Add likes field to the news item
       const newsItemWithLikes = {
         ...newsItem,
-        likes: 0
+        comments: [],
+        likes: 0,
+        likedBy: []
       };
 
       const { result, error } = await addData('news', newsItemWithLikes);
