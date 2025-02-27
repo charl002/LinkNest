@@ -4,8 +4,8 @@ import next from "next";
 import { Server as SocketIOServer } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = dev ? "localhost" : "linknest-fkd5eba5dqbrhzd7.canadacentral-01.azurewebsites.net";
-const port = dev ? 3000 : Number(process.env.PORT) || 3000; 
+const hostname = process.env.WEBSITE_HOSTNAME || 'localhost';
+const port = Number(process.env.PORT) || 3000;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
@@ -20,8 +20,7 @@ app.prepare().then(() => {
   const io = new SocketIOServer(server, {
     cors: {
       origin: "*",
-      methods: ["GET", "POST"],
-      credentials: true
+      methods: ["GET", "POST"]
     }
   });
 

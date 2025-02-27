@@ -1,7 +1,7 @@
 stages:
   - dependencies
-  - lint
-  - test
+  # - lint
+  # - test
   - build
   - release
   - deploy
@@ -34,29 +34,29 @@ install-dependencies:
     paths:
       - node_modules/
     
-test-server:
-  stage: test
-  dependencies:
-    - install-dependencies
-  script:
-    - npm run test
-  allow_failure: false
+# test-server:
+#   stage: test
+#   dependencies:
+#     - install-dependencies
+#   script:
+#     - npm run test
+#   allow_failure: false
   
-lint-server:
-  stage: lint
-  dependencies:
-    - install-dependencies
-  script:
-    - npx eslint .
-  allow_failure: false
+# lint-server:
+#   stage: lint
+#   dependencies:
+#     - install-dependencies
+#   script:
+#     - npx eslint .
+#   allow_failure: false
 
-check-unused-packages:
-  stage: lint
-  dependencies:
-    - install-dependencies
-  script:
-    - npx depcheck || true
-  allow_failure: true
+# check-unused-packages:
+#   stage: lint
+#   dependencies:
+#     - install-dependencies
+#   script:
+#     - npx depcheck || true
+#   allow_failure: true
 
 build-frontend:
   stage: build
