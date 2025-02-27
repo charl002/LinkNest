@@ -88,7 +88,7 @@ export default function ChatList() {
                 key={user.id} 
                 className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
               >
-                <Link href={`/profile/${encodeURIComponent(user.username)}`}>
+                <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
                 <div className="flex items-center space-x-2">
                   <Image 
                     src={user.image} 
@@ -97,10 +97,10 @@ export default function ChatList() {
                     height={40} 
                     className="rounded-full border"
                   />
-                  <p>{user.username}</p>
+                  <p className="text-sm font-medium">{user.username}</p>
                 </div>
                 </Link>
-                <Button>Chat</Button>
+                <Button className="ml-auto">Chat</Button>
               </div>
               
             ))
