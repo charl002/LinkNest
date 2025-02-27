@@ -1,5 +1,6 @@
 "use client";
 
+import LoadingLogo from "@/components/LoadingLogo";
 import Post from "@/components/Post";
 import { useEffect, useState } from "react";
 
@@ -61,7 +62,7 @@ export default function Home() {
   }, []);
 
   if (loadingPosts) {
-    return <div>Loading posts...</div>;
+    return <LoadingLogo/>
   }
 
   return (
