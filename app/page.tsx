@@ -16,6 +16,7 @@ interface Post {
   createdAt: string;
   profilePicture: string;
   postType: 'posts' | 'bluesky' | 'news';
+  likedBy: string[];
 }
 
 export default function Home() {

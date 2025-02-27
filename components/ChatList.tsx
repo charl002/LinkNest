@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
 interface User {
   id: string;
@@ -18,6 +19,7 @@ export default function ChatList() {
   const { data: session } = useSession();
   const [friends, setFriends] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const router = useRouter(); // Use Next.js router
 
   useEffect(() => {
     async function fetchUsers() {
@@ -76,6 +78,11 @@ export default function ChatList() {
     fetchFriends();
   }, [currentUser]);
 
+  const openChat = (friendUsername: string, currentUsername: string | null) => {
+    if (!currentUsername) return;
+    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
+  };
+
   return (
     <aside className="bg-white shadow-md p-4 rounded-md">
       <h2 className="text-lg font-semibold mb-4">Chat</h2>
@@ -97,7 +104,7 @@ export default function ChatList() {
                   />
                   <p>{user.username}</p>
                 </div>
-                <Button>Chat</Button>
+                <Button onClick={() => openChat(user.username, currentUser)}>Chat</Button>
               </div>
             ))
           ) : (

@@ -6,6 +6,7 @@ import ChatList from "./ChatList";
 import Sidebar from "./Sidebar";
 import Post from "./Post";
 import { Toaster } from "sonner";
+import LoadingLogo from "./LoadingLogo";
 
 interface Post {
     id: string;
@@ -19,6 +20,7 @@ interface Post {
     createdAt: string;
     profilePicture: string;
     postType: 'posts' | 'bluesky' | 'news';
+    likedBy: string[];
 }
 
 export default function UserCheck() {
@@ -203,7 +205,7 @@ export default function UserCheck() {
     }
 
     if (loadingPosts) {
-        return <div>Loading posts...</div>;
+        return <LoadingLogo/>;
     }
 
     return (
