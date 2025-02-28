@@ -25,9 +25,16 @@ export async function GET(req: Request) {
                 username: data.username,
                 description: data.text,
                 tags: data.tags || [],
-                comments: data.comments || [],
+                likedBy: data.likedBy || [],
+                comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number }) => ({
+                    comment: comment.comment,
+                    username: comment.username,
+                    date: comment.date,
+                    likes: comment.likes || 0
+                })) || [],
                 likes: data.likes || 0,
-                images: [{ url: data.fileUrl, alt: data.title, thumb: data.fileUrl }]
+                images: [{ url: data.fileUrl, alt: data.title, thumb: data.fileUrl }],
+                postType: 'posts'
             };
         });
 
