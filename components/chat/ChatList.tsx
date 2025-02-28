@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "./ui/button";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 interface User {

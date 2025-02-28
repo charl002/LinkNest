@@ -1,7 +1,7 @@
-import Sidebar from "../../../components/Sidebar";
-import ChatList from "../../../components/ChatList";
-import ProfilePage from "../../../components/ProfilePage";
 import { Toaster } from "sonner";
+import Sidebar from "../../../components/custom-ui/Sidebar";
+import ChatList from "../../../components/chat/ChatList";
+import ProfilePage from "../../../components/profile/ProfilePage";
 
 type ProfileParams = Promise<{ username: string }>
 

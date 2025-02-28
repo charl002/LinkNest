@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import Post from "./Post"; 
+import Post from "../post/Post"; 
 import { useSession } from "next-auth/react";
 import {
   Dialog,
