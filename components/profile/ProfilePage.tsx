@@ -49,7 +49,7 @@ interface PostData {
   images: { url: string; alt: string; thumb: string }[];
   createdAt: string;
   profilePicture: string;
-  postType: 'posts' | 'bluesky' | 'news';
+  postType: 'posts';
   likedBy: string[];
 }
 
@@ -66,9 +66,9 @@ export default function ProfilePage({ user }: { user: string }) {
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  //const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement | null>(null);
-  const [background, setBackground] = useState<File | null>(null);
+  //const [background, setBackground] = useState<File | null>(null);
   const fileInputRef2 = useRef<HTMLInputElement | null>(null);
   const [isFriendsDialogOpen, setIsFriendsDialogOpen] = useState(false);
 
@@ -237,7 +237,8 @@ export default function ProfilePage({ user }: { user: string }) {
                       <Input
                           type="file"
                           ref={fileInputRef1}
-                          onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
+                          readOnly
+                          //onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
                           className="col-span-3"
                       />
                     </div>
@@ -248,7 +249,8 @@ export default function ProfilePage({ user }: { user: string }) {
                       <Input
                           type="file"
                           ref={fileInputRef2}
-                          onChange={(e) => setBackground(e.target.files?.[0] || null)}
+                          readOnly
+                          //onChange={(e) => setBackground(e.target.files?.[0] || null)}
                           className="col-span-3"
                       />
                     </div>
