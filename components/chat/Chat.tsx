@@ -1,11 +1,11 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useSocket } from "@/components/SocketProvider";
+import { useSocket } from "@/components/provider/SocketProvider";
 import { useEffect, useRef, useState } from "react";
 import ChatList from "./ChatList";
 import { Toaster } from "sonner";
-import Sidebar from "./Sidebar";
+import Sidebar from "@/components/custom-ui/Sidebar";
 
 interface Message {
   sender: string;

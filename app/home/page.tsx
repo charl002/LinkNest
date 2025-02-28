@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import UserCheck from "../../components/UserCheck";
+import UserCheck from "../../components/auth/UserCheck";
 
 export default async function Home() {
     const session = await auth();

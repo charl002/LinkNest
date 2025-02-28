@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { doLogout } from "@/app/actions"
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import LoginForm from "./LoginForm";
+import LoginForm from "@/components/auth/LoginForm";
 import Link from "next/link";
 import {
   DropdownMenu,

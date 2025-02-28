@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import ChatList from "./ChatList";
-import Sidebar from "./Sidebar";
-import Post from "./Post";
+import ChatList from "@/components/chat/ChatList";
+import Sidebar from "@/components/custom-ui/Sidebar";
+import Post from "@/components/post/Post";
 import { Toaster } from "sonner";
-import LoadingLogo from "./LoadingLogo";
+import LoadingLogo from "@/components/custom-ui/LoadingLogo";
 
 interface Post {
     id: string;

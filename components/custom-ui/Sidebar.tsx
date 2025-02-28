@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { customToast } from "./ui/customToast";
+import { customToast } from "../ui/customToast";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area"
 

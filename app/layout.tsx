@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/custom-ui/Navbar";
 import { auth } from "@/auth";
 import { SessionProvider } from "next-auth/react";
-import { SocketProvider } from "@/components/SocketProvider";
+import { SocketProvider } from "@/components/provider/SocketProvider";
 
 export const metadata: Metadata = {
   title: "LinkNest",

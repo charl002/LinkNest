@@ -1,8 +1,8 @@
 "use client";
 
-import Post from "@/components/Post";
+import Post from "@/components/post/Post";
 import { useEffect, useState } from "react";
-import LoadingLogo from "../components/LoadingLogo";
+import LoadingLogo from "../components/custom-ui/LoadingLogo";
 
 interface Post {
   id: string;

@@ -1,6 +1,6 @@
-import ChatList from "@/components/ChatList";
-import CreatePost from "@/components/CreatePost";
-import Sidebar from "@/components/Sidebar";
+import ChatList from "@/components/chat/ChatList";
+import CreatePost from "@/components/post/CreatePost";
+import Sidebar from "@/components/custom-ui/Sidebar";
 import { Toaster } from "sonner";
 
 export default function CreatePostPage() {

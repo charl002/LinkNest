@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useSession } from "next-auth/react"; 
-import { customToast } from "./ui/customToast";
+import { customToast } from "../ui/customToast";
 import { useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 
