@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
+import { auth } from "@/lib/auth";
 
 interface Message {
     id: string;
@@ -15,6 +16,11 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const sender = searchParams.get("sender");
         const receiver = searchParams.get("receiver");
+        const session = await auth();
+
+        if (!session || !session.user) {
+          return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
 
         if (!sender || !receiver) {
             return NextResponse.json({ message: "Sender and receiver usernames are required" }, { status: 400 });

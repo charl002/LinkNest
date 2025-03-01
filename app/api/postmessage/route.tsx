@@ -1,35 +1,42 @@
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
+import { auth } from "@/auth";
 
 export async function POST(req: Request) {
     try {
-        const { senderUsername, receiverUsername, message } = await req.json();
+      const session = await auth();
 
-        if (!senderUsername || !receiverUsername || !message) {
-            return NextResponse.json({ message: "Both usernames and message are required" }, { status: 400 });
-        }
+      if (!session || !session.user) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      }
 
-        const now =  new Date();
-        const datePart = now.toISOString().split("T")[0]; 
-        const timePart = now.toLocaleString("en-US", {
-        hour: "numeric",
-        minute: "numeric",
-        hour12: true,
-        });
+      const { senderUsername, receiverUsername, message } = await req.json();
 
-        const date = `${datePart} ${timePart}`
+      if (!senderUsername || !receiverUsername || !message) {
+          return NextResponse.json({ message: "Both usernames and message are required" }, { status: 400 });
+      }
 
-        const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date };
+      const now =  new Date();
+      const datePart = now.toISOString().split("T")[0]; 
+      const timePart = now.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+      });
 
-        const { result: docId, error } = await addData("messages", data);
+      const date = `${datePart} ${timePart}`
 
-        if (error) {
-            return NextResponse.json({ message: "Error adding message", error }, { status: 500 });
-        }
+      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date };
 
-        return NextResponse.json({ message: "Message added sucessfully", id: docId }, { status: 200 });
+      const { result: docId, error } = await addData("messages", data);
+
+      if (error) {
+          return NextResponse.json({ message: "Error adding message", error }, { status: 500 });
+      }
+
+      return NextResponse.json({ message: "Message added sucessfully", id: docId }, { status: 200 });
 
     } catch (err) {
-        return NextResponse.json({ message: "Unexpected error occurred", error: err }, { status: 500 });
+      return NextResponse.json({ message: "Unexpected error occurred", error: err }, { status: 500 });
     }
 }

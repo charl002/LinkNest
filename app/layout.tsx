@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "../components/custom-ui/Navbar";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 import { SessionProvider } from "next-auth/react";
 import { SocketProvider } from "@/components/provider/SocketProvider";
 
