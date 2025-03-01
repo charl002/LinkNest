@@ -2,6 +2,7 @@
 
 import Post from "@/components/post/Post";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import LoadingLogo from "../components/custom-ui/LoadingLogo";
 
 interface Post {
@@ -20,12 +21,25 @@ interface Post {
 }
 
 export default function Home() {
+  const { data: session } = useSession();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [sessionUsername, setSessionUsername] = useState('');
 
   useEffect(() => {
     const fetchPosts = async () => {
       setLoadingPosts(true);
+
+      const sessionEmail = session?.user?.email;
+
+      const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
+      const sessionUser = await response.json();
+
+      if (response.ok) {
+        setSessionUsername(sessionUser.data.username)
+    } else {
+        console.error(sessionUser.message);
+    }
       try {
         const [response, newsResponse, customResponse] = await Promise.all([
           fetch('/api/bluesky/getfromdb'),
@@ -72,7 +86,7 @@ export default function Home() {
       <section className="flex flex-col space-y-6 max-w-2xl w-full h-full overflow-y-auto">
         {posts.map((post, index) => (
           <Post key={`${post.id}-${index}`} {...post} profilePicture={post.profilePicture} documentId={post.id}
-          postType={post.postType}/>
+          postType={post.postType} sessionUsername={sessionUsername}/>
         ))}
       </section>
     </div>
