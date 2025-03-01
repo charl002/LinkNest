@@ -1,3 +1,4 @@
+import { Toaster } from "sonner";
 import Sidebar from "../../../components/custom-ui/Sidebar";
 import ChatList from "../../../components/chat/ChatList";
 import ProfilePage from "../../../components/profile/ProfilePage";
@@ -13,6 +14,7 @@ const Profile = async (props : { params: ProfileParams }) => {
             <Sidebar />
             <ProfilePage user={user} />
             <ChatList />
+            <Toaster position="bottom-center" richColors></Toaster>
         </div>
     );
 };
