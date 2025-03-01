@@ -14,37 +14,28 @@ interface PostProps {
     documentId: string;
     postType: 'posts' | 'bluesky' | 'news';
     likedBy: string[];
+    sessionUsername: string;
 }
 
-export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy }: PostProps) {
+export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
     const { data: session } = useSession();
     const [likeCount, setLikeCount] = useState(likes);
     const [isLiked, setIsLiked] = useState(false);
-    const [sessionUsername, setSessionUsername] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const fetchSessionUsername = async () => {
             if (!session?.user) return;
-            const sessionEmail = session.user.email;
-
-            const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
-            const sessionUser = await response.json();
-
-            if (response.ok) {
-                const username = sessionUser.data.username;
-                setSessionUsername(username);
-                setIsLiked(likedBy.includes(username));
-            } else {
-                console.error(sessionUser.message);
-            }
+            setIsLiked(likedBy.includes(sessionUsername));
         };
 
         fetchSessionUsername();
-    }, [session, likedBy]);
+    }, [session, likedBy, sessionUsername]);
 
     const handleToggleLike = async () => {
-        if (!session?.user || !sessionUsername) return;
+        if (!session?.user || !sessionUsername || isLoading) return;
 
+        setIsLoading(true);
         const newIsLiked = !isLiked;
         const incrementValue = newIsLiked;
 
@@ -66,6 +57,8 @@ export default function Post({ title, username, description, tags, comments, lik
             }
         } catch (error) {
             console.error('Error liking the post:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -114,6 +107,7 @@ export default function Post({ title, username, description, tags, comments, lik
           <button 
             onClick={handleToggleLike} 
             className={`ml-4 px-3 py-1 rounded transition ${isLiked ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+            disabled={isLoading}
           >
             {isLiked ? 'Unlike' : 'Like'}
           </button>
