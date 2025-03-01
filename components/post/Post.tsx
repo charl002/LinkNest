@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from "next/link";
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
@@ -66,29 +67,31 @@ export default function Post({ title, username, description, tags, comments, lik
 
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
-        <div className="flex items-center space-x-2">
-          {profilePicture ? (
-            <Image 
-              src={profilePicture} 
-              alt={`${username}'s profile picture`} 
-              width={40} 
-              height={40} 
-              className="rounded-full" 
-              layout="fixed"
-            />
-          ) : (
-            <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+        <Link href={`/profile/${encodeURIComponent(username)}`}>
+          <div className="flex items-center space-x-2">
+            {profilePicture ? (
               <Image 
-                src={defaultImageUrl} 
-                alt="Default Profile" 
+                src={profilePicture} 
+                alt={`${username}'s profile picture`} 
                 width={40} 
                 height={40} 
                 className="rounded-full" 
+                layout="fixed"
               />
-            </div>
-          )}
-          <p className="font-bold">{username}</p>
-        </div>
+            ) : (
+              <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+                <Image 
+                  src={defaultImageUrl} 
+                  alt="Default Profile" 
+                  width={40} 
+                  height={40} 
+                  className="rounded-full" 
+                />
+              </div>
+            )}
+            <p className="font-bold">{username}</p>
+          </div>
+        </Link>
         {images.length > 0 && images[0].url ? (
           <Image 
             src={images[0].url} 
