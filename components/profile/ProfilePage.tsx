@@ -71,6 +71,8 @@ export default function ProfilePage({ user }: { user: string }) {
   //const [background, setBackground] = useState<File | null>(null);
   const fileInputRef2 = useRef<HTMLInputElement | null>(null);
   const [isFriendsDialogOpen, setIsFriendsDialogOpen] = useState(false);
+  const [sessionUsername, setSessionUsername] = useState('');
+  
 
   useEffect(() => {
     async function fetchUser() {
@@ -125,10 +127,19 @@ export default function ProfilePage({ user }: { user: string }) {
 
     async function fetchPosts() {
       try {
-        const response = await fetch(`/api/getpostbyusername?username=${user}`);
-        const result = await response.json();
+        const response = await fetch(`/api/getsingleuser?email=${email}`);
+        const sessionUser = await response.json();
 
-        if (!response.ok) {
+        if (response.ok) {
+            setSessionUsername(sessionUser.data.username)
+        } else {
+            console.error(sessionUser.message);
+        }
+
+        const response2 = await fetch(`/api/getpostbyusername?username=${user}`);
+        const result = await response2.json();
+
+        if (!response2.ok) {
           throw new Error(result.message || "Failed to fetch friends");
         }
 
@@ -353,6 +364,7 @@ export default function ProfilePage({ user }: { user: string }) {
                   profilePicture={userData.data.image || ""}
                   documentId={post.id}
                   postType={post.postType}
+                  sessionUsername={sessionUsername}
               />)
               ) : (
               <p className="text-gray-600">No posts available.</p>
