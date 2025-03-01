@@ -66,7 +66,7 @@ export default function ProfilePage({ user }: { user: string }) {
   const [username, setUsername] = useState("");
   const [description, setDescription] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  //const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement | null>(null);
   //const [background, setBackground] = useState<File | null>(null);
   const fileInputRef2 = useRef<HTMLInputElement | null>(null);
@@ -154,14 +154,33 @@ export default function ProfilePage({ user }: { user: string }) {
     fetchPosts();
     fetchUser();
     fetchFriends();
-  }, [user]);
-
+  }, [user, email]);
 
   const handleSaveChanges = async () => {
     if (!userData) return;
-
+  
     try {
-      const response = await fetch("/api/updateuser", {
+      let profilePictureUrl = userData.data.image; 
+  
+      if (profilePicture) {
+        const formData = new FormData();
+        formData.append("file", profilePicture);
+        formData.append("username", sessionUsername);
+  
+        const response = await fetch("/api/postimage", {
+          method: "POST",
+          body: formData,
+        });
+  
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to upload profile picture");
+        }
+  
+        profilePictureUrl = result.imageUrl; 
+      }
+  
+      const updateResponse = await fetch("/api/updateuser", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -170,26 +189,26 @@ export default function ProfilePage({ user }: { user: string }) {
           id: userData.id,
           username,
           description,
+          image: profilePictureUrl, 
         }),
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to update profile");
+  
+      const updateResult = await updateResponse.json();
+      if (!updateResponse.ok) {
+        throw new Error(updateResult.message || "Failed to update profile");
       }
-
-      // Update local state
+  
       setUserData((prev) =>
-        prev ? { ...prev, data: { ...prev.data, username, description } } : null
+        prev ? { ...prev, data: { ...prev.data, username, description, image: profilePictureUrl } } : null
       );
-
+  
       customToast({ message: "Profile updated successfully!", type: "success" });
       setIsDialogOpen(false);
     } catch (err) {
       customToast({ message: "Error updating profile: " + (err as Error).message, type: "error" });
     }
   };
+  
 
   return (
     <div className="bg-white min-h-screen w-full text-gray-800">
@@ -248,8 +267,7 @@ export default function ProfilePage({ user }: { user: string }) {
                       <Input
                           type="file"
                           ref={fileInputRef1}
-                          readOnly
-                          //onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
+                          onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
                           className="col-span-3"
                       />
                     </div>
