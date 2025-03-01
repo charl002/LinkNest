@@ -31,6 +31,7 @@ export default function UserCheck() {
     const [usernameError, setUsernameError] = useState("");
     const [posts, setPosts] = useState<Post[]>([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
+    const [sessionUsername, setSessionUsername] = useState('');
 
     useEffect(() => {
         if (!session?.user) return;
@@ -76,6 +77,18 @@ export default function UserCheck() {
 
         const fetchPosts = async () => {
             setLoadingPosts(true);
+
+            const sessionEmail = session?.user?.email;
+
+            const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
+            const sessionUser = await response.json();
+
+            if (response.ok) {
+                setSessionUsername(sessionUser.data.username)
+            } else {
+                console.error(sessionUser.message);
+            }
+
             try {
                 const [response, newsResponse, customResponse] = await Promise.all([
                     fetch('/api/bluesky/getfromdb'),
@@ -219,6 +232,7 @@ export default function UserCheck() {
                         profilePicture={post.profilePicture || ""}
                         documentId={post.id}
                         postType={post.postType}
+                        sessionUsername={sessionUsername}
                     />
                 ))}
             </section>
