@@ -10,6 +10,7 @@ import { customToast } from "../ui/customToast";
 import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket } from "@/components/provider/SocketProvider";
+import { useFriends } from "../provider/FriendsProvider";
 
 interface User {
   id: string;
@@ -19,11 +20,7 @@ interface User {
   name: string;
 }
 
-interface SidebarProps {
-  setFriends: React.Dispatch<React.SetStateAction<User[]>>;
-}
-
-export default function Sidebar({ setFriends }: SidebarProps) {
+export default function Sidebar() {
   const socket = useSocket();
   const { data: session } = useSession();
   const [friendName, setFriendName] = useState("");
@@ -34,6 +31,8 @@ export default function Sidebar({ setFriends }: SidebarProps) {
 
   const currentUser = users.find(user => user.email === session?.user?.email);
   const senderUsername = currentUser?.username || null;
+
+  const { setFriends } = useFriends();
 
   useEffect(() => {
     async function fetchUsers() {
@@ -239,22 +238,24 @@ export default function Sidebar({ setFriends }: SidebarProps) {
         prevRequests.filter((user) => user.username !== friendUsername)
       );
 
-      const fetchFriends = async () => {
-        try {
-            const response = await fetch(`/api/getfriends?username=${senderUsername}`);
-            const data = await response.json();
+      const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+        const userData = await userResponse.json();
 
-            console.log(data);
-
-            if (data?.friends?.length > 0) {
-                setFriends(data.friends as User[]);
-            }
-        } catch (error) {
-            console.error("Error fetching friends:", error);
+        if (!userResponse.ok) {
+            console.error(`Error fetching user details for ${friendUsername}:`, userData);
+            return;
         }
-      };
 
-      await fetchFriends();
+      setFriends((prev) => [
+        ...prev,
+          {
+              id: userData.id,
+              username: userData.data.username,
+              image: userData.data.image || "/default-avatar.png",
+              email: userData.data.email || "",
+              name: userData.data.name || "",
+          },
+      ]);
   
       customToast({ message: `You are now friends with ${friendUsername}!`, type: "success" });
     } catch (error) {

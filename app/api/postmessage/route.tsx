@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 
 export async function POST(req: Request) {
     try {

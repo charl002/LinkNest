@@ -4,6 +4,7 @@ import Navbar from "../components/custom-ui/Navbar";
 import { auth } from "@/lib/auth";
 import { SessionProvider } from "next-auth/react";
 import { SocketProvider } from "@/components/provider/SocketProvider";
+import { FriendsProvider } from "@/components/provider/FriendsProvider";
 
 export const metadata: Metadata = {
   title: "LinkNest",
@@ -21,8 +22,10 @@ export default async function RootLayout({
      <body className="bg-gray-100 text-gray-900 antialiased">
       <SessionProvider session={session}>
         <SocketProvider>
-          <Navbar />
-          <main className="flex min-h-screen">{children}</main>
+          <FriendsProvider>
+            <Navbar />
+            <main className="flex min-h-screen">{children}</main>
+          </FriendsProvider>
         </SocketProvider>
       </SessionProvider>
       </body>

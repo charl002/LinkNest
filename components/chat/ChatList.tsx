@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useFriends } from "../provider/FriendsProvider";
 
 interface User {
   id: string;
@@ -16,14 +17,12 @@ interface User {
   email: string;
 }
 
-interface ChatListProps {
-  friends: User[]; // ✅ Receive friends as a prop
-}
-
-export default function ChatList({ friends }: ChatListProps) {
+export default function ChatList() {
   const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const router = useRouter(); // Use Next.js router
+
+  const { friends} = useFriends();
 
   useEffect(() => {
     async function fetchUsers() {
