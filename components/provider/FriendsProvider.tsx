@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useSession } from "next-auth/react";
+import { useSocket } from "./SocketProvider";
+import { customToast } from "../ui/customToast";
 
 interface User {
   id: string;
@@ -22,6 +24,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const [friends, setFriends] = useState<User[]>([]);
   const [username, setUsername] = useState<string | null>(null);
+  const socket = useSocket();
 
   // First, fetch the username using the session email
   useEffect(() => {
@@ -45,36 +48,49 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     fetchUsername();
   }, [session]);
 
-  // Once we have the username, fetch friends list
-  useEffect(() => {
-    if (!username) return;
+useEffect(() => {
+  if (!socket || !session?.user?.email) return;
 
-    async function fetchFriends() {
-      try {
-        const response = await fetch(`/api/getfriends?username=${username}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error("Error fetching friends:", data);
-          return;
-        }
-
-        const friendsData = await Promise.all(
-          data.friends.map(async (friendUsername: string) => {
-            const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
-            const userData = await userResponse.json();
-            return userResponse.ok ? { id: userData.id, ...userData.data } : null;
-          })
-        );
-
-        setFriends(friendsData.filter(Boolean));
-      } catch (error) {
-        console.error("Error fetching friends:", error);
+  const fetchFriends = async (newFriend?: string) => {
+    try {
+      const response = await fetch(`/api/getfriends?username=${username}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error("Error fetching friends:", data);
+        return;
       }
-    }
 
-    fetchFriends();
-  }, [username]);
+      const friendsData = await Promise.all(
+        data.friends.map(async (friendUsername: string) => {
+          const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+          const userData = await userResponse.json();
+          return userResponse.ok ? { id: userData.id, ...userData.data } : null;
+        })
+      );
+
+      setFriends(friendsData.filter(Boolean));
+
+      // Show toast notification if a new friend was added
+      if (newFriend) {
+        customToast({message: `${newFriend} added you as a friend!`, type: 'info'});
+      }
+
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+    }
+  };
+
+  // Fetch friends initially
+  fetchFriends();
+
+  // Listen for friend list updates from WebSocket
+  socket.on("updateFriendsList", (param: { newFriend?: string }) => fetchFriends(param.newFriend));
+
+  return () => {
+    socket.off("updateFriendsList", fetchFriends);
+  };
+}, [session?.user?.email, socket, username]);
 
   return (
     <FriendsContext.Provider value={{ friends, setFriends }}>

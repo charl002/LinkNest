@@ -113,7 +113,7 @@ export default function Sidebar() {
     return () => {
       socket.off("newFriendRequest", handleNewFriendRequest);
     };
-  }, [socket, senderUsername]);  
+  }, [socket, senderUsername]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -256,6 +256,13 @@ export default function Sidebar() {
               name: userData.data.name || "",
           },
       ]);
+
+      if (socket) {
+        socket.emit("friendAccepted", {
+          sender: senderUsername,  // user2 (who accepted)
+          receiver: friendUsername, // user1 (who sent the request)
+        });
+      }
   
       customToast({ message: `You are now friends with ${friendUsername}!`, type: "success" });
     } catch (error) {
