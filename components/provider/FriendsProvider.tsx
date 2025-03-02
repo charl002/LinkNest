@@ -48,49 +48,50 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
     fetchUsername();
   }, [session]);
 
-useEffect(() => {
-  if (!socket || !session?.user?.email) return;
-
-  const fetchFriends = async (newFriend?: string) => {
-    try {
-      const response = await fetch(`/api/getfriends?username=${username}`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        console.error("Error fetching friends:", data);
-        return;
+  useEffect(() => {
+    if (!socket || !session?.user?.email) return;
+  
+    const fetchFriends = async () => {
+      try {
+        const response = await fetch(`/api/getfriends?username=${username}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          console.error("Error fetching friends:", data);
+          return;
+        }
+  
+        const friendsData = await Promise.all(
+          data.friends.map(async (friendUsername: string) => {
+            const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+            const userData = await userResponse.json();
+            return userResponse.ok ? { id: userData.id, ...userData.data } : null;
+          })
+        );
+  
+        setFriends(friendsData.filter(Boolean));
+      } catch (error) {
+        console.error("Error fetching friends:", error);
       }
-
-      const friendsData = await Promise.all(
-        data.friends.map(async (friendUsername: string) => {
-          const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
-          const userData = await userResponse.json();
-          return userResponse.ok ? { id: userData.id, ...userData.data } : null;
-        })
-      );
-
-      setFriends(friendsData.filter(Boolean));
-
-      // Show toast notification if a new friend was added
-      if (newFriend) {
-        customToast({message: `${newFriend} added you as a friend!`, type: 'info'});
-      }
-
-    } catch (error) {
-      console.error("Error fetching friends:", error);
-    }
-  };
-
-  // Fetch friends initially
-  fetchFriends();
-
-  // Listen for friend list updates from WebSocket
-  socket.on("updateFriendsList", (param: { newFriend?: string }) => fetchFriends(param.newFriend));
-
-  return () => {
-    socket.off("updateFriendsList", fetchFriends);
-  };
-}, [session?.user?.email, socket, username]);
+    };
+  
+    // Fetch friends initially
+    fetchFriends();
+  
+    // **Listen for friend list updates**
+    socket.on("updateFriendsList", () => fetchFriends());
+  
+    socket.on("friendRequestAccepted", ({ acceptedBy }) => {
+      console.log(`Received friendRequestAccepted event for ${acceptedBy}`);
+      customToast({ message: `You are now friends with ${acceptedBy}!`, type: "success" });
+    });
+  
+    return () => {
+      socket.off("updateFriendsList");
+      socket.off("friendRequestAccepted");
+    };
+  }, [session?.user?.email, socket, username]);  
+  
 
   return (
     <FriendsContext.Provider value={{ friends, setFriends }}>

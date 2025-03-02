@@ -70,18 +70,21 @@ app.prepare().then(() => {
         return;
       }
     
-      const receiverSocketId = userSockets[receiver];
-      const senderSocketId = userSockets[sender];
+      const receiverSocketId = userSockets[receiver]; // Receiver who accepted the request
+      const senderSocketId = userSockets[sender]; // Sender who originally sent the request
     
       console.log(`Receiver Socket ID: ${receiverSocketId}, Sender Socket ID: ${senderSocketId}`);
     
       if (receiverSocketId) {
-        console.log(`Emitting updateFriendsList to ${receiver}`);
+        console.log(`Emitting friendRequestAccepted to ${receiver}`);
+        io.to(receiverSocketId).emit("friendRequestAccepted", { acceptedBy: sender });
+      }
+    
+      if (receiverSocketId) {
         io.to(receiverSocketId).emit("updateFriendsList", { newFriend: sender });
       }
     
       if (senderSocketId) {
-        console.log(`Emitting updateFriendsList to ${sender}`);
         io.to(senderSocketId).emit("updateFriendsList", { newFriend: receiver });
       }
     });    
