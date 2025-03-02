@@ -1,12 +1,13 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation"; // Import useRouter
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useEffect, useRef, useState } from "react";
 import ChatList from "./ChatList";
-import { Toaster, toast } from "sonner"; // Import toast from Sonner
+import { Toaster, toast } from "sonner";
 import Sidebar from "@/components/custom-ui/Sidebar";
-import { customToast } from "../ui/customToast";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Button } from "../ui/button";
 
 interface Message {
   sender: string;
@@ -16,12 +17,13 @@ interface Message {
 export default function Chat() {
   const socket = useSocket();
   const searchParams = useSearchParams();
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
   const friendUsername = searchParams.get("friend");
   const currentUsername = searchParams.get("user");
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -44,12 +46,12 @@ export default function Chat() {
             message: msg.message,
           }))
         );
-      } catch (error) {
-        customToast({message: `${error} Redirecting to home...`, type: 'error'});
-
-        setTimeout(() => {
-          router.push("/home");
-        }, 3000);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage("An unexpected error occurred. Please try again.");
+        }
       }
     }
 
@@ -110,6 +112,11 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleRedirectToHome = () => {
+    setErrorMessage(null);
+    router.push("/home");
+  };
+
   return (
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
       <Sidebar />
@@ -151,6 +158,20 @@ export default function Chat() {
         </div>
       </section>
       <ChatList />
+      
+      {errorMessage && (
+        <Dialog open={true}>
+          <DialogContent forceMount className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Error</DialogTitle>
+            </DialogHeader>
+            <p>{errorMessage}</p>
+            <DialogFooter>
+              <Button onClick={handleRedirectToHome}>Continue</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>      
+      )}
       <Toaster position="bottom-center" richColors />
     </div>
   );
