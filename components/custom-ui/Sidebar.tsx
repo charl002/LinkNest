@@ -69,19 +69,41 @@ export default function Sidebar() {
   
     console.log("Listening for new friend requests...");
   
-    const handleNewFriendRequest = (data: { senderUsername: string }) => {
+    const handleNewFriendRequest = async (data: { senderUsername: string }) => {
       console.log("Received new friend request:", data);
-  
+    
       if (!data.senderUsername) return;
-  
-      // Ensure the pending request list updates
-      setPendingRequests((prev) => {
-        if (prev.some((user) => user.username === data.senderUsername)) return prev;
-        return [...prev, { id: crypto.randomUUID(), username: data.senderUsername, image: "", email: "", name: "" }];
-      });
-  
-      customToast({ message: `New friend request from ${data.senderUsername}!`, type: "info" });
-    };
+    
+      try {
+        const response = await fetch(`/api/getuserbyusername?username=${data.senderUsername}`);
+        const userData = await response.json();
+    
+        if (!response.ok) {
+          console.error(`Error fetching user details for ${data.senderUsername}:`, userData);
+          return;
+        }
+    
+        setPendingRequests((prev) => {
+          if (prev.some((user) => user.username === data.senderUsername)) return prev;
+    
+          return [
+            ...prev,
+            {
+              id: userData.id,
+              username: data.senderUsername,
+              image: userData.data.image || "/default-avatar.png",
+              email: userData.data.email || "", 
+              name: userData.data.name || "",
+            },
+          ];
+        });
+    
+        customToast({ message: `New friend request from ${data.senderUsername}!`, type: "info" });
+    
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      }
+    };    
   
     socket.on("newFriendRequest", handleNewFriendRequest);
   
