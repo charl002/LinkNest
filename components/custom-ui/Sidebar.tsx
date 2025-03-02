@@ -8,9 +8,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { customToast } from "../ui/customToast";
 import Image from "next/image";
-import { ScrollArea } from "@/components/ui/scroll-area"
-
-
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSocket } from "@/components/provider/SocketProvider";
 
 interface User {
   id: string;
@@ -21,6 +20,7 @@ interface User {
 }
 
 export default function Sidebar() {
+  const socket = useSocket();
   const { data: session } = useSession();
   const [friendName, setFriendName] = useState("");
   const [users, setUsers] = useState<User[]>([]);
@@ -62,40 +62,64 @@ export default function Sidebar() {
   }, [friendName, users]);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!socket || !senderUsername) return;
   
-    async function fetchPendingRequests() {
+    console.log("Registering user to WebSocket:", senderUsername);
+    socket.emit("register", senderUsername);
+  
+    console.log("Listening for new friend requests...");
+  
+    const handleNewFriendRequest = (data: { senderUsername: string }) => {
+      console.log("Received new friend request:", data);
+  
+      if (!data.senderUsername) return;
+  
+      // Ensure the pending request list updates
+      setPendingRequests((prev) => {
+        if (prev.some((user) => user.username === data.senderUsername)) return prev;
+        return [...prev, { id: crypto.randomUUID(), username: data.senderUsername, image: "", email: "", name: "" }];
+      });
+  
+      customToast({ message: `New friend request from ${data.senderUsername}!`, type: "info" });
+    };
+  
+    socket.on("newFriendRequest", handleNewFriendRequest);
+  
+    return () => {
+      socket.off("newFriendRequest", handleNewFriendRequest);
+    };
+  }, [socket, senderUsername]);  
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchPendingRequests = async () => {
       try {
         const response = await fetch(`/api/getpendingrequests?username=${senderUsername}`);
         const data = await response.json();
   
-        if (data && Array.isArray(data.pendingRequests)) {
+        if (data?.pendingRequests?.length > 0) {
           const userRequests = await Promise.all(
             data.pendingRequests.map(async (username: string) => {
               const userResponse = await fetch(`/api/getuserbyusername?username=${username}`);
               const userData = await userResponse.json();
-  
-              if (userResponse.ok) {
-                return { id: userData.id, ...userData.data };
-              } else {
-                console.error(`User ${username} not found`);
-                return null;
-              }
+              return userResponse.ok ? { id: userData.id, ...userData.data } : null;
             })
           );
           setPendingRequests(userRequests.filter(Boolean));
         } else {
-          console.error("Unexpected API response:", data);
           setPendingRequests([]);
         }
       } catch (error) {
         console.error("Error fetching pending requests:", error);
         setPendingRequests([]);
       }
-    }
+    };
   
     fetchPendingRequests();
+
   }, [currentUser, senderUsername]);
+  
 
   const handleAddFriend = async () => {
     if (!session?.user?.name || !friendName) {
@@ -126,7 +150,14 @@ export default function Sidebar() {
         customToast({ message: `${result.message}`, type: "error" });
         return;
       }
-    
+
+      if (socket) {
+        socket.emit("newFriendRequest", {
+          senderUsername,
+          receiverUsername: friendName,
+        });
+      }
+  
       customToast({ message: `Friend request sent to ${friendName}!`, type: "success" });
       setFriendName("");
     } catch (error) {

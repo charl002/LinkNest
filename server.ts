@@ -51,6 +51,17 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on("newFriendRequest", ({ senderUsername, receiverUsername }) => {
+      console.log(`New friend request from ${senderUsername} to ${receiverUsername}`);
+    
+      const receiverSocketId = userSockets[receiverUsername];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("newFriendRequest", { senderUsername });
+      } else {
+        console.log(`User ${receiverUsername} is not online`);
+      }
+    });
+
     socket.on("disconnect", () => {
       Object.keys(userSockets).forEach((userId) => {
         if (userSockets[userId] === socket.id) {
