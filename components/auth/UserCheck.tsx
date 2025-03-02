@@ -23,6 +23,14 @@ interface Post {
     likedBy: string[];
 }
 
+interface User {
+  id: string;
+  image: string;
+  username: string;
+  email: string;
+  name: string;
+}
+
 export default function UserCheck() {
     const { data: session } = useSession();
     const [usernameRequired, setUsernameRequired] = useState(false);
@@ -32,6 +40,7 @@ export default function UserCheck() {
     const [posts, setPosts] = useState<Post[]>([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
     const [sessionUsername, setSessionUsername] = useState('');
+    const [friends, setFriends] = useState<User[]>([]);
 
     useEffect(() => {
         if (!session?.user) return;
@@ -71,6 +80,37 @@ export default function UserCheck() {
 
         fetchData();
     }, [session]);
+
+    useEffect(() => {
+      if (!sessionUsername) return;
+
+      async function fetchFriends() {
+          try {
+              const response = await fetch(`/api/getfriends?username=${sessionUsername}`);
+              const data = await response.json();
+
+              if (!response.ok) {
+                  console.error("Error fetching friends:", data);
+                  return;
+              }
+
+              const friendsData = await Promise.all(
+                  data.friends.map(async (friendUsername: string) => {
+                      const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+                      const userData = await userResponse.json();
+
+                      return userResponse.ok ? { id: userData.id, ...userData.data } : null;
+                  })
+              );
+
+              setFriends(friendsData.filter(Boolean)); // Remove null values
+          } catch (error) {
+              console.error("Error fetching friends:", error);
+          }
+      }
+
+      fetchFriends();
+    }, [sessionUsername]); // Fetch friends when username is available
 
     useEffect(() => {
         if (!session?.user) return;
@@ -223,7 +263,7 @@ export default function UserCheck() {
 
     return (
         <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen">
-            <Sidebar />
+            <Sidebar setFriends={setFriends} />
             <section className="flex flex-col space-y-6 h-full overflow-y-auto">
                 {posts.map((post, index) => (
                     <Post 
@@ -236,7 +276,7 @@ export default function UserCheck() {
                     />
                 ))}
             </section>
-            <ChatList />
+            <ChatList friends={friends} />
             <Toaster position="bottom-center" richColors></Toaster>
         </div>
     );

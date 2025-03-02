@@ -19,7 +19,11 @@ interface User {
   name: string;
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  setFriends: React.Dispatch<React.SetStateAction<User[]>>;
+}
+
+export default function Sidebar({ setFriends }: SidebarProps) {
   const socket = useSocket();
   const { data: session } = useSession();
   const [friendName, setFriendName] = useState("");
@@ -234,6 +238,23 @@ export default function Sidebar() {
         setPendingRequests((prevRequests) =>
         prevRequests.filter((user) => user.username !== friendUsername)
       );
+
+      const fetchFriends = async () => {
+        try {
+            const response = await fetch(`/api/getfriends?username=${senderUsername}`);
+            const data = await response.json();
+
+            console.log(data);
+
+            if (data?.friends?.length > 0) {
+                setFriends(data.friends as User[]);
+            }
+        } catch (error) {
+            console.error("Error fetching friends:", error);
+        }
+      };
+
+      await fetchFriends();
   
       customToast({ message: `You are now friends with ${friendUsername}!`, type: "success" });
     } catch (error) {

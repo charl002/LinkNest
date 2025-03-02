@@ -16,9 +16,12 @@ interface User {
   email: string;
 }
 
-export default function ChatList() {
+interface ChatListProps {
+  friends: User[]; // ✅ Receive friends as a prop
+}
+
+export default function ChatList({ friends }: ChatListProps) {
   const { data: session } = useSession();
-  const [friends, setFriends] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const router = useRouter(); // Use Next.js router
 
@@ -44,41 +47,6 @@ export default function ChatList() {
 
   const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
 
-  useEffect(() => {
-    if (!currentUser) return;
-
-    async function fetchFriends() {
-      try {
-        const response = await fetch(`/api/getfriends?username=${currentUser}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error("Error fetching friends:", data);
-          return;
-        }
-        const friendsData = await Promise.all(
-          data.friends.map(async (friendUsername: string) => {
-            const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
-            const userData = await userResponse.json();
-
-            if (userResponse.ok) {
-              return { id: userData.id, ...userData.data };
-            } else {
-              console.error(`User ${friendUsername} not found`);
-              return null;
-            }
-          })
-        );
-
-        setFriends(friendsData.filter(Boolean));
-      } catch (error) {
-        console.error("Error fetching friends:", error);
-      }
-    }
-
-    fetchFriends();
-  }, [currentUser]);
-
   const openChat = (friendUsername: string, currentUsername: string | null) => {
     if (!currentUsername) return;
     router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
@@ -90,9 +58,9 @@ export default function ChatList() {
       <ScrollArea className="w-full max-h-120 overflow-y-auto">
         <div className="flex flex-col space-y-2">
           {friends.length > 0 ? (
-            friends.map((user) => (
+            friends.map((user, index) => (
               <div 
-                key={user.id} 
+                key={user.id || `${user.username}-${index}`}
                 className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
               >
                 <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
