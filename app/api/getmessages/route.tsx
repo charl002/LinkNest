@@ -22,8 +22,15 @@ export async function GET(req: Request) {
           return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
+        const response = await fetch(`http://localhost:3000/api/getsingleuser?email=${session.user.email}`);
+        const sessionUser = await response.json();
+
+        if( sender != sessionUser.data.username){
+          return NextResponse.json({ message: "You are not allowed to see these messages!" }, { status: 403 });
+        }
+
         if (!sender || !receiver) {
-            return NextResponse.json({ message: "Sender and receiver usernames are required" }, { status: 400 });
+          return NextResponse.json({ message: "Sender and receiver usernames are required" }, { status: 400 });
         }
 
         const { results, error } = await getAllDocuments("messages");
@@ -57,7 +64,6 @@ export async function GET(req: Request) {
         return NextResponse.json({ messages }, { status: 200 });
 
     } catch (error) {
-        console.error("Error fetching messages:", error);
-        return NextResponse.json({ message: "Unexpected error occurred", error }, { status: 500 });
+      return NextResponse.json({ message: 'Error getting messages!', error }, { status: 500 });
     }
 }
