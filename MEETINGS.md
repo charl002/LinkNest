@@ -53,3 +53,19 @@ Thiha will focus on the front-end testing and improving the community aspect of 
 As in group, we will also focus on adding tests for the API Routes we created.
 
 Author: Thiha
+
+### 2025-02-28
+
+Today in class, we had a workshop today regarding bugs, and we let another team test our deployed website. They started creating issues for us and we did the same for another team.
+
+We then had a meeting to see what everyone has worked on, and what they will work on in the future.
+
+**Mohammed**: He worked on updating the profile picture and the background image, and he is planning to add video calling next.
+
+**Charles**: He has set up the likes for the posts and fixed bugs related to it. Charles is planning to add likes to comments when they are implemented, and adding a tab for the bluesky and news. He is also thinking about the hashtags tab.
+
+**Ahmed**: Ahmed worked on storing the messages in the database, and now he is going to fix on a bug regarding the order of the message (DUe to the time being minutes).
+
+**Abdullah**: He has improved the 'create post' page, specifically so that is has better user interaction and redirects to home after creation. He also started optimizing the application, improving by 17%. He will now focus on adding comments.
+
+**Thiha**: I added websockets for production, meaning you are able to message another person on the deployed website. I am now going to focus on adding authentication for the chats, and improving the experience of the website by removing the need to refresh constantly to update the website.
