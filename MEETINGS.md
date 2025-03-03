@@ -69,3 +69,15 @@ We then had a meeting to see what everyone has worked on, and what they will wor
 **Abdullah**: He has improved the 'create post' page, specifically so that is has better user interaction and redirects to home after creation. He also started optimizing the application, improving by 17%. He will now focus on adding comments.
 
 **Thiha**: I added websockets for production, meaning you are able to message another person on the deployed website. I am now going to focus on adding authentication for the chats, and improving the experience of the website by removing the need to refresh constantly to update the website.
+
+### 2025-03-03
+
+**Charles**: He has fixed the likes for posts (Before you could spam click), and he fixed the fetches regarding the likes for every posts. He will now do testing for his API routes and he will also implement likes with the comments.
+
+**Ahmed**: He fixed the bug regarding the order of the messages, due to how it was ordering by minutes and not seconds. Also, Ahmed resolved the issue where you can add multiple friends by spam clicking. He will now work limiting the characters and start new unit tests for the API routes.
+
+**Adbullah**: He fixed the like button to be more responsive, and now he has also added comments for posts. He will polish the comments more and start optimization. He will also do some testings.
+
+**Mohammed**: He implemented the profile picture being updated. For next, he will also implement adding videocalling and polishing the profile picture update due to a bug.
+
+**Thiha**: I added authentication for the chatting, meaning you can't access another user's chat. I also used socket IO to make friend requests appear in real time, and when accepting a friend request. I will now also implement declining a friend request and removing a friend. I also will fix chatting.
