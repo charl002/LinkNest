@@ -9,10 +9,7 @@ interface UpdateDataResult {
 }
 
 export default async function updateData(
-    collectionName: string,
-    objectId: string,
-    data: Record<string, unknown>
-): Promise<UpdateDataResult> {
+collectionName: string, objectId: string, p0: string, data: Record<string, unknown>): Promise<UpdateDataResult> {
     let result: string | null = null;
     let error: Error | null = null;
 

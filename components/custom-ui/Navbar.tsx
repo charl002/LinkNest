@@ -62,6 +62,7 @@ const Navbar = () => {
                       alt="User Profile"
                       width={40}
                       height={40}
+                      priority
                       className="rounded-full border border-gray-300"
                     />
                     <div className="flex flex-col">

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import updateData from "@/firebase/firestore/updateData";
+import updateArrayField from "@/firebase/firestore/updateData";
 
 export async function POST(req: Request) {
     try {
@@ -18,14 +18,14 @@ export async function POST(req: Request) {
         });
         const date = `${datePart} ${timePart}`
 
-        const data = { 
+        const newComment = { 
             username,
             comment , 
             likes: 0 ,
             date
         };
 
-        const { result: docId, error } = await updateData("posts", postId, data);
+        const { result: docId, error } = await updateArrayField("posts", postId, "comments", newComment);
 
         if (error) {
             return NextResponse.json({ message: "Error adding comment", error }, { status: 500 });
