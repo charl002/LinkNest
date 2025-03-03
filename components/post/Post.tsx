@@ -90,10 +90,21 @@ export default function Post({ title, username, description, tags, comments, lik
 
           const data = await response.json();
           if (response.ok) {
-              setPostComments([...postComments, { username: sessionUsername, comment: newComment, date: "Just now", likes: 0 }]);
-              setNewComment("");
+            // Convert "Just now" to the actual timestamp for previous comments
+            const updatedComments = postComments.map(comment =>
+              comment.date === "Just now"
+                ? { ...comment, date: new Date().toLocaleString() }
+                : comment
+            );
+  
+            setPostComments([
+              ...updatedComments,
+              { username: sessionUsername, comment: newComment, date: "Just now", likes: 0 }
+            ]);
+  
+            setNewComment(""); 
           } else {
-              console.error(data.message);
+            console.error(data.message);
           }
       } catch (error) {
           console.error('Error posting comment:', error);
@@ -164,7 +175,7 @@ export default function Post({ title, username, description, tags, comments, lik
                   <p className="text-gray-600">No comments yet.</p>
               )}
             </div>
-            
+
             <div className="mt-3 flex items-center space-x-2">
               <input 
                   type="text" 
