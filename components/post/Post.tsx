@@ -16,10 +16,19 @@ interface PostProps {
     likedBy: string[];
 }
 
+interface Comment {
+  username: string;
+  comment: string;
+  date: string;
+  likes: number;
+}
+
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy }: PostProps) {
     const { data: session } = useSession();
     const [likeCount, setLikeCount] = useState(likes);
     const [isLiked, setIsLiked] = useState(false);
+    const [newComment, setNewComment] = useState("");
+    const [postComments, setPostComments] = useState<Comment[]>(comments);
     const [sessionUsername, setSessionUsername] = useState('');
 
     useEffect(() => {
@@ -68,6 +77,29 @@ export default function Post({ title, username, description, tags, comments, lik
             console.error('Error liking the post:', error);
         }
     };
+
+    const handlePostComment = async () => {
+      if (!session?.user || !sessionUsername || !newComment.trim()) return;
+
+      try {
+          const response = await fetch('/api/postcomment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ postId: documentId, username: sessionUsername, comment: newComment })
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+              setPostComments([...postComments, { username: sessionUsername, comment: newComment, date: "Just now", likes: 0 }]);
+              setNewComment("");  
+          } else {
+              console.error(data.message);
+          }
+      } catch (error) {
+          console.error('Error posting comment:', error);
+      }
+  };
+
 
     const defaultImageUrl = "/defaultProfilePic.jpg";
 
@@ -118,19 +150,8 @@ export default function Post({ title, username, description, tags, comments, lik
             {isLiked ? 'Unlike' : 'Like'}
           </button>
         </div>
-        <div className="mt-4">
-          {comments.length > 0 ? (
-            comments.map((comment, index) => (
-              <div key={index} className="text-gray-600">
-                <p><strong>{comment.username}:</strong> {comment.comment}</p>
-                <p className="text-gray-400 text-sm">{comment.date}</p>
-                <p className="text-gray-400 text-sm">Likes: {comment.likes}</p>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-600">No comments yet.</p>
-          )}
+         {/* ✅ Comments Section */}
+    
         </div>
-      </div>
     );
 }
