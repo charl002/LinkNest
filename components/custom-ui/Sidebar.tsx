@@ -211,6 +211,14 @@ export default function Sidebar() {
         }),
       });
   
+      const friendsResponse = await fetch(`/api/getfriends?username=${senderUsername}`);
+      const friendsData = await friendsResponse.json();
+
+      if (friendsData.friends.includes(friendUsername)) {
+        console.log("Friendship already exists, skipping duplicate entry.");
+        return;
+      }
+      
       const updateResult = await updateResponse.json();
   
       if (!updateResponse.ok) {
