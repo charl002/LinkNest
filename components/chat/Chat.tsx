@@ -29,6 +29,9 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  const [first, second] = [currentUsername, friendUsername].sort();
+  const channelName = `${first}_${second}`;
+
   useEffect(() => {
     if (!currentUsername || !friendUsername) return;
 
@@ -157,7 +160,7 @@ export default function Chat() {
             Send
           </button>
           <button
-            onClick={() => {router.push(`/channel/${currentUsername}${friendUsername}`)}}
+            onClick={() => {router.push(`/channel/${channelName}`)}}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg"
           >
             <Video/>

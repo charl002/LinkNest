@@ -1,7 +1,7 @@
 import Call from "@/components/chat/Call";
 
-export default function Page({ params }: { params: { channel: string } }) {
-    const channelName = params.channel || "root";
+export default function Page({ params }: { params: { channelName: string } }) {
+    const channelName = params.channelName || "root";
 
     return (
         <main className="flex w-full flex-col">
