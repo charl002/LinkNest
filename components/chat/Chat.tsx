@@ -8,6 +8,7 @@ import { Toaster, toast } from "sonner";
 import Sidebar from "@/components/custom-ui/Sidebar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { Video } from 'lucide-react';
 
 interface Message {
   sender: string;
@@ -154,6 +155,12 @@ export default function Chat() {
             className="px-4 py-2 bg-blue-500 text-white rounded-lg"
           >
             Send
+          </button>
+          <button
+            onClick={() => {router.push(`/channel/${currentUsername}${friendUsername}`)}}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+          >
+            <Video/>
           </button>
         </div>
       </section>
