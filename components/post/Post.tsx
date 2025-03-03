@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from "next/link";
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { FiThumbsUp } from 'react-icons/fi'; 
@@ -18,6 +19,7 @@ interface PostProps {
     documentId: string;
     postType: 'posts' | 'bluesky' | 'news';
     likedBy: string[];
+    sessionUsername: string;
 }
 
 interface Comment {
@@ -27,38 +29,29 @@ interface Comment {
   likes: number;
 }
 
-export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy }: PostProps) {
+export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
     const { data: session } = useSession();
     const [likeCount, setLikeCount] = useState(likes);
     const [isLiked, setIsLiked] = useState(false);
     const [newComment, setNewComment] = useState("");
     const [postComments, setPostComments] = useState<Comment[]>(comments);
-    const [sessionUsername, setSessionUsername] = useState('');
     const [showComments, setShowComments] = useState(false); 
+    const [isLoading, setIsLoading] = useState(false);
+
 
     useEffect(() => {
         const fetchSessionUsername = async () => {
             if (!session?.user) return;
-            const sessionEmail = session.user.email;
-
-            const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
-            const sessionUser = await response.json();
-
-            if (response.ok) {
-                const username = sessionUser.data.username;
-                setSessionUsername(username);
-                setIsLiked(likedBy.includes(username));
-            } else {
-                console.error(sessionUser.message);
-            }
+            setIsLiked(likedBy.includes(sessionUsername));
         };
 
         fetchSessionUsername();
-    }, [session, likedBy]);
+    }, [session, likedBy, sessionUsername]);
 
     const handleToggleLike = async () => {
-        if (!session?.user || !sessionUsername) return;
+        if (!session?.user || !sessionUsername || isLoading) return;
 
+        setIsLoading(true);
         const newIsLiked = !isLiked;
         const incrementValue = newIsLiked;
 
@@ -80,6 +73,8 @@ export default function Post({ title, username, description, tags, comments, lik
             }
         } catch (error) {
             console.error('Error liking the post:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -121,29 +116,31 @@ export default function Post({ title, username, description, tags, comments, lik
 
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
-        <div className="flex items-center space-x-2">
-          {profilePicture ? (
-            <Image 
-              src={profilePicture} 
-              alt={`${username}'s profile picture`} 
-              width={40} 
-              height={40} 
-              className="rounded-full" 
-              layout="fixed"
-            />
-          ) : (
-            <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+        <Link href={`/profile/${encodeURIComponent(username)}`}>
+          <div className="flex items-center space-x-2">
+            {profilePicture ? (
               <Image 
-                src={defaultImageUrl} 
-                alt="Default Profile" 
+                src={profilePicture} 
+                alt={`${username}'s profile picture`} 
                 width={40} 
                 height={40} 
                 className="rounded-full" 
+                layout="fixed"
               />
-            </div>
-          )}
-          <p className="font-bold">{username}</p>
-        </div>
+            ) : (
+              <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+                <Image 
+                  src={defaultImageUrl} 
+                  alt="Default Profile" 
+                  width={40} 
+                  height={40} 
+                  className="rounded-full" 
+                />
+              </div>
+            )}
+            <p className="font-bold">{username}</p>
+          </div>
+        </Link>
         {images.length > 0 && images[0].url ? (
           <Image 
             src={images[0].url} 
@@ -162,6 +159,7 @@ export default function Post({ title, username, description, tags, comments, lik
             onClick={handleToggleLike}
             className={`flex items-center space-x-2 px-3 py-1 rounded-md transition text-sm 
                 ${isLiked ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'} hover:bg-blue-200`}
+            disabled={isLoading}
           >
             {isLiked ? <FaThumbsUp className="text-blue-600" /> : <FaRegThumbsUp />} 
             <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
