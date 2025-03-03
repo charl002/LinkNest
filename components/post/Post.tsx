@@ -91,7 +91,7 @@ export default function Post({ title, username, description, tags, comments, lik
           const data = await response.json();
           if (response.ok) {
               setPostComments([...postComments, { username: sessionUsername, comment: newComment, date: "Just now", likes: 0 }]);
-              setNewComment("");  
+              setNewComment("");
           } else {
               console.error(data.message);
           }
@@ -150,8 +150,34 @@ export default function Post({ title, username, description, tags, comments, lik
             {isLiked ? 'Unlike' : 'Like'}
           </button>
         </div>
-         {/* ✅ Comments Section */}
-    
+          <div className="mt-4">
+            <h3 className="font-semibold">Comments</h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {postComments.length > 0 ? (
+                postComments.map((comment, index) => (
+                  <div key={index} className="bg-gray-100 p-3 rounded-md">
+                    <p><strong>{comment.username}:</strong> {comment.comment}</p>
+                    <p className="text-gray-400 text-xs">{comment.date}</p>
+                  </div>
+                ))
+              ) : (
+                  <p className="text-gray-600">No comments yet.</p>
+              )}
+            </div>
+            
+            <div className="mt-3 flex items-center space-x-2">
+              <input 
+                  type="text" 
+                  value={newComment} 
+                  onChange={(e) => setNewComment(e.target.value)} 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Write a comment..."
+              />
+              <button onClick={handlePostComment} className="bg-blue-500 text-white px-3 py-2 rounded-lg">
+                  Post
+              </button>
+            </div>
+          </div>
         </div>
     );
 }
