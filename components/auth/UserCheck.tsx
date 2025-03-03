@@ -72,6 +72,37 @@ export default function UserCheck() {
         fetchData();
     }, [session]);
 
+    // useEffect(() => {
+    //   if (!sessionUsername) return;
+
+    //   async function fetchFriends() {
+    //       try {
+    //           const response = await fetch(`/api/getfriends?username=${sessionUsername}`);
+    //           const data = await response.json();
+
+    //           if (!response.ok) {
+    //               console.error("Error fetching friends:", data);
+    //               return;
+    //           }
+
+    //           const friendsData = await Promise.all(
+    //               data.friends.map(async (friendUsername: string) => {
+    //                   const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+    //                   const userData = await userResponse.json();
+
+    //                   return userResponse.ok ? { id: userData.id, ...userData.data } : null;
+    //               })
+    //           );
+
+    //           setFriends(friendsData.filter(Boolean)); // Remove null values
+    //       } catch (error) {
+    //           console.error("Error fetching friends:", error);
+    //       }
+    //   }
+
+    //   fetchFriends();
+    // }, [sessionUsername, setFriends]); // Fetch friends when username is available
+
     useEffect(() => {
         if (!session?.user) return;
 

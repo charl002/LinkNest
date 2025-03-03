@@ -1,11 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useEffect, useRef, useState } from "react";
 import ChatList from "./ChatList";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import Sidebar from "@/components/custom-ui/Sidebar";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Button } from "../ui/button";
 
 interface Message {
   sender: string;
@@ -15,11 +17,13 @@ interface Message {
 export default function Chat() {
   const socket = useSocket();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const friendUsername = searchParams.get("friend");
   const currentUsername = searchParams.get("user");
 
-  const [messages, setMessages] = useState<{ sender: string; message: string }[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -31,10 +35,9 @@ export default function Chat() {
       try {
         const response = await fetch(`/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`);
         const data = await response.json();
-        console.log(data);
+
         if (!response.ok) {
-          console.error("Error fetching previous messages:", data.message);
-          return;
+          throw new Error(data.message || "Failed to fetch messages");
         }
 
         setMessages(
@@ -43,13 +46,17 @@ export default function Chat() {
             message: msg.message,
           }))
         );
-      } catch (error) {
-        console.error("Error fetching messages:", error);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage("An unexpected error occurred. Please try again.");
+        }
       }
     }
 
     fetchPreviousMessages();
-  }, [currentUsername, friendUsername]);
+  }, [currentUsername, friendUsername, router]);
 
   useEffect(() => {
     if (!socket || !friendUsername) return;
@@ -75,10 +82,10 @@ export default function Chat() {
         message: input,
       });
 
-      try{
+      try {
         const response = await fetch("/api/postmessage", {
           method: "POST",
-          headers: { "Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             senderUsername: currentUsername,
             receiverUsername: friendUsername,
@@ -86,11 +93,13 @@ export default function Chat() {
           }),
         });
 
-      const data = await response.json();
-      if (!response.ok) {
-        console.error("Error storing message:", data.message);
-      }
+        const data = await response.json();
+        if (!response.ok) {
+          toast.error(`Error storing message: ${data.message}`);
+          return;
+        }
       } catch (error) {
+        toast.error("Error storing message.");
         console.error("Error storing message:", error);
       }
 
@@ -102,6 +111,11 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleRedirectToHome = () => {
+    setErrorMessage(null);
+    router.push("/home");
+  };
 
   return (
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
@@ -117,8 +131,8 @@ export default function Chat() {
               key={index}
               className={`p-2 rounded-lg max-w-[75%] break-words w-fit ${
                 msg.sender === currentUsername
-                  ? "bg-blue-500 text-white ml-auto" 
-                  : "bg-gray-300 text-black mr-auto" 
+                  ? "bg-blue-500 text-white ml-auto"
+                  : "bg-gray-300 text-black mr-auto"
               }`}
             >
               <strong>{msg.sender}:</strong> {msg.message}
@@ -144,6 +158,20 @@ export default function Chat() {
         </div>
       </section>
       <ChatList />
+      
+      {errorMessage && (
+        <Dialog open={true}>
+          <DialogContent forceMount className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Error</DialogTitle>
+            </DialogHeader>
+            <p>{errorMessage}</p>
+            <DialogFooter>
+              <Button onClick={handleRedirectToHome}>Continue</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>      
+      )}
       <Toaster position="bottom-center" richColors />
     </div>
   );

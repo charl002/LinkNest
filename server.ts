@@ -51,6 +51,44 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on("newFriendRequest", ({ senderUsername, receiverUsername }) => {
+      console.log(`New friend request from ${senderUsername} to ${receiverUsername}`);
+    
+      const receiverSocketId = userSockets[receiverUsername];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("newFriendRequest", { senderUsername });
+      } else {
+        console.log(`User ${receiverUsername} is not online`);
+      }
+    });
+
+    socket.on("friendAccepted", ({ sender, receiver }) => {
+      console.log(`Friend request accepted! ${sender} and ${receiver} are now friends.`);
+    
+      if (!sender || !receiver) {
+        console.error("Invalid data for friendAccepted event:", { sender, receiver });
+        return;
+      }
+    
+      const receiverSocketId = userSockets[receiver]; // Receiver who accepted the request
+      const senderSocketId = userSockets[sender]; // Sender who originally sent the request
+    
+      console.log(`Receiver Socket ID: ${receiverSocketId}, Sender Socket ID: ${senderSocketId}`);
+    
+      if (receiverSocketId) {
+        console.log(`Emitting friendRequestAccepted to ${receiver}`);
+        io.to(receiverSocketId).emit("friendRequestAccepted", { acceptedBy: sender });
+      }
+    
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("updateFriendsList", { newFriend: sender });
+      }
+    
+      if (senderSocketId) {
+        io.to(senderSocketId).emit("updateFriendsList", { newFriend: receiver });
+      }
+    });    
+
     socket.on("disconnect", () => {
       Object.keys(userSockets).forEach((userId) => {
         if (userSockets[userId] === socket.id) {
