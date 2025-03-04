@@ -61,7 +61,22 @@ const CreatePost = () => {
             customToast({ message: "Title and description are required.", type: "error" });
             return;
         }
+
+        if (text.length > 365) {
+            customToast({ message: "Description cannot be longer than 365 charecters.", type: "error" });
+            return;
+        }
+
+        if (title.length > 50) {
+            customToast({ message: "Title cannot be longer than 50 characters long.", type: "error" });
+            return;
+        }
         
+        if (hashtags.length > 1000) {
+            customToast({ message: "All tags must be less than 1000 charecters long.", type: "error" });
+            return;
+        }
+
         const allowedTypes = [
             "image/png", "image/jpeg", "image/jpg", 
             "video/mp4", "video/webm", "video/ogg"
@@ -72,12 +87,24 @@ const CreatePost = () => {
             return;
         }
 
+        let tooLong = false;
+
+        hashtags.split(" ").forEach(tag => {
+            if(tag.length > 20){
+                customToast({ message: "Each tag should be less than 20 charecters long.", type: "error" });
+                tooLong = true;
+            }
+        });
+
+        if(tooLong){
+            return;
+        }
+
         const formData = new FormData();
         formData.append("username", username);
         formData.append("title", title);
         formData.append("text", text);
         hashtags.split(" ").forEach(tag => formData.append("tags", tag));
-
         if (selectedFile) {
             formData.append("file", selectedFile);
         }
