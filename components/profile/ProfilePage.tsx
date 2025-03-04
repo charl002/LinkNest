@@ -177,7 +177,8 @@ export default function ProfilePage({ user }: { user: string }) {
           throw new Error(result.message || "Failed to upload profile picture");
         }
   
-        profilePictureUrl = result.imageUrl; 
+        profilePictureUrl = result.fileUrl; 
+        console.log("URL: " + profilePictureUrl);
       }
   
       const updateResponse = await fetch("/api/updateuser", {
