@@ -6,7 +6,7 @@ const db = getFirestore(firebase_app);
 
 export async function PATCH(req: Request) {
     try {
-        const { id, username, description, image } = await req.json();
+        const { id, username, description, image, background } = await req.json();
 
         // Validate required fields
         if (!id || !username) {
@@ -21,6 +21,7 @@ export async function PATCH(req: Request) {
             image: image,
             username,
             description: description ?? "", // Set to empty string if not provided
+            background: background,
         });
 
         return NextResponse.json({ message: "User updated successfully" }, { status: 200 });
