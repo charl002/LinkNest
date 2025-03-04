@@ -9,9 +9,9 @@ const Page = async (props: { params: CallParams }) => {
 
     return (
         <main className="flex w-full flex-col">
-            <p className="absolute z-10 mt-2 ml-12 text-2xl font-bold text-gray-900">
+            {/*<p className="absolute z-10 mt-2 ml-12 text-2xl font-bold text-gray-900">
                 {channel}
-            </p>
+            </p>*/}
             <Call appId={process.env.NEXT_PUBLIC_AGORA_APP_ID!} channelName={channel} />
             <Toaster position="bottom-center" richColors />
         </main>

@@ -24,9 +24,9 @@ function Call(props: { appId: string; channelName: string }) {
       <Videos channelName={props.channelName} AppID={props.appId} />
       <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4">
         <Link
-          className="px-5 py-3 text-base font-medium text-center text-white bg-red-400 rounded-lg hover:bg-red-500 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-900 w-40"
+          className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400"
           href="/home">
-          End Call
+          Leave Call
         </Link>
       </div>
     </AgoraRTCProvider>
@@ -61,11 +61,11 @@ function Videos(props: { channelName: string; AppID: string }) {
 
   return (
     <div
-        className="flex flex-col justify-between w-screen h-screen"
-        style={{ backgroundColor: 'lightblue' }}
+        className="flex flex-col justify-between w-full h-full"
+        style={{ backgroundColor: 'white' }}
       >
       <div
-        className={`gap-1 flex-1 w-4/5 h-1/2 mx-auto my-auto flex items-center justify-center`}
+        className={`gap-1 flex-1 w-full h-full mx-auto my-auto flex items-center justify-center`}
         style={{
           gridTemplateColumns:
             remoteUsers.length > 9
@@ -75,17 +75,16 @@ function Videos(props: { channelName: string; AppID: string }) {
               : remoteUsers.length > 1
               ? unit.repeat(2)
               : unit,
-              backgroundColor: 'lightgray',
         }}
       >
         <br></br>
         <LocalVideoTrack
           track={localCameraTrack}
           play={true}
-          className="w-full h-full border-8 border-green-500 rounded-lg"
+          className="border-4 border-green-500 rounded-sm"
         />
         {remoteUsers.map((user) => (
-          <RemoteUser key={user.uid} user={user}  className="w-full h-full border-8 border-black rounded-lg" />
+          <RemoteUser key={user.uid} user={user}  className="w-full h-full border-4 border-gray-500 rounded-sm" />
         ))}
         <br></br>
       </div>
