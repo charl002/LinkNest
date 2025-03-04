@@ -39,7 +39,7 @@ function Videos(props: { channelName: string; AppID: string }) {
     useLocalMicrophoneTrack();
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
   const remoteUsers = useRemoteUsers();
-  console.log('Remote Users: ' + remoteUsers);
+  //console.log('Remote Users: ' + remoteUsers);
   const { audioTracks } = useRemoteAudioTracks(remoteUsers);
 
   useJoin({
@@ -57,7 +57,7 @@ function Videos(props: { channelName: string; AppID: string }) {
     );
   const unit = "minmax(0, 2fr) ";
 
-  console.log("Remote users:", remoteUsers);
+  //console.log("Remote users:", remoteUsers);
 
   return (
     <div
@@ -77,16 +77,31 @@ function Videos(props: { channelName: string; AppID: string }) {
               : unit,
         }}
       >
-        <br></br>
-        <LocalVideoTrack
-          track={localCameraTrack}
-          play={true}
-          className="border-4 border-green-500 rounded-sm"
-        />
+        <div className="relative w-full h-full">
+          <LocalVideoTrack
+            track={localCameraTrack}
+            play={true}
+            className="border-4 border-green-500 rounded-sm"
+          />
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 mt-2">
+            <span className="text-white text-2xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-lg">
+              User 1
+            </span>
+          </div>
+        </div>
         {remoteUsers.map((user) => (
-          <RemoteUser key={user.uid} user={user}  className="w-full h-full border-4 border-gray-500 rounded-sm" />
+          <div key={user.uid} className="relative w-full h-full">
+            <RemoteUser
+              user={user}
+              className="w-full h-full border-4 border-gray-500 rounded-sm"
+            />
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 mt-2">
+              <span className="text-white text-2xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-lg">
+                User 2
+              </span>
+            </div>
+          </div>
         ))}
-        <br></br>
       </div>
     </div>
   );
