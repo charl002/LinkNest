@@ -7,12 +7,20 @@ import { BiReply } from 'react-icons/bi';
 import { IoSend } from "react-icons/io5";
 import { FaRegThumbsUp, FaThumbsUp, FaRegComment } from "react-icons/fa";
 
+interface Comment {
+    username: string;
+    comment: string;
+    date: string;
+    likes: number;
+    likedBy: string[];
+}
+
 interface PostProps {
     title: string;
     username: string;
     description: string;
     tags: string[];
-    comments: { comment: string; username: string; date: string; likes: number }[];
+    comments: Comment[];  // Using the Comment interface
     likes: number;
     images: { url: string; alt: string; thumb: string }[];
     profilePicture: string;
@@ -20,13 +28,6 @@ interface PostProps {
     postType: 'posts' | 'bluesky' | 'news';
     likedBy: string[];
     sessionUsername: string;
-}
-
-interface Comment {
-  username: string;
-  comment: string;
-  date: string;
-  likes: number;
 }
 
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
@@ -79,38 +80,89 @@ export default function Post({ title, username, description, tags, comments, lik
     };
 
     const handlePostComment = async () => {
-      if (!session?.user || !sessionUsername || !newComment.trim()) return;
+        if (!session?.user || !sessionUsername || !newComment.trim()) return;
 
-      try {
-          const response = await fetch('/api/postcomment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ postId: documentId, username: sessionUsername, comment: newComment })
-          });
-
-          const data = await response.json();
-          if (response.ok) {
-            // Convert "Just now" to the actual timestamp for previous comments
-            const updatedComments = postComments.map(comment =>
-              comment.date === "Just now"
-                ? { ...comment, date: new Date().toLocaleString() }
-                : comment
-            );
+        try {
+            const response = await fetch('/api/postcomment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ postType: postType, postId: documentId, username: sessionUsername, comment: newComment })
+            });
   
-            setPostComments([
-              ...updatedComments,
-              { username: sessionUsername, comment: newComment, date: "Just now", likes: 0 }
-            ]);
+            const data = await response.json();
+            if (response.ok) {
+                // Convert "Just now" to the actual timestamp for previous comments
+                const updatedComments = postComments.map(comment =>
+                    comment.date === "Just now"
+                        ? { ...comment, date: new Date().toLocaleString() }
+                        : comment
+                );
   
-            setNewComment(""); 
-          } else {
-            console.error(data.message);
-          }
-      } catch (error) {
-          console.error('Error posting comment:', error);
-      }
-  };
+                setPostComments([
+                    ...updatedComments,
+                    { 
+                        username: sessionUsername, 
+                        comment: newComment, 
+                        date: "Just now", 
+                        likes: 0, 
+                        likedBy: [] // Initialize with empty array
+                    }
+                ]);
+  
+                setNewComment(""); 
+            } else {
+                console.error(data.message);
+            }
+        } catch (error) {
+            console.error('Error posting comment:', error);
+        }
+    };
 
+
+    const handleCommentLike = async (commentIndex: number, isLiked: boolean) => {
+        if (!session?.user || !sessionUsername || isLoading) return;
+  
+        setIsLoading(true);
+        const incrementValue = !isLiked;
+  
+        try {
+            const response = await fetch('/api/putcommentlikes', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: documentId,
+                    type: postType,
+                    increment: incrementValue,
+                    username: sessionUsername,
+                    commentIndex
+                })
+            });
+  
+            const data = await response.json();
+            if (response.ok) {
+                setPostComments(prevComments => prevComments.map((comment, idx) => {
+                    if (idx === commentIndex) {
+                        return {
+                            ...comment,
+                            likes: incrementValue ? comment.likes + 1 : comment.likes - 1,
+                            likedBy: incrementValue 
+                                ? [...comment.likedBy, sessionUsername]
+                                : comment.likedBy.filter(user => user !== sessionUsername)
+                        };
+                    }
+                    return comment;
+                }));
+            } else {
+                console.error(data.message);
+            }
+        } catch (error) {
+            console.error('Error liking the comment:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const defaultImageUrl = "/defaultProfilePic.jpg";
 
@@ -202,12 +254,22 @@ export default function Post({ title, username, description, tags, comments, lik
                         <p className="font-bold text-sm text-gray-900">{comment.username} <span className="text-gray-500 text-xs">{comment.date}</span></p>
                         <p className="text-gray-700">{comment.comment}</p>
                         <div className="flex items-center space-x-3 mt-1 text-gray-500 text-sm">
-                          <button className="flex items-center space-x-1 hover:text-gray-700">
-                            <FiThumbsUp /> <span>{comment.likes}</span>
-                          </button>
-                          <button className="flex items-center space-x-1 hover:text-gray-700">
-                            <BiReply /> <span>Reply</span>
-                          </button>
+                            <button 
+                                onClick={() => handleCommentLike(index, comment.likedBy.includes(sessionUsername))}
+                                className={`flex items-center space-x-1 hover:text-gray-700 ${
+                                    comment.likedBy.includes(sessionUsername) ? 'text-blue-600' : ''
+                                }`}
+                                disabled={isLoading}
+                            >
+                                {comment.likedBy.includes(sessionUsername) ? 
+                                    <FaThumbsUp /> : 
+                                    <FiThumbsUp />
+                                }
+                                <span>{comment.likes}</span>
+                            </button>
+                            <button className="flex items-center space-x-1 hover:text-gray-700">
+                                <BiReply /> <span>Reply</span>
+                            </button>
                         </div>
                       </div>
                     </div>

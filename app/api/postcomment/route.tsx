@@ -3,9 +3,9 @@ import updateArrayField from "@/firebase/firestore/updateData";
 
 export async function POST(req: Request) {
     try {
-        const { postId, username, comment } = await req.json();
+        const { postId, username, comment, postType } = await req.json();
 
-        if (!postId || !username || !comment) {
+        if (!postId || !username || !comment || !postType) {
             return NextResponse.json({ message: "Email, name, username, and image are required" }, { status: 400 });
         }
 
@@ -22,10 +22,11 @@ export async function POST(req: Request) {
             username,
             comment , 
             likes: 0 ,
-            date
+            date,
+            likedBy: [],
         };
 
-        const { result: docId, error } = await updateArrayField("posts", postId, "comments", newComment);
+        const { result: docId, error } = await updateArrayField(postType, postId, "comments", newComment);
 
         if (error) {
             return NextResponse.json({ message: "Error adding comment", error }, { status: 500 });

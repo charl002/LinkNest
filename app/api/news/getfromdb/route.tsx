@@ -8,11 +8,11 @@ interface NewsPost {
   keywords: string;
   url: string;
   image_url: string;
-  published_at: string;
+  createdAt: string;
   source: string;
   likes: number;
   likedBy: string[];
-  comments: { comment: string; username: string; date: string; likes: number }[];
+  comments: { comment: string; username: string; date: string; likes: number, likedBy: string[] }[];
 }
 
 export async function GET() {
@@ -34,17 +34,17 @@ export async function GET() {
         username: data.source, // Assuming source is used as username
         description: data.description,
         tags: data.keywords.split(',').map(tag => tag.trim()), // Split keywords into tags
-        // comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number }) => ({
-        //   comment: comment.comment,
-        //   username: comment.username,
-        //   date: comment.date,
-        //   likes: comment.likes || 0
-        // })) || [], UNCOMMENT THIS WHEN YOU ADD COMMENTS TO NEWS POSTS
-        comments: [],
+        comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number, likedBy: string[] }) => ({
+          comment: comment.comment,
+          username: comment.username,
+          date: comment.date,
+          likes: comment.likes || 0,
+          likedBy: comment.likedBy || []
+        })) || [],
         likes: data.likes || 0,
         images: [{ url: data.image_url, alt: data.title, thumb: data.image_url }], // Create image object
         profilePicture: '', // Set profile picture if available
-        published_at: data.published_at, // Add published_at to the returned object
+        createdAt: data.createdAt, // Add published_at to the returned object
         id: doc.id,
         postType: 'news',
         likedBy: data.likedBy
@@ -53,7 +53,7 @@ export async function GET() {
 
     return NextResponse.json({ 
       success: true, 
-      posts: posts.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
+      posts: posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     });
 
   } catch (error) {
