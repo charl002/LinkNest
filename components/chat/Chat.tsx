@@ -9,6 +9,7 @@ import Sidebar from "@/components/custom-ui/Sidebar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Skeleton } from "../ui/skeleton";
 
 interface Message {
   sender: string;
@@ -41,11 +42,14 @@ export default function Chat() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [friendUser, setFriendUser] = useState<User | null>(null);
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     if (!currentUsername || !friendUsername) return;
 
     async function fetchPreviousMessages() {
       try {
+        setIsLoading(true);
         const response = await fetch(`/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`);
         const data = await response.json();
 
@@ -78,6 +82,8 @@ export default function Chat() {
         } else {
           setErrorMessage("An unexpected error occurred. Please try again.");
         }
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -167,9 +173,20 @@ export default function Chat() {
       <section className="relative flex flex-col space-y-6 h-full bg-white shadow-md rounded-lg p-4 overflow-hidden">
         <h1 className="text-lg font-semibold">Chat with {friendUsername}</h1>
         <div ref={messagesContainerRef} className="flex-1 overflow-y-auto w-full space-y-2 pr-2 pb-20 p-4 rounded-lg">
-          {messages.map((msg, index) => {
-            const isCurrentUser = msg.sender === currentUsername;
-            const user = isCurrentUser ? currentUser : friendUser;
+          {isLoading ? (
+            [...Array(8)].map((_, index) => (
+              <div key={index} className={`flex items-start space-x-4 ${index % 2 === 0 ? "justify-start" : "justify-end"}`}>
+                <Skeleton className="w-10 h-10 rounded-full" /> {/* Avatar Skeleton */}
+                <div className="flex flex-col space-y-2">
+                  <Skeleton className="h-4 w-24 rounded-md" /> {/* Username & Time Skeleton */}
+                  <Skeleton className="h-12 w-40 rounded-md" /> {/* Message Skeleton */}
+                </div>
+              </div>
+            ))
+          ) : (
+            messages.map((msg, index) => {
+              const isCurrentUser = msg.sender === currentUsername;
+              const user = isCurrentUser ? currentUser : friendUser;
 
             return (
               <div 
@@ -210,12 +227,13 @@ export default function Chat() {
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={user?.image || "/default-avatar.png"} alt="User Avatar" />
                       <AvatarFallback>{msg.sender.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                      </Avatar>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
           <div ref={messagesEndRef} className="pb-10" />
         </div>
         <div className="absolute bottom-0 left-0 w-full p-4 bg-white shadow-md flex items-center space-x-2">
