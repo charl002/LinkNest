@@ -8,20 +8,7 @@ import Post from "@/components/post/Post";
 import { Toaster } from "sonner";
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
 
-interface Post {
-    id: string;
-    title: string;
-    username: string;
-    description: string;
-    tags: string[];
-    comments: { comment: string; username: string; date: string; likes: number }[];
-    likes: number;
-    images: { url: string; alt: string; thumb: string }[];
-    createdAt: string;
-    profilePicture: string;
-    postType: 'posts' | 'bluesky' | 'news';
-    likedBy: string[];
-}
+import { PostType } from "@/types/post";
 
 export default function UserCheck() {
     const { data: session } = useSession();
@@ -29,7 +16,7 @@ export default function UserCheck() {
     const [username, setUsername] = useState("");
     const [description, setDescription] = useState("");
     const [usernameError, setUsernameError] = useState("");
-    const [posts, setPosts] = useState<Post[]>([]);
+    const [posts, setPosts] = useState<PostType[]>([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
     const [sessionUsername, setSessionUsername] = useState('');
 
@@ -133,7 +120,7 @@ export default function UserCheck() {
                     customResponse.json()
                 ]);
                 
-                let allPosts: Post[] = [];
+                let allPosts: PostType[] = [];
 
                 if (data.success) {
                     allPosts = allPosts.concat(data.posts);

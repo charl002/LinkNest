@@ -5,24 +5,11 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import LoadingLogo from "../components/custom-ui/LoadingLogo";
 
-interface Post {
-  id: string;
-  title: string;
-  username: string;
-  description: string;
-  tags: string[];
-  comments: { comment: string; username: string; date: string; likes: number }[];
-  likes: number;
-  images: { url: string; alt: string; thumb: string }[];
-  createdAt: string;
-  profilePicture: string;
-  postType: 'posts' | 'bluesky' | 'news';
-  likedBy: string[];
-}
+import { PostType } from "@/types/post";
 
 export default function Home() {
   const { data: session } = useSession();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostType[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [sessionUsername, setSessionUsername] = useState('');
 
@@ -53,7 +40,7 @@ export default function Home() {
           customResponse.json()
       ]);
 
-        let allPosts: Post[] = [];
+        let allPosts: PostType[] = [];
 
         if (data.success) {
           allPosts = allPosts.concat(data.posts);

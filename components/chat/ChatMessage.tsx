@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { User } from "@/types/user";
 
 interface ChatMessageProps {
   message: {
@@ -8,14 +9,6 @@ interface ChatMessageProps {
   };
   isCurrentUser: boolean;
   user: User | null;
-}
-
-interface User {
-  id: string;
-  image: string;
-  username: string;
-  email: string;
-  name: string;
 }
 
 export default function ChatMessage({ message, isCurrentUser, user }: ChatMessageProps) {

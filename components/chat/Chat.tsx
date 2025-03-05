@@ -11,19 +11,8 @@ import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import ChatMessage from "./ChatMessage";
 
-interface Message {
-  sender: string;
-  message: string;
-  date: string;
-}
-
-interface User {
-  id: string;
-  image: string;
-  username: string;
-  email: string;
-  name: string;
-}
+import { Message } from "@/types/message";
+import { User } from "@/types/user";
 
 export default function Chat() {
   const socket = useSocket();

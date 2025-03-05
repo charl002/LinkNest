@@ -9,13 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useFriends } from "../provider/FriendsProvider";
 
-interface User {
-  id: string;
-  image: string;
-  username: string;
-  name: string;
-  email: string;
-}
+import { User } from "@/types/user";
 
 export default function ChatList() {
   const { data: session } = useSession();

@@ -12,13 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useFriends } from "../provider/FriendsProvider";
 
-interface User {
-  id: string;
-  image: string;
-  username: string;
-  email: string;
-  name: string;
-}
+import { User } from "@/types/user";
 
 export default function Sidebar() {
   const socket = useSocket();
