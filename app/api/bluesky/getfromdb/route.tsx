@@ -38,11 +38,12 @@ export async function GET() {
         username: data.author.displayName,
         description: data.text,
         tags: [], // You might want to add tags extraction logic here
-        comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number }) => ({
+        comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number, likedBy: string[] }) => ({
           comment: comment.comment,
           username: comment.username,
           date: comment.date,
-          likes: comment.likes || 0
+          likes: comment.likes || 0,
+          likedBy: comment.likedBy || []
         })) || [],
         likes: data.likes || 0,
         images: data.images || [],
