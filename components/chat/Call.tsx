@@ -13,15 +13,24 @@ import AgoraRTC, {
   useRemoteUsers,
 } from "agora-rtc-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-function Call(props: { appId: string; channelName: string }) {
+function Call() {
   const client = useRTCClient(
     AgoraRTC.createClient({ codec: "vp8", mode: "rtc" })
   );
 
+  const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
+  const searchParams = useSearchParams();
+  const friendUsername = searchParams.get("friend") ?? "Guest";
+  const currentUsername = searchParams.get("user") ?? "Guest";
+  const [first, second] = [currentUsername, friendUsername].sort();
+  const channelName = `${first}_${second}`;
+  
+
   return (
     <AgoraRTCProvider client={client}>
-      <Videos channelName={props.channelName} AppID={props.appId} />
+      <Videos currentUsername={currentUsername} friendUsername={friendUsername} channelName={channelName} AppID={appId} />
       <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4">
         <Link
           className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400"
@@ -33,8 +42,8 @@ function Call(props: { appId: string; channelName: string }) {
   );
 }
 
-function Videos(props: { channelName: string; AppID: string }) {
-  const { AppID, channelName } = props;
+function Videos(props: {currentUsername: string; friendUsername: string; channelName: string; AppID: string }) {
+  const { currentUsername, friendUsername, AppID, channelName } = props;
   const { isLoading: isLoadingMic, localMicrophoneTrack } =
     useLocalMicrophoneTrack();
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
@@ -85,7 +94,7 @@ function Videos(props: { channelName: string; AppID: string }) {
           />
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 mt-2">
             <span className="text-white text-2xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-lg">
-              User 1
+              {currentUsername}
             </span>
           </div>
         </div>
@@ -97,7 +106,7 @@ function Videos(props: { channelName: string; AppID: string }) {
             />
             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 mt-2">
               <span className="text-white text-2xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-lg">
-                User 2
+                {friendUsername}
               </span>
             </div>
           </div>
