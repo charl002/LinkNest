@@ -7,15 +7,20 @@ const db = getFirestore(firebase_app);
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
+    const username = searchParams.get("username");
 
-    if (!email) {
-        return NextResponse.json({ message: "Email parameter is required" }, { status: 400 });
+    if (!email && !username) {
+        return NextResponse.json({ message: "Either email or username parameter is required" }, { status: 400 });
     }
 
     try {
-    
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("email", "==", email));
+
+        // Determine which field to query
+        const q = email
+            ? query(usersRef, where("email", "==", email))
+            : query(usersRef, where("username", "==", username));
+
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
@@ -26,6 +31,6 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ id: userDoc.id, data: userDoc.data() }, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ message: "Error fetching user", error }, { status: 500 });
+        return NextResponse.json({ message: "Error fetching user", error: error }, { status: 500 });
     }
 }

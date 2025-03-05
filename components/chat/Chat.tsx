@@ -8,11 +8,20 @@ import { Toaster, toast } from "sonner";
 import Sidebar from "@/components/custom-ui/Sidebar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 interface Message {
   sender: string;
   message: string;
   date: string;
+}
+
+interface User {
+  id: string;
+  image: string;
+  username: string;
+  email: string;
+  name: string;
 }
 
 export default function Chat() {
@@ -29,25 +38,39 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [friendUser, setFriendUser] = useState<User | null>(null);
+
   useEffect(() => {
     if (!currentUsername || !friendUsername) return;
-  
+
     async function fetchPreviousMessages() {
       try {
         const response = await fetch(`/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`);
         const data = await response.json();
-  
+
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
         }
-  
+
         setMessages(
           data.messages.map((msg: Message) => ({
             sender: msg.sender,
             message: msg.message,
-            date: formatTimestamp(msg.date), // Convert date into human readable format
+            date: formatTimestamp(msg.date),
           }))
         );
+
+        const [senderResponse, friendResponse] = await Promise.all([
+          fetch(`/api/getsingleuser?username=${currentUsername}`),
+          fetch(`/api/getsingleuser?username=${friendUsername}`)
+        ]);
+
+        const senderData = await senderResponse.json();
+        const friendData = await friendResponse.json();
+
+        setCurrentUser(senderData.data);
+        setFriendUser(friendData.data);
 
       } catch (error: unknown) {
         if (error instanceof Error) {
@@ -57,9 +80,10 @@ export default function Chat() {
         }
       }
     }
-  
+
     fetchPreviousMessages();
-  }, [currentUsername, friendUsername, router]);  
+  }, [currentUsername, friendUsername, router]);
+
 
   useEffect(() => {
     if (!socket || !friendUsername) return;
@@ -155,6 +179,14 @@ export default function Chat() {
                   : "bg-gray-300 text-black mr-auto"
               }`}
             >
+              <Avatar>
+                <AvatarImage
+                  src={msg.sender === currentUsername ? currentUser?.image || "/default-avatar.png" : friendUser?.image || "/default-avatar.png"}
+                  alt="User Avatar"
+                />
+                <AvatarFallback>{msg.sender.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+
               <strong>{msg.sender}:</strong> {msg.message}
               <br />
               <span className="text-xs">
