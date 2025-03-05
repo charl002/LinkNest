@@ -20,7 +20,7 @@ interface Post {
     fileUrl: string;
     likes: number;
     likedBy: string[];
-    comments: { comment: string; username: string; date: string; likes: number }[];
+    comments: { comment: string; username: string; date: string; likes: number, likedBy: string[] }[];
 }
 export async function GET(){
     try{
@@ -57,11 +57,12 @@ export async function GET(){
                 description: data.text,
                 tags: data.tags || [],
                 likedBy: data.likedBy || [],
-                comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number }) => ({
+                comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number, likedBy: string[] }) => ({
                     comment: comment.comment,
                     username: comment.username,
                     date: comment.date,
-                    likes: comment.likes || 0
+                    likes: comment.likes || 0,
+                    likedBy: comment.likedBy || []
                 })) || [],
                 likes: data.likes || 0,
                 images: [{ url: data.fileUrl, alt: data.title, thumb: data.fileUrl }],
