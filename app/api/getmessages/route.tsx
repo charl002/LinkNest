@@ -22,10 +22,19 @@ export async function GET(req: Request) {
           return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const response = await fetch(`http://localhost:3000/api/getsingleuser?email=${session.user.email}`);
-        const sessionUser = await response.json();
+        const { results: getUsersResults, error: getUsersError } = await getAllDocuments("users");
 
-        if( sender != sessionUser.data.username){
+        if (getUsersError || !getUsersResults) {
+          return NextResponse.json({ message: "Error fetching messages", error: getUsersError }, { status: 500 });
+        }
+
+        const sessionUser = getUsersResults.docs.find(doc => doc.data().email === session.user?.email);
+        
+        if (!sessionUser) {
+          return NextResponse.json({ message: "User not found" }, { status: 404 });
+        }
+
+        if (sender !== sessionUser.data().username) {
           return NextResponse.json({ message: "You are not allowed to see these messages!" }, { status: 403 });
         }
 
