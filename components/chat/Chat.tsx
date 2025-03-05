@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 interface Message {
   sender: string;
   message: string;
+  date: string;
 }
 
 export default function Chat() {
@@ -30,22 +31,24 @@ export default function Chat() {
 
   useEffect(() => {
     if (!currentUsername || !friendUsername) return;
-
+  
     async function fetchPreviousMessages() {
       try {
         const response = await fetch(`/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`);
         const data = await response.json();
-
+  
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
         }
-
+  
         setMessages(
           data.messages.map((msg: Message) => ({
             sender: msg.sender,
             message: msg.message,
+            date: formatTimestamp(msg.date), // Convert date into human readable format
           }))
         );
+
       } catch (error: unknown) {
         if (error instanceof Error) {
           setErrorMessage(error.message);
@@ -54,25 +57,29 @@ export default function Chat() {
         }
       }
     }
-
+  
     fetchPreviousMessages();
-  }, [currentUsername, friendUsername, router]);
+  }, [currentUsername, friendUsername, router]);  
 
   useEffect(() => {
     if (!socket || !friendUsername) return;
-
+  
     socket.emit("register", currentUsername);
-
+  
     socket.on("privateMessage", ({ senderId, message }) => {
       if (senderId === friendUsername) {
-        setMessages((prev) => [...prev, { sender: senderId, message }]);
+        setMessages((prev) => [
+          ...prev,
+          { sender: senderId, message, date: formatTimestamp(new Date().toISOString()) }, // Format timestamp
+        ]);
       }
     });
-
+  
     return () => {
       socket.off("privateMessage");
     };
   }, [socket, currentUsername, friendUsername]);
+  
 
   const sendMessage = async () => {
     if (socket && input.trim() && friendUsername && currentUsername) {
@@ -103,7 +110,7 @@ export default function Chat() {
         console.error("Error storing message:", error);
       }
 
-      setMessages((prev) => [...prev, { sender: currentUsername, message: input }]);
+      setMessages((prev) => [...prev, { sender: currentUsername, message: input, date: formatTimestamp(new Date().toISOString()) }]);
       setInput("");
     }
   };
@@ -116,6 +123,19 @@ export default function Chat() {
     setErrorMessage(null);
     router.push("/home");
   };
+
+  function formatTimestamp(timestamp: string): string {
+    const date = new Date(timestamp);
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true,
+    });
+  }  
 
   return (
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
@@ -136,6 +156,10 @@ export default function Chat() {
               }`}
             >
               <strong>{msg.sender}:</strong> {msg.message}
+              <br />
+              <span className="text-xs">
+                {formatTimestamp(msg.date)}
+              </span>
             </div>
           ))}
           <div ref={messagesEndRef} className="pb-10" />
