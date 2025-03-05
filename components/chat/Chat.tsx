@@ -166,34 +166,56 @@ export default function Chat() {
       <Sidebar />
       <section className="relative flex flex-col space-y-6 h-full bg-white shadow-md rounded-lg p-4 overflow-hidden">
         <h1 className="text-lg font-semibold">Chat with {friendUsername}</h1>
-        <div
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto w-full space-y-2 pr-2 pb-20"
-        >
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`p-2 rounded-lg max-w-[75%] break-words w-fit ${
-                msg.sender === currentUsername
-                  ? "bg-blue-500 text-white ml-auto"
-                  : "bg-gray-300 text-black mr-auto"
-              }`}
-            >
-              <Avatar>
-                <AvatarImage
-                  src={msg.sender === currentUsername ? currentUser?.image || "/default-avatar.png" : friendUser?.image || "/default-avatar.png"}
-                  alt="User Avatar"
-                />
-                <AvatarFallback>{msg.sender.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto w-full space-y-2 pr-2 pb-20 p-4 rounded-lg">
+          {messages.map((msg, index) => {
+            const isCurrentUser = msg.sender === currentUsername;
+            const user = isCurrentUser ? currentUser : friendUser;
 
-              <strong>{msg.sender}:</strong> {msg.message}
-              <br />
-              <span className="text-xs">
-                {formatTimestamp(msg.date)}
-              </span>
-            </div>
-          ))}
+            return (
+              <div 
+                key={index} 
+                className={`flex items-start space-x-4 ${isCurrentUser ? "justify-end ml-auto" : "justify-start"}`}
+              >
+                {/* Left-Side Messages (Friend) */}
+                {!isCurrentUser && (
+                  <div className="flex items-start space-x-4 bg-gray-100 rounded-lg p-2">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={user?.image || "/default-avatar.png"} alt="User Avatar" />
+                      <AvatarFallback>{msg.sender.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex flex-col space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-black font-semibold">{msg.sender}</span>
+                        <span className="text-xs text-black-800">{formatTimestamp(msg.date)}</span>
+                      </div>
+                      <p className="text-black-300 text-sm">{msg.message}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Right-Side Messages (Current User) */}
+                {isCurrentUser && (
+                  <div className="flex items-start space-x-4 bg-blue-100 rounded-lg p-2 ml-auto">
+                    {/* Message Content */}
+                    <div className="flex flex-col space-y-1 text-right">
+                      <div className="flex items-center space-x-2 justify-end">
+                        <span className="text-xs text-black-400">{formatTimestamp(msg.date)}</span>
+                        <span className="text-black font-semibold">{msg.sender}</span>
+                      </div>
+                      <p className="text-black-300 text-sm">{msg.message}</p>
+                    </div>
+
+                    {/* Avatar stays on the far right */}
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={user?.image || "/default-avatar.png"} alt="User Avatar" />
+                      <AvatarFallback>{msg.sender.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <div ref={messagesEndRef} className="pb-10" />
         </div>
         <div className="absolute bottom-0 left-0 w-full p-4 bg-white shadow-md flex items-center space-x-2">
