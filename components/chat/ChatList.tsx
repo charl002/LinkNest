@@ -22,6 +22,8 @@ export default function ChatList() {
   const socket = useSocket();
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
 
+  const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
+
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -42,30 +44,38 @@ export default function ChatList() {
     fetchUsers();
   }, []);
 
-  const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
-
   useEffect(() => {
-    if (!socket || !session?.user?.email) return;
+    if (!socket || !currentUser) return;
   
-    socket.on("privateMessage", (data: { senderId: string, receiverId: string }) => {
-      console.log("Received a new message from:", data.senderId);
-  
-      // Check if the message is sent to the current user
-
-      console.log(data.receiverId);
-
+    socket.on("privateMessage", async (data: { senderId: string; receiverId: string }) => {
       if (data.receiverId === currentUser) {
+        // Update unread count locally
         setUnreadMessages((prev) => ({
           ...prev,
-          [data.senderId]: (prev[data.senderId] || 0) + 1, // Increment count for sender
+          [data.senderId]: (prev[data.senderId] || 0) + 1,
         }));
+  
+        // Save unread count to Firestore via API
+        try {
+          await fetch("/api/postunreadmessage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sender: data.senderId,
+              receiver: data.receiverId,
+            }),
+          });
+        } catch (error) {
+          console.error("Error storing unread message:", error);
+        }
       }
     });
   
     return () => {
       socket.off("privateMessage");
     };
-  }, [currentUser, socket, session?.user?.email]);
+  }, [currentUser, socket]);
+  
 
   const openChat = (friendUsername: string, currentUsername: string | null) => {
     if (!currentUsername) return;
