@@ -47,7 +47,7 @@ app.prepare().then(() => {
     socket.on("privateMessage", ({ senderId, receiverId, message }) => {
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("privateMessage", { senderId, message });
+        io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message });
       }
     });
 

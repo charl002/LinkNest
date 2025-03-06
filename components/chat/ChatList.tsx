@@ -8,6 +8,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useFriends } from "../provider/FriendsProvider";
+import { Badge } from "@/components/ui/badge";
+import { useSocket } from "@/components/provider/SocketProvider";
 
 import { User } from "@/types/user";
 
@@ -17,6 +19,8 @@ export default function ChatList() {
   const router = useRouter(); // Use Next.js router
 
   const { friends} = useFriends();
+  const socket = useSocket();
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
 
   useEffect(() => {
     async function fetchUsers() {
@@ -40,8 +44,36 @@ export default function ChatList() {
 
   const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
 
+  useEffect(() => {
+    if (!socket || !session?.user?.email) return;
+  
+    socket.on("privateMessage", (data: { senderId: string, receiverId: string }) => {
+      console.log("Received a new message from:", data.senderId);
+  
+      // Check if the message is sent to the current user
+
+      console.log(data.receiverId);
+
+      if (data.receiverId === currentUser) {
+        setUnreadMessages((prev) => ({
+          ...prev,
+          [data.senderId]: (prev[data.senderId] || 0) + 1, // Increment count for sender
+        }));
+      }
+    });
+  
+    return () => {
+      socket.off("privateMessage");
+    };
+  }, [currentUser, socket, session?.user?.email]);
+
   const openChat = (friendUsername: string, currentUsername: string | null) => {
     if (!currentUsername) return;
+    // Clear unread messages when opening chat
+    setUnreadMessages(prev => ({
+      ...prev,
+      [friendUsername]: 0
+    }));
     router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
   };
 
@@ -68,9 +100,17 @@ export default function ChatList() {
                     <p className="text-sm font-medium">{user.username}</p>
                   </div>
                 </Link>
-                <Button onClick={() => openChat(user.username, currentUser)}>Chat</Button>
+                <div className="flex items-center gap-2">
+                  {unreadMessages[user.username] > 0 && (
+                    <Badge variant="destructive">
+                      {unreadMessages[user.username]}
+                    </Badge>
+                  )}
+                  <Button onClick={() => openChat(user.username, currentUser)}>
+                    Chat
+                  </Button>
+                </div>
               </div>
-              
             ))
           ) : (
             <p className="text-gray-500">No friends found</p>

@@ -11,6 +11,7 @@ interface ChatMessageProps {
   user: User | null;
 }
 
+// This Display a message to the chat
 export default function ChatMessage({ message, isCurrentUser, user }: ChatMessageProps) {
   return (
     <div className={`flex items-start space-x-4 ${isCurrentUser ? "justify-end ml-auto" : "justify-start"}`}>

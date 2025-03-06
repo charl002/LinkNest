@@ -61,7 +61,7 @@ export default function Chat() {
 
         const senderData = await senderResponse.json();
         const friendData = await friendResponse.json();
-
+        
         setCurrentUser(senderData.data);
         setFriendUser(friendData.data);
 
@@ -154,7 +154,7 @@ export default function Chat() {
       second: "numeric",
       hour12: true,
     });
-  }  
+  }
 
   return (
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
