@@ -44,11 +44,9 @@ function Call() {
 
 function Videos(props: {currentUsername: string; friendUsername: string; channelName: string; AppID: string }) {
   const { currentUsername, friendUsername, AppID, channelName } = props;
-  const { isLoading: isLoadingMic, localMicrophoneTrack } =
-    useLocalMicrophoneTrack();
+  const { isLoading: isLoadingMic, localMicrophoneTrack } = useLocalMicrophoneTrack();
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
   const remoteUsers = useRemoteUsers();
-  //console.log('Remote Users: ' + remoteUsers);
   const { audioTracks } = useRemoteAudioTracks(remoteUsers);
 
   useJoin({
@@ -64,9 +62,6 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
     return (
       <div className="flex flex-col items-center pt-40">Loading devices...</div>
     );
-  const unit = "minmax(0, 2fr) ";
-
-  //console.log("Remote users:", remoteUsers);
 
   return (
     <div
@@ -75,16 +70,6 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
       >
       <div
         className={`gap-1 flex-1 w-full h-full mx-auto my-auto flex items-center justify-center`}
-        style={{
-          gridTemplateColumns:
-            remoteUsers.length > 9
-              ? unit.repeat(4)
-              : remoteUsers.length > 4
-              ? unit.repeat(3)
-              : remoteUsers.length > 1
-              ? unit.repeat(2)
-              : unit,
-        }}
       >
         <div className="relative w-full h-full">
           <LocalVideoTrack
@@ -98,19 +83,23 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
             </span>
           </div>
         </div>
-        {remoteUsers.map((user) => (
-          <div key={user.uid} className="relative w-full h-full">
-            <RemoteUser
-              user={user}
-              className="w-full h-full border-4 border-gray-500 rounded-sm"
-            />
-            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 mt-2">
-              <span className="text-white text-2xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-lg">
-                {friendUsername}
-              </span>
+        {remoteUsers.length > 0 ? (
+          remoteUsers.map((user) => (
+            <div key={user.uid} className="relative w-full h-full">
+              <RemoteUser
+                user={user}
+                className="w-full h-full border-4 border-gray-500 rounded-sm"
+              />
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 mt-2">
+                <span className="text-white text-2xl font-bold bg-black bg-opacity-50 px-4 py-2 rounded-lg">
+                  {friendUsername}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <div className="text-center text-gray-500">Waiting for other users to join...</div>
+        )}
       </div>
     </div>
   );
