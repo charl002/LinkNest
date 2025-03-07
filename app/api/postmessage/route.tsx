@@ -17,16 +17,8 @@ export async function POST(req: Request) {
       }
 
       const now =  new Date();
-      const datePart = now.toISOString().split("T")[0]; 
-      const timePart = now.toLocaleString("en-US", {
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-      });
 
-      const date = `${datePart} ${timePart}`
-
-      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date };
+      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime() };
 
       const { result: docId, error } = await addData("messages", data);
 

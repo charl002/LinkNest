@@ -198,6 +198,16 @@ export default function UserCheck() {
             return;
         }
 
+        if (username.length > 20 || username.length == 0){
+            setUsernameError("Username should be between 1 and 20 charecters long.")
+            return;
+        }
+
+        if (description.length > 350){
+            setUsernameError("User desctiption should be less that 350 charecters long.")
+            return;
+        }
+
         const { email, name, image } = session!.user;
 
         try {
