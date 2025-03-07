@@ -25,24 +25,38 @@ export default function ChatList() {
   const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
 
   useEffect(() => {
-    async function fetchUsers() {
+    async function fetchUsersAndUnreadMessages() {
       try {
+        // 🔹 Fetch all users
         const response = await fetch("/api/getalluser");
         const data = await response.json();
-
         if (data && Array.isArray(data.users)) {
           setUsers(data.users as User[]);
         } else {
           console.error("Unexpected API response:", data);
           setUsers([]);
         }
+        
+        if (currentUser) {
+          const unreadResponse = await fetch(`/api/getunreadmessage?receiver=${currentUser}`);
+          const unreadData = await unreadResponse.json();
+
+          console.log("unreadData", unreadData);
+
+          if (unreadResponse.ok) {
+            setUnreadMessages(unreadData.unreadCounts);
+          } else {
+            console.error("Error fetching unread messages:", unreadData.message);
+          }
+        }
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching users or unread messages:", error);
         setUsers([]);
       }
     }
-    fetchUsers();
-  }, []);
+  
+    fetchUsersAndUnreadMessages();
+  }, [currentUser]);
 
   useEffect(() => {
     if (!socket || !currentUser) return;
@@ -63,6 +77,7 @@ export default function ChatList() {
             body: JSON.stringify({
               sender: data.senderId,
               receiver: data.receiverId,
+              count: 1
             }),
           });
         } catch (error) {
@@ -77,15 +92,30 @@ export default function ChatList() {
   }, [currentUser, socket]);
   
 
-  const openChat = (friendUsername: string, currentUsername: string | null) => {
+  const openChat = async (friendUsername: string, currentUsername: string | null) => {
     if (!currentUsername) return;
-    // Clear unread messages when opening chat
-    setUnreadMessages(prev => ({
+  
+    setUnreadMessages((prev) => ({
       ...prev,
-      [friendUsername]: 0
+      [friendUsername]: 0, // Reset unread count locally
     }));
+  
+    try {
+      await fetch("/api/postunreadmessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: friendUsername,
+          receiver: currentUsername,
+          count: 0, // Reset count in Firestore
+        }),
+      });
+    } catch (error) {
+      console.error("Error resetting unread count:", error);
+    }
+  
     router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  };
+  };  
 
   return (
     <aside className="bg-white shadow-md p-4 rounded-md">

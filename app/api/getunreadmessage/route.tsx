@@ -13,22 +13,22 @@ export async function GET(req: Request) {
     }
 
     try {
-        const usersRef = collection(db, "users");
+      const usersRef = collection(db, "unreadmessages");
 
-        const querySnapshot = await getDocs(query(usersRef, where("receiver", "==", receiver)));
+      const querySnapshot = await getDocs(query(usersRef, where("receiver", "==", receiver)));
 
-        if (querySnapshot.empty) {
-          return NextResponse.json({ message: "No unread messages found" }, { status: 404 });
-        }
+      if (querySnapshot.empty) {
+        return NextResponse.json({ querySnapshot }, { status: 404 });
+      }
 
-        const unreadCounts: Record<string, number> = {};
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          unreadCounts[data.sender] = data.count;
-        });
+      const unreadCounts: Record<string, number> = {};
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        unreadCounts[data.sender] = data.count;
+      });
 
-        return NextResponse.json({ unreadCounts }, { status: 200 });
+      return NextResponse.json({ unreadCounts }, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ message: "Error unread messages for this receiver", error: error }, { status: 500 });
+      return NextResponse.json({ message: "Error unread messages for this receiver", error: error }, { status: 500 });
     }
 }
