@@ -8,15 +8,10 @@ import LoadingLogo from "../components/custom-ui/LoadingLogo";
 import { PostType } from "@/types/post";
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [sessionUsername, setSessionUsername] = useState('');
-
-  // If authenticated, render UserCheck component
-  if (status === "authenticated") {
-    return <UserCheck />;
-  }
+  const [sessionUsername] = useState('');
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -60,6 +55,10 @@ export default function Home() {
 
   if (loadingPosts) {
     return <LoadingLogo />;
+  }
+  // If authenticated, render UserCheck component
+  if (status === "authenticated") {
+    return <UserCheck />;
   }
 
   // Render the public view for non-authenticated users
