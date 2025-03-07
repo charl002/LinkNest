@@ -14,13 +14,7 @@ import { useFriends } from "../provider/FriendsProvider";
 import { X } from 'lucide-react';
 
 
-interface User {
-  id: string;
-  image: string;
-  username: string;
-  email: string;
-  name: string;
-}
+import { User } from "@/types/user";
 
 export default function Sidebar() {
   const socket = useSocket();
