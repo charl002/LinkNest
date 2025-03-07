@@ -141,7 +141,7 @@ export default function ChatList() {
                   </div>
                 </Link>
                 <div className="flex items-center gap-2">
-                  {unreadMessages[user.username] > 0 && (
+                  {unreadMessages && unreadMessages[user.username] > 0 && (
                     <Badge variant="destructive">
                       {unreadMessages[user.username]}
                     </Badge>

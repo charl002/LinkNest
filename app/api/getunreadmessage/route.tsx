@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       const querySnapshot = await getDocs(query(usersRef, where("receiver", "==", receiver)));
 
       if (querySnapshot.empty) {
-        return NextResponse.json({ querySnapshot }, { status: 404 });
+        return NextResponse.json({ message: "No unread messages found"}, { status: 200 });
       }
 
       const unreadCounts: Record<string, number> = {};
