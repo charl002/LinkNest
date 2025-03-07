@@ -141,7 +141,7 @@ export default function Chat() {
 
   const handleRedirectToHome = () => {
     setErrorMessage(null);
-    router.push("/home");
+    router.push("/");
   };
 
   function formatTimestamp(timestamp: string): string {
