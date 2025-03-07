@@ -1,38 +1,27 @@
 "use client";
 
+import UserCheck from "@/components/auth/UserCheck";
 import Post from "@/components/post/Post";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import LoadingLogo from "../components/custom-ui/LoadingLogo";
-
 import { PostType } from "@/types/post";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { status } = useSession();
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [sessionUsername, setSessionUsername] = useState('');
+  const [sessionUsername] = useState('');
 
   useEffect(() => {
     const fetchPosts = async () => {
       setLoadingPosts(true);
-
-      const sessionEmail = session?.user?.email;
-
-      const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
-      const sessionUser = await response.json();
-
-    if (response.ok) {
-      setSessionUsername(sessionUser.data.username)
-    } else {
-      console.log("There was an error fetching the session user!");
-    }
       try {
         const [response, newsResponse, customResponse] = await Promise.all([
           fetch('/api/bluesky/getfromdb'),
           fetch('/api/news/getfromdb'),
           fetch('/api/getuserpost')
-      ]);
+        ]);
 
       const [data, newsData, customData] = await Promise.all([
           response.json(),
@@ -62,18 +51,29 @@ export default function Home() {
     };
 
     fetchPosts();
-  }, [session?.user?.email]);
+  }, []);
 
   if (loadingPosts) {
-    return <LoadingLogo></LoadingLogo>;
+    return <LoadingLogo />;
+  }
+  // If authenticated, render UserCheck component
+  if (status === "authenticated") {
+    return <UserCheck />;
   }
 
+  // Render the public view for non-authenticated users
   return (
     <div className="flex flex-col items-center gap-6 p-6 w-full h-screen">
       <section className="flex flex-col space-y-6 max-w-2xl w-full h-full overflow-y-auto">
         {posts.map((post, index) => (
-          <Post key={`${post.id}-${index}`} {...post} profilePicture={post.profilePicture} documentId={post.id}
-          postType={post.postType} sessionUsername={sessionUsername}/>
+          <Post 
+            key={`${post.id}-${index}`} 
+            {...post} 
+            profilePicture={post.profilePicture} 
+            documentId={post.id}
+            postType={post.postType} 
+            sessionUsername={sessionUsername}
+          />
         ))}
       </section>
     </div>

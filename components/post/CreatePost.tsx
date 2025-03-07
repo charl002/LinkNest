@@ -135,7 +135,7 @@ const CreatePost = () => {
 
                 setTimeout(() => {
                     setIsUploading(false);
-                    router.push("/home");
+                    router.push("/");
                 }, 1500);
 
                 } else {
