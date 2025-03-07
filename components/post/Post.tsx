@@ -38,6 +38,7 @@ export default function Post({ title, username, description, tags, comments, lik
     const [postComments, setPostComments] = useState<Comment[]>(comments);
     const [showComments, setShowComments] = useState(false); 
     const [isLoading, setIsLoading] = useState(false);
+    const [isOverLimit, setIsOverLimit] = useState(false);
 
     useEffect(() => {
         const fetchSessionUsername = async () => {
@@ -171,6 +172,18 @@ export default function Post({ title, username, description, tags, comments, lik
         }
     };
 
+    const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const input = e.target.value;
+        setIsOverLimit(input.length > 100);
+        setNewComment(input);
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && !isOverLimit && newComment.trim()) {
+            handlePostComment();
+        }
+    };
+
     const defaultImageUrl = "/defaultProfilePic.jpg";
 
     return (
@@ -290,14 +303,31 @@ export default function Post({ title, username, description, tags, comments, lik
               </div>
 
               <div className="mt-3 flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500"
-                  placeholder="Write a comment..."
-                />
-                <button onClick={handlePostComment} className="px-4 py-2 hover:text-gray-500 transition">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={handleCommentChange}
+                    onKeyPress={handleKeyPress}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white text-gray-900 placeholder-gray-500
+                      ${isOverLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                    placeholder="Write a comment... (100 characters max)"
+                  />
+                  {isOverLimit && (
+                    <p className="text-red-500 text-xs mt-1 absolute">
+                      Comment must be 100 characters or less ({newComment.length}/100)
+                    </p>
+                  )}
+                </div>
+                <button 
+                  onClick={handlePostComment} 
+                  disabled={isOverLimit || !newComment.trim()}
+                  className={`px-4 py-2 transition ${
+                    isOverLimit || !newComment.trim() 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'hover:text-gray-500'
+                  }`}
+                >
                   <IoSend className="inline-block text-xl" />
                 </button>
               </div>
