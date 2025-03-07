@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useFriends } from "../provider/FriendsProvider";
 import { Badge } from "@/components/ui/badge";
 import { useSocket } from "@/components/provider/SocketProvider";
+import { useSearchParams } from "next/navigation"; 
 
 import { User } from "@/types/user";
 
@@ -18,11 +19,14 @@ export default function ChatList() {
   const [users, setUsers] = useState<User[]>([]);
   const router = useRouter(); // Use Next.js router
 
-  const { friends} = useFriends();
+  const { friends } = useFriends();
   const socket = useSocket();
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
 
   const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
+
+  const searchParams = useSearchParams();
+  const activeChatFriend = searchParams.get("friend");
 
   useEffect(() => {
     async function fetchUsersAndUnreadMessages() {
@@ -62,14 +66,23 @@ export default function ChatList() {
     if (!socket || !currentUser) return;
   
     socket.on("privateMessage", async (data: { senderId: string; receiverId: string }) => {
-      if (data.receiverId === currentUser) {
-        // Update unread count locally
-        setUnreadMessages((prev) => ({
+      if (data.receiverId !== currentUser) return; // Ignore messages not meant for the current user
+  
+      console.log("Active Chat Friend:", activeChatFriend);
+  
+      setUnreadMessages((prev = {}) => {
+        // 🔹 If the user is already chatting with the sender, don't increase the unread count
+        if (activeChatFriend === data.senderId) {
+          return { ...prev, [data.senderId]: 0 };
+        }
+        return {
           ...prev,
           [data.senderId]: (prev[data.senderId] || 0) + 1,
-        }));
+        };
+      });
   
-        // Save unread count to Firestore via API
+      // 🔹 If chat is open and the sender is the currently chatting friend, reset unread count
+      if (activeChatFriend === data.senderId) {
         try {
           await fetch("/api/postunreadmessage", {
             method: "POST",
@@ -77,20 +90,35 @@ export default function ChatList() {
             body: JSON.stringify({
               sender: data.senderId,
               receiver: data.receiverId,
-              count: 1
+              count: 0, // Reset unread count
             }),
           });
         } catch (error) {
-          console.error("Error storing unread message:", error);
+          console.error("Error resetting unread count:", error);
         }
+        return;
+      }
+  
+      // 🔹 Otherwise, increment unread count normally
+      try {
+        await fetch("/api/postunreadmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: data.senderId,
+            receiver: data.receiverId,
+            count: 1, // Increment unread count
+          }),
+        });
+      } catch (error) {
+        console.error("Error storing unread message:", error);
       }
     });
   
     return () => {
       socket.off("privateMessage");
     };
-  }, [currentUser, socket]);
-  
+  }, [currentUser, socket, activeChatFriend]);
 
   const openChat = async (friendUsername: string, currentUsername: string | null) => {
     if (!currentUsername) return;
