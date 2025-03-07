@@ -11,6 +11,8 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useFriends } from "../provider/FriendsProvider";
+import { X } from 'lucide-react';
+
 
 interface User {
   id: string;
@@ -193,6 +195,41 @@ export default function Sidebar() {
     }    
   };
 
+  const handleDenyRequest = async (friendUsername: string) => {
+    if (!senderUsername) {
+      customToast({ message: "Error! Missing current username", type: "error" });
+      return;
+    }
+  
+    try {
+      const deleteResponse = await fetch("/api/deletefriendrequest", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: friendUsername,
+          receiverUsername: senderUsername,
+        }),
+      });
+  
+      const deleteResult = await deleteResponse.json();
+  
+      if (!deleteResponse.ok) {
+        customToast({ message: `Error rejecting request: ${deleteResult.message}`, type: "error" });
+        return;
+      }
+  
+      setPendingRequests((prevRequests) =>
+        prevRequests.filter((user) => user.username !== friendUsername)
+      );
+  
+      customToast({ message: `Friend request from ${friendUsername} rejected!`, type: "success" });
+  
+    } catch (error) {
+      console.error("Error rejecting friend request:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    }
+  };  
+
   const handleAcceptRequest = async (friendUsername: string) => {
     if (!senderUsername) {
       customToast({ message: "Error! Missing current username", type: "error" });
@@ -337,7 +374,13 @@ export default function Sidebar() {
                     />
                     <span className="text-md font-medium">{user.username}</span>
                   </div>
-                  <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
+                   <div className="flex items-center gap-2">
+                      <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
+                      <X 
+                        className="cursor-pointer text-red-500 hover:text-red-700"
+                        onClick={() => handleDenyRequest(user.username)}
+                      />
+                    </div>
                 </li>
               ))}
             </ul>
