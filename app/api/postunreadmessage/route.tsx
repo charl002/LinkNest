@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { auth } from "@/lib/auth";
 import { getDocument }  from "@/firebase/firestore/getData";
-import updateData from "@/firebase/firestore/updateData";
+import updateData from "@/firebase/firestore/updateUnreadCount";
 
 export async function POST(req: Request) {
     try {

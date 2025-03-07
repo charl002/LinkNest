@@ -22,10 +22,10 @@ export default function Home() {
       const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
       const sessionUser = await response.json();
 
-      if (response.ok) {
-        setSessionUsername(sessionUser.data.username)
+    if (response.ok) {
+      setSessionUsername(sessionUser.data.username)
     } else {
-        console.error(sessionUser.message);
+      console.log("There was an error fetching the session user!");
     }
       try {
         const [response, newsResponse, customResponse] = await Promise.all([
