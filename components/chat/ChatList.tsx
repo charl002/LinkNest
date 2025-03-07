@@ -59,37 +59,46 @@ export default function ChatList() {
   }, [currentUser]);
 
   useEffect(() => {
-    if (!socket || !currentUser) return;
-  
-    socket.on("privateMessage", async (data: { senderId: string; receiverId: string }) => {
-      if (data.receiverId === currentUser) {
-        // Update unread count locally
-        setUnreadMessages((prev) => ({
+  if (!socket || !currentUser) return;
+
+  socket.on("privateMessage", async (data: { senderId: string; receiverId: string }) => {
+    if (data.receiverId === currentUser) {
+      setUnreadMessages((prev = {}) => {
+        // 🔹 Skip updating if the chat is already open
+        if (window.location.pathname === `/chat`) {
+          return prev;
+        }
+        return {
           ...prev,
           [data.senderId]: (prev[data.senderId] || 0) + 1,
-        }));
-  
-        // Save unread count to Firestore via API
-        try {
-          await fetch("/api/postunreadmessage", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sender: data.senderId,
-              receiver: data.receiverId,
-              count: 1
-            }),
-          });
-        } catch (error) {
-          console.error("Error storing unread message:", error);
+        };
+      });
+
+      // Save unread count to Firestore via API
+      try {
+        if (window.location.pathname === `/chat`) {
+          return;
         }
+        await fetch("/api/postunreadmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: data.senderId,
+            receiver: data.receiverId,
+            count: 1,
+          }),
+        });
+      } catch (error) {
+        console.error("Error storing unread message:", error);
       }
-    });
-  
-    return () => {
-      socket.off("privateMessage");
-    };
-  }, [currentUser, socket]);
+    }
+  });
+
+  return () => {
+    socket.off("privateMessage");
+  };
+}, [currentUser, socket]);
+
   
 
   const openChat = async (friendUsername: string, currentUsername: string | null) => {
