@@ -72,7 +72,8 @@ export default function ProfilePage({ user }: { user: string }) {
   const fileInputRef2 = useRef<HTMLInputElement | null>(null);
   const [isFriendsDialogOpen, setIsFriendsDialogOpen] = useState(false);
   const [sessionUsername, setSessionUsername] = useState('');
-  
+  const [isFriend, setIsFriend] = useState(false);  
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function fetchUser() {
@@ -155,6 +156,88 @@ export default function ProfilePage({ user }: { user: string }) {
     fetchUser();
     fetchFriends();
   }, [user, email]);
+
+  useEffect(() => {
+    if (sessionUsername && friends.length > 0) {
+      setIsFriend(friends.some(friend => friend.username === sessionUsername));
+    }
+  }, [sessionUsername, friends]); 
+
+   const handleAddFriend = async () => {
+    if (!session?.user?.name || !user) {
+      customToast({ message: "Error! Missing username", type: "error" });
+      return;
+    } else if (sessionUsername === user) {
+      customToast({ message: "You can't add yourself!", type: "info" });
+      return;
+    }
+
+    setIsLoading(true);
+
+    const requestBody = {
+      senderUsername: sessionUsername,
+      receiverUsername: user,
+    };
+
+    try {
+      const response = await fetch("/api/postfriendrq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        customToast({ message: `${result.message}`, type: "error" });
+        return;
+      }
+
+      customToast({ message: `Friend request sent to ${user}!`, type: "success" });
+
+    } catch (error) {
+      console.error("Error adding friend:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemoveFriend = async () => {
+    if (!session?.user?.name || !user) {
+      customToast({ message: "Error! Missing username", type: "error" });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/deletefriend", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: sessionUsername,
+          receiverUsername: user,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        customToast({ message: `${result.message}`, type: "error" });
+        return;
+      }
+
+      customToast({ message: `You have removed ${user} as a friend.`, type: "success" });
+
+      setIsFriend(false);
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSaveChanges = async () => {
     if (!userData) return;
@@ -314,9 +397,15 @@ export default function ProfilePage({ user }: { user: string }) {
                 </DialogContent>
               </Dialog>
               ) : (
-                <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
-                  Add Friend
-                </button>
+                <button
+                className={`px-4 py-2 text-white text-sm rounded-full ${
+                  isFriend ? "bg-red-500" : "bg-blue-500"
+                }`}
+                onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                disabled={isLoading}
+              >
+                {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
+              </button>
               )}
             </div>
 
