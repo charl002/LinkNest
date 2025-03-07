@@ -19,6 +19,7 @@ export default function UserCheck() {
     const [posts, setPosts] = useState<PostType[]>([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
     const [sessionUsername, setSessionUsername] = useState('');
+    const [activeTab, setActiveTab] = useState('user'); // Changed from 'all' to 'user'
 
     useEffect(() => {
         if (!session?.user) return;
@@ -255,17 +256,59 @@ export default function UserCheck() {
     return (
         <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen">
             <Sidebar />
-            <section className="flex flex-col space-y-6 h-full overflow-y-auto">
-                {posts.map((post, index) => (
-                    <Post 
-                        key={`${post.id}-${index}`} 
-                        {...post} 
-                        profilePicture={post.profilePicture || ""}
-                        documentId={post.id}
-                        postType={post.postType}
-                        sessionUsername={sessionUsername}
-                    />
-                ))}
+            <section className="flex flex-col h-full">
+                <div className="flex space-x-2 mb-6">
+                    <button
+                        onClick={() => setActiveTab('user')}
+                        className={`px-4 py-2 rounded-lg ${
+                            activeTab === 'user' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                    >
+                        Posts
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('bluesky')}
+                        className={`px-4 py-2 rounded-lg ${
+                            activeTab === 'bluesky' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                    >
+                        Bluesky
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('news')}
+                        className={`px-4 py-2 rounded-lg ${
+                            activeTab === 'news' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                    >
+                        News
+                    </button>
+                </div>
+                <div className="space-y-6 overflow-y-auto">
+                    {posts
+                        .filter(post => {
+                            if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
+                            if (activeTab === 'bluesky') return post.postType === 'bluesky';
+                            if (activeTab === 'news') return post.postType === 'news';
+                            return true;
+                        })
+                        .map((post, index) => (
+                            <Post 
+                                key={`${post.id}-${index}`} 
+                                {...post} 
+                                profilePicture={post.profilePicture || ""}
+                                documentId={post.id}
+                                postType={post.postType}
+                                sessionUsername={sessionUsername}
+                            />
+                        ))
+                    }
+                </div>
             </section>
             <ChatList />
             <Toaster position="bottom-center" richColors></Toaster>
