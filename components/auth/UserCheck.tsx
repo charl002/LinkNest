@@ -254,13 +254,15 @@ export default function UserCheck() {
     }
 
     return (
-        <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen">
-            <Sidebar />
+        <div className="grid grid-cols-[300px_1fr_300px] gap-6 p-6 w-full h-screen">
+            <div className="w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <Sidebar />
+            </div>
             <section className="flex flex-col h-full">
                 <div className="flex space-x-2 mb-6">
                     <button
                         onClick={() => setActiveTab('user')}
-                        className={`px-4 py-2 rounded-lg ${
+                        className={`flex-1 px-4 py-2 rounded-lg ${
                             activeTab === 'user' 
                                 ? 'bg-blue-500 text-white' 
                                 : 'bg-gray-200 hover:bg-gray-300'
@@ -270,7 +272,7 @@ export default function UserCheck() {
                     </button>
                     <button
                         onClick={() => setActiveTab('bluesky')}
-                        className={`px-4 py-2 rounded-lg ${
+                        className={`flex-1 px-4 py-2 rounded-lg ${
                             activeTab === 'bluesky' 
                                 ? 'bg-blue-500 text-white' 
                                 : 'bg-gray-200 hover:bg-gray-300'
@@ -280,7 +282,7 @@ export default function UserCheck() {
                     </button>
                     <button
                         onClick={() => setActiveTab('news')}
-                        className={`px-4 py-2 rounded-lg ${
+                        className={`flex-1 px-4 py-2 rounded-lg ${
                             activeTab === 'news' 
                                 ? 'bg-blue-500 text-white' 
                                 : 'bg-gray-200 hover:bg-gray-300'
@@ -310,7 +312,9 @@ export default function UserCheck() {
                     }
                 </div>
             </section>
-            <ChatList />
+            <div className="w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <ChatList />
+            </div>
             <Toaster position="bottom-center" richColors></Toaster>
         </div>
     );
