@@ -19,11 +19,11 @@ import {
 const Navbar = () => {
 
   const [userName, setUserName] = useState("User");
+  const [userImage, setUserImage] = useState("/../public/defaultProfilePic.jpg");
   const { data: session } = useSession();
 
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? "User";
-  const userImage = session?.user?.image ?? "../public/defaultProfilePic.jpg";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -34,6 +34,7 @@ const Navbar = () => {
           if (res.ok) {
             const userData = await res.json();
             setUserName(userData.data.username);
+            setUserImage(userData.data.image);
           }
         } catch (error) {
           console.error("Error fetching username:", error);

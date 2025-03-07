@@ -27,6 +27,7 @@ interface UserData {
     email: string;
     image: string;
     description: string;
+    background: string;
   };
 }
 
@@ -36,6 +37,7 @@ interface Friend {
   username: string;
   name: string;
   email: string;
+  background: string;
 }
 
 interface PostData {
@@ -68,7 +70,7 @@ export default function ProfilePage({ user }: { user: string }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement | null>(null);
-  //const [background, setBackground] = useState<File | null>(null);
+  const [background, setBackground] = useState<File | null>(null);
   const fileInputRef2 = useRef<HTMLInputElement | null>(null);
   const [isFriendsDialogOpen, setIsFriendsDialogOpen] = useState(false);
   const [sessionUsername, setSessionUsername] = useState('');
@@ -253,6 +255,7 @@ export default function ProfilePage({ user }: { user: string }) {
   
     try {
       let profilePictureUrl = userData.data.image; 
+      let backgroundPictureUrl = userData.data.background;
   
       if (profilePicture) {
         const formData = new FormData();
@@ -269,7 +272,25 @@ export default function ProfilePage({ user }: { user: string }) {
           throw new Error(result.message || "Failed to upload profile picture");
         }
   
-        profilePictureUrl = result.imageUrl; 
+        profilePictureUrl = result.fileUrl; 
+      }
+
+      if (background) {
+        const formData = new FormData();
+        formData.append("file", background);
+        formData.append("username", sessionUsername);
+  
+        const response = await fetch("/api/postimage", {
+          method: "POST",
+          body: formData,
+        });
+  
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to upload background picture");
+        }
+  
+        backgroundPictureUrl = result.fileUrl; 
       }
   
       const updateResponse = await fetch("/api/updateuser", {
@@ -282,6 +303,7 @@ export default function ProfilePage({ user }: { user: string }) {
           username,
           description,
           image: profilePictureUrl, 
+          background: backgroundPictureUrl
         }),
       });
   
@@ -312,7 +334,7 @@ export default function ProfilePage({ user }: { user: string }) {
       
           <div className="w-full h-32 bg-gray-300 relative">
             <Image
-              src={userData.data.image}
+              src={userData.data.background || userData.data.image}
               alt="User Profile"
               layout="fill"
               objectFit="cover"
@@ -370,8 +392,7 @@ export default function ProfilePage({ user }: { user: string }) {
                       <Input
                           type="file"
                           ref={fileInputRef2}
-                          readOnly
-                          //onChange={(e) => setBackground(e.target.files?.[0] || null)}
+                          onChange={(e) => setBackground(e.target.files?.[0] || null)}
                           className="col-span-3"
                       />
                     </div>

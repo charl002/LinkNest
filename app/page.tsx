@@ -75,7 +75,7 @@ export default function Home() {
     };
 
     fetchPosts();
-  }, []);
+  }, [session?.user?.email]);
 
   if (loadingPosts) {
     return <LoadingLogo></LoadingLogo>;
