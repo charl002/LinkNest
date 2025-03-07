@@ -39,7 +39,6 @@ export default function Post({ title, username, description, tags, comments, lik
     const [showComments, setShowComments] = useState(false); 
     const [isLoading, setIsLoading] = useState(false);
 
-
     useEffect(() => {
         const fetchSessionUsername = async () => {
             if (!session?.user) return;
@@ -118,6 +117,14 @@ export default function Post({ title, username, description, tags, comments, lik
         }
     };
 
+    const handleReply = (username: string) => {
+        setNewComment(`@${username} `);
+        // Focus on the input field
+        const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement;
+        if (inputElement) {
+            inputElement.focus();
+        }
+    };
 
     const handleCommentLike = async (commentIndex: number, isLiked: boolean) => {
         if (!session?.user || !sessionUsername || isLoading) return;
@@ -248,11 +255,11 @@ export default function Post({ title, username, description, tags, comments, lik
                         alt={comment.username}
                         width={40}
                         height={40}
-                        className="rounded-full"
+                        className="rounded-full flex-shrink-0"
                       />
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="font-bold text-sm text-gray-900">{comment.username} <span className="text-gray-500 text-xs">{comment.date}</span></p>
-                        <p className="text-gray-700">{comment.comment}</p>
+                        <p className="text-gray-700 break-words overflow-wrap-anywhere">{comment.comment}</p>
                         <div className="flex items-center space-x-3 mt-1 text-gray-500 text-sm">
                             <button 
                                 onClick={() => handleCommentLike(index, comment.likedBy.includes(sessionUsername))}
@@ -267,7 +274,10 @@ export default function Post({ title, username, description, tags, comments, lik
                                 }
                                 <span>{comment.likes}</span>
                             </button>
-                            <button className="flex items-center space-x-1 hover:text-gray-700">
+                            <button 
+                                onClick={() => handleReply(comment.username)}
+                                className="flex items-center space-x-1 hover:text-gray-700"
+                            >
                                 <BiReply /> <span>Reply</span>
                             </button>
                         </div>
