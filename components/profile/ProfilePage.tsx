@@ -74,6 +74,8 @@ export default function ProfilePage({ user }: { user: string }) {
   const [sessionUsername, setSessionUsername] = useState('');
   const [isFriend, setIsFriend] = useState(false);  
   const [isLoading, setIsLoading] = useState(false);
+  const [isFriendLoading, setIsFriendLoading] = useState(true);
+
 
   useEffect(() => {
     async function fetchUser() {
@@ -96,6 +98,8 @@ export default function ProfilePage({ user }: { user: string }) {
     }
 
     async function fetchFriends() {
+      if(!sessionUsername) return;
+      setIsFriendLoading(true);
       try {
         const response = await fetch(`/api/getfriends?username=${user}`);
         const result = await response.json();
@@ -119,10 +123,13 @@ export default function ProfilePage({ user }: { user: string }) {
             }
           })
         );
-
-        setFriends(friendsData.filter(Boolean));
+        const filteredFriends = friendsData.filter(Boolean);
+        setFriends(filteredFriends);
+        setIsFriend(filteredFriends.some(friend => friend.username === sessionUsername));
       } catch (err) {
         console.error("Error fetching friends:", err);
+      } finally {
+        setIsFriendLoading(false); 
       }
     }
 
@@ -155,13 +162,8 @@ export default function ProfilePage({ user }: { user: string }) {
     fetchPosts();
     fetchUser();
     fetchFriends();
-  }, [user, email]);
+  }, [user, email, sessionUsername]);
 
-  useEffect(() => {
-    if (sessionUsername && friends.length > 0) {
-      setIsFriend(friends.some(friend => friend.username === sessionUsername));
-    }
-  }, [sessionUsername, friends]); 
 
    const handleAddFriend = async () => {
     if (!session?.user?.name || !user) {
@@ -397,15 +399,23 @@ export default function ProfilePage({ user }: { user: string }) {
                 </DialogContent>
               </Dialog>
               ) : (
-                <button
-                className={`px-4 py-2 text-white text-sm rounded-full ${
-                  isFriend ? "bg-red-500" : "bg-blue-500"
-                }`}
-                onClick={isFriend ? handleRemoveFriend : handleAddFriend}
-                disabled={isLoading}
-              >
-                {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
-              </button>
+                <>
+                {isFriendLoading ? (
+                  <button className="px-4 py-2 bg-gray-300 text-white text-sm rounded-full" disabled>
+                    Loading...
+                  </button>
+                ) : (
+                  <button
+                    className={`px-4 py-2 text-white text-sm rounded-full ${
+                      isFriend ? "bg-red-500" : "bg-blue-500"
+                    }`}
+                    onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
+                  </button>
+                )}
+              </>
               )}
             </div>
 
