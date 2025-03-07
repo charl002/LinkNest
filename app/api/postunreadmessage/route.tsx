@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       const existingData = await getDocument("unreadmessages", docId);
 
 
-      if (existingData.result) {
+      if (existingData?.result?.exists()) {
         // If the count is 0, set the count to 0, otherwise increment the count by 1
         const updatedCount = count === 0 ? 0 : (existingData.result.data()?.count || 0) + 1;
         const { error } = await updateData("unreadmessages", docId, { count: updatedCount });
