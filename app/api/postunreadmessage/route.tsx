@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
       const { sender, receiver, count } = await req.json();
 
-      if (!sender || !receiver || !count) {
+      if (!sender || !receiver || count === undefined) {
           return NextResponse.json({ message: "Sender, receiver, and count are required" }, { status: 400 });
       }
 

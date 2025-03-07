@@ -97,9 +97,12 @@ export default function ChatList() {
   
     setUnreadMessages((prev) => ({
       ...prev,
-      [friendUsername]: 0, // Reset unread count locally
+      [friendUsername]: 0,
     }));
   
+    console.log("friendUsername", friendUsername);
+    console.log("currentUsername", currentUsername);
+
     try {
       await fetch("/api/postunreadmessage", {
         method: "POST",
@@ -107,7 +110,7 @@ export default function ChatList() {
         body: JSON.stringify({
           sender: friendUsername,
           receiver: currentUsername,
-          count: 0, // Reset count in Firestore
+          count: 0,
         }),
       });
     } catch (error) {
