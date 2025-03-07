@@ -27,6 +27,7 @@ interface UserData {
     email: string;
     image: string;
     description: string;
+    background: string;
   };
 }
 
@@ -36,6 +37,7 @@ interface Friend {
   username: string;
   name: string;
   email: string;
+  background: string;
 }
 
 interface PostData {
@@ -44,7 +46,7 @@ interface PostData {
   username: string;
   description: string;
   tags: string[];
-  comments: { comment: string; username: string; date: string; likes: number }[];
+  comments: { comment: string; username: string; date: string; likes: number, likedBy: string[]; }[];
   likes: number;
   images: { url: string; alt: string; thumb: string }[];
   createdAt: string;
@@ -68,11 +70,14 @@ export default function ProfilePage({ user }: { user: string }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement | null>(null);
-  //const [background, setBackground] = useState<File | null>(null);
+  const [background, setBackground] = useState<File | null>(null);
   const fileInputRef2 = useRef<HTMLInputElement | null>(null);
   const [isFriendsDialogOpen, setIsFriendsDialogOpen] = useState(false);
   const [sessionUsername, setSessionUsername] = useState('');
-  
+  const [isFriend, setIsFriend] = useState(false);  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFriendLoading, setIsFriendLoading] = useState(true);
+
 
   useEffect(() => {
     async function fetchUser() {
@@ -95,6 +100,8 @@ export default function ProfilePage({ user }: { user: string }) {
     }
 
     async function fetchFriends() {
+      if(!sessionUsername) return;
+      setIsFriendLoading(true);
       try {
         const response = await fetch(`/api/getfriends?username=${user}`);
         const result = await response.json();
@@ -118,10 +125,13 @@ export default function ProfilePage({ user }: { user: string }) {
             }
           })
         );
-
-        setFriends(friendsData.filter(Boolean));
+        const filteredFriends = friendsData.filter(Boolean);
+        setFriends(filteredFriends);
+        setIsFriend(filteredFriends.some(friend => friend.username === sessionUsername));
       } catch (err) {
         console.error("Error fetching friends:", err);
+      } finally {
+        setIsFriendLoading(false); 
       }
     }
 
@@ -140,7 +150,14 @@ export default function ProfilePage({ user }: { user: string }) {
         const result = await response2.json();
 
         if (!response2.ok) {
-          throw new Error(result.message || "Failed to fetch friends");
+            throw new Error(result.message || "Failed to fetch posts"); // Changed error message
+        }
+
+        if (!result.posts) {
+            console.error("No posts found in response:", result);
+            setPosts([]);
+            setPostsCount(0);
+            return;
         }
 
         setPostsCount(result.posts.length);
@@ -154,13 +171,91 @@ export default function ProfilePage({ user }: { user: string }) {
     fetchPosts();
     fetchUser();
     fetchFriends();
-  }, [user, email]);
+  }, [user, email, sessionUsername]);
+
+
+   const handleAddFriend = async () => {
+    if (!session?.user?.name || !user) {
+      customToast({ message: "Error! Missing username", type: "error" });
+      return;
+    } else if (sessionUsername === user) {
+      customToast({ message: "You can't add yourself!", type: "info" });
+      return;
+    }
+
+    setIsLoading(true);
+
+    const requestBody = {
+      senderUsername: sessionUsername,
+      receiverUsername: user,
+    };
+
+    try {
+      const response = await fetch("/api/postfriendrq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        customToast({ message: `${result.message}`, type: "error" });
+        return;
+      }
+
+      customToast({ message: `Friend request sent to ${user}!`, type: "success" });
+
+    } catch (error) {
+      console.error("Error adding friend:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemoveFriend = async () => {
+    if (!session?.user?.name || !user) {
+      customToast({ message: "Error! Missing username", type: "error" });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/deletefriend", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: sessionUsername,
+          receiverUsername: user,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        customToast({ message: `${result.message}`, type: "error" });
+        return;
+      }
+
+      customToast({ message: `You have removed ${user} as a friend.`, type: "success" });
+
+      setIsFriend(false);
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSaveChanges = async () => {
     if (!userData) return;
   
     try {
       let profilePictureUrl = userData.data.image; 
+      let backgroundPictureUrl = userData.data.background;
   
       if (profilePicture) {
         const formData = new FormData();
@@ -177,7 +272,25 @@ export default function ProfilePage({ user }: { user: string }) {
           throw new Error(result.message || "Failed to upload profile picture");
         }
   
-        profilePictureUrl = result.imageUrl; 
+        profilePictureUrl = result.fileUrl; 
+      }
+
+      if (background) {
+        const formData = new FormData();
+        formData.append("file", background);
+        formData.append("username", sessionUsername);
+  
+        const response = await fetch("/api/postimage", {
+          method: "POST",
+          body: formData,
+        });
+  
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to upload background picture");
+        }
+  
+        backgroundPictureUrl = result.fileUrl; 
       }
   
       const updateResponse = await fetch("/api/updateuser", {
@@ -190,6 +303,7 @@ export default function ProfilePage({ user }: { user: string }) {
           username,
           description,
           image: profilePictureUrl, 
+          background: backgroundPictureUrl
         }),
       });
   
@@ -220,7 +334,7 @@ export default function ProfilePage({ user }: { user: string }) {
       
           <div className="w-full h-32 bg-gray-300 relative">
             <Image
-              src={userData.data.image}
+              src={userData.data.background || userData.data.image}
               alt="User Profile"
               layout="fill"
               objectFit="cover"
@@ -278,8 +392,7 @@ export default function ProfilePage({ user }: { user: string }) {
                       <Input
                           type="file"
                           ref={fileInputRef2}
-                          readOnly
-                          //onChange={(e) => setBackground(e.target.files?.[0] || null)}
+                          onChange={(e) => setBackground(e.target.files?.[0] || null)}
                           className="col-span-3"
                       />
                     </div>
@@ -314,9 +427,23 @@ export default function ProfilePage({ user }: { user: string }) {
                 </DialogContent>
               </Dialog>
               ) : (
-                <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
-                  Add Friend
-                </button>
+                <>
+                {isFriendLoading ? (
+                  <button className="px-4 py-2 bg-gray-300 text-white text-sm rounded-full" disabled>
+                    Loading...
+                  </button>
+                ) : (
+                  <button
+                    className={`px-4 py-2 text-white text-sm rounded-full ${
+                      isFriend ? "bg-red-500" : "bg-blue-500"
+                    }`}
+                    onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
+                  </button>
+                )}
+              </>
               )}
             </div>
 

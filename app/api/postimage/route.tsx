@@ -18,11 +18,11 @@ export async function POST(request: Request) {
     const formData = await request.formData();
 
     // Extract form fields
-    const username = formData.get("username")?.toString();
+    const imageName = formData.get("username")?.toString();
     const file = formData.get("file") as File | null;
 
     // Validate required fields
-    if (!username || !file) {
+    if (!imageName || !file) {
       return NextResponse.json(
         { message: "Missing required fields: username or file" },
         { status: 400 }
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const fileUrl = `${blobPublicUrl}${encodeURIComponent(blobName)}`;
 
     // Save image data to Firestore
-    const imageData = { username, fileUrl };
+    const imageData = { imageName, fileUrl };
     const { result, error } = await addData("images", imageData);
 
     if (error) {

@@ -9,10 +9,14 @@ interface UpdateDataResult {
 }
 
 export default async function updateData(
+<<<<<<< HEAD
     collectionName: string,
     objectId: string,
     data: { [key: string]: FieldValue | Partial<unknown> | undefined }
 ): Promise<UpdateDataResult> {
+=======
+collectionName: string, objectId: string, p0: string, data: Record<string, unknown>): Promise<UpdateDataResult> {
+>>>>>>> 8dbfd608a2dc0c783be44cb6eda7392cbb7e023a
     let result: string | null = null;
     let error: Error | null = null;
 

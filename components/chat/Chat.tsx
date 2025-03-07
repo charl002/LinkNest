@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import ChatMessage from "./ChatMessage";
+import { Video } from 'lucide-react';
 
 import { Message } from "@/types/message";
 import { User } from "@/types/user";
@@ -196,6 +197,12 @@ export default function Chat() {
             className="px-4 py-2 bg-blue-500 text-white rounded-lg"
           >
             Send
+          </button>
+          <button
+            onClick={() => {router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`)}}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+          >
+            <Video/>
           </button>
         </div>
       </section>

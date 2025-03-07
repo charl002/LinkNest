@@ -73,3 +73,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* scrolling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc; 
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa; 
+}

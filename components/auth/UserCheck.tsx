@@ -133,8 +133,11 @@ export default function UserCheck() {
                     allPosts = allPosts.concat(customData.posts);
                 }
 
-                const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
-                setPosts(shuffledPosts);
+                // Sort posts by createdAt in descending order (newest first)
+                const sortedPosts = allPosts.sort((a, b) => 
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+                setPosts(sortedPosts);
             } catch (err) {
                 console.error("Error fetching posts:", err);
             } finally {

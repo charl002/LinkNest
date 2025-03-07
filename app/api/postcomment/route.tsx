@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import updateData from "@/firebase/firestore/updateData";
+import updateArrayField from "@/firebase/firestore/updateData";
 
 export async function POST(req: Request) {
     try {
-        const { postId, username, comment } = await req.json();
+        const { postId, username, comment, postType } = await req.json();
 
-        if (!postId || !username || !comment) {
+        if (!postId || !username || !comment || !postType) {
             return NextResponse.json({ message: "Email, name, username, and image are required" }, { status: 400 });
         }
 
@@ -18,14 +18,15 @@ export async function POST(req: Request) {
         });
         const date = `${datePart} ${timePart}`
 
-        const data = { 
+        const newComment = { 
             username,
             comment , 
             likes: 0 ,
-            date
+            date,
+            likedBy: [],
         };
 
-        const { result: docId, error } = await updateData("posts", postId, data);
+        const { result: docId, error } = await updateArrayField(postType, postId, "comments", newComment);
 
         if (error) {
             return NextResponse.json({ message: "Error adding comment", error }, { status: 500 });
