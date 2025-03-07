@@ -11,7 +11,7 @@ interface Post {
   username: string;
   description: string;
   tags: string[];
-  comments: { comment: string; username: string; date: string; likes: number }[];
+  comments: { comment: string; username: string; date: string; likes: number, likedBy: string[] }[];
   likes: number;
   images: { url: string; alt: string; thumb: string }[];
   createdAt: string;

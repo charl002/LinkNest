@@ -44,7 +44,7 @@ interface PostData {
   username: string;
   description: string;
   tags: string[];
-  comments: { comment: string; username: string; date: string; likes: number }[];
+  comments: { comment: string; username: string; date: string; likes: number, likedBy: string[]; }[];
   likes: number;
   images: { url: string; alt: string; thumb: string }[];
   createdAt: string;
@@ -148,7 +148,14 @@ export default function ProfilePage({ user }: { user: string }) {
         const result = await response2.json();
 
         if (!response2.ok) {
-          throw new Error(result.message || "Failed to fetch friends");
+            throw new Error(result.message || "Failed to fetch posts"); // Changed error message
+        }
+
+        if (!result.posts) {
+            console.error("No posts found in response:", result);
+            setPosts([]);
+            setPostsCount(0);
+            return;
         }
 
         setPostsCount(result.posts.length);

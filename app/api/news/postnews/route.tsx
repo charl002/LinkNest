@@ -47,7 +47,8 @@ export async function POST() {
         ...newsItem,
         comments: [],
         likes: 0,
-        likedBy: []
+        likedBy: [],
+        createdAt: newsItem.published_at
       };
 
       const { result, error } = await addData('news', newsItemWithLikes);
