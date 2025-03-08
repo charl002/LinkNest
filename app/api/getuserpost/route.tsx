@@ -67,7 +67,8 @@ export async function GET(){
                 likes: data.likes || 0,
                 images: [{ url: data.fileUrl, alt: data.title, thumb: data.fileUrl }],
                 profilePicture: user ? user.image : '',
-                postType: 'posts'
+                postType: 'posts',
+                createdAt:  data.createdAt ?? new Date(0).toISOString(),
             };
         });
 

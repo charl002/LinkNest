@@ -122,7 +122,6 @@ export default function UserCheck() {
                 ]);
                 
                 let allPosts: PostType[] = [];
-
                 if (data.success) {
                     allPosts = allPosts.concat(data.posts);
                 }
@@ -134,10 +133,12 @@ export default function UserCheck() {
                     allPosts = allPosts.concat(customData.posts);
                 }
 
-                // Sort posts by createdAt in descending order (newest first)
-                const sortedPosts = allPosts.sort((a, b) => 
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                );
+                const sortedPosts = [...allPosts]
+                    .map(post => ({
+                        ...post,
+                        createdAt: post.createdAt
+                    }))
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 setPosts(sortedPosts);
             } catch (err) {
                 console.error("Error fetching posts:", err);
