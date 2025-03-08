@@ -19,7 +19,7 @@ import {
 const Navbar = () => {
 
   const [userName, setUserName] = useState("User");
-  const [userImage, setUserImage] = useState("/../public/defaultProfilePic.jpg");
+  const [userImage, setUserImage] = useState("../../public/defaultProfilePic.jpg");
   const { data: session } = useSession();
 
   const email = session?.user?.email ?? "";
