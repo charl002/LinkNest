@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useFriends } from "../provider/FriendsProvider";
 import { X } from 'lucide-react';
+import Link from "next/link";
 
 
 import { User } from "@/types/user";
@@ -357,17 +358,19 @@ export default function Sidebar() {
             <ul className="mt-2 w-full">
               {pendingRequests.map((user) => (
                 <li key={user.id} className="flex justify-between items-center p-2 border-b">
-                  <div className="flex items-center gap-3">
-                    <Image 
-                      src={user.image} 
-                      alt={user.username} 
-                      width={40} 
-                      height={40} 
-                      className="rounded-full border"
-                      onError={(e) => console.error(`Error loading image for ${user.username}:`, e)}
-                    />
-                    <span className="text-md font-medium">{user.username}</span>
-                  </div>
+                  <Link key={user.id} href={`/profile/${encodeURIComponent(user.username)}`}>
+                    <div className="flex items-center gap-3">
+                      <Image 
+                        src={user.image} 
+                        alt={user.username} 
+                        width={40} 
+                        height={40} 
+                        className="rounded-full border"
+                        onError={(e) => console.error(`Error loading image for ${user.username}:`, e)}
+                      />
+                      <span className="text-md font-medium">{user.username}</span>
+                    </div>
+                  </Link>
                    <div className="flex items-center gap-2">
                       <Button onClick={() => handleAcceptRequest(user.username)}>Accept</Button>
                       <X 
