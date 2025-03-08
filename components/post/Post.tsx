@@ -13,6 +13,7 @@ interface Comment {
     date: string;
     likes: number;
     likedBy: string[];
+    profilePicture?: string;
 }
 
 interface PostProps {
@@ -49,6 +50,37 @@ export default function Post({ title, username, description, tags, comments, lik
         fetchSessionUsername();
     }, [session, likedBy, sessionUsername]);
 
+      // Fetch profile pictures for comments
+      useEffect(() => {
+        const fetchProfilePictures = async () => {
+            const updatedComments = await Promise.all(
+                postComments.map(async (comment) => {
+                    if (!comment.profilePicture) {
+                        try {
+                            const response = await fetch(`/api/getuserbyusername?username=${comment.username}`);
+                            if (!response.ok) throw new Error("Failed to fetch profile picture");
+
+                            const userData = await response.json();
+                            return {
+                                ...comment,
+                                profilePicture: userData.data.image || "/defaultProfilePic.jpg",
+                            };
+                        } catch (error) {
+                            console.error("Error fetching profile picture:", error);
+                            return { ...comment, profilePicture: "/defaultProfilePic.jpg" };
+                        }
+                    }
+                    return comment;
+                })
+            );
+            setPostComments(updatedComments);
+        };
+        if (comments.length > 0) {
+          fetchProfilePictures();
+      }
+    }, [comments]);
+
+    
     const handleToggleLike = async () => {
         if (!session?.user || !sessionUsername || isLoading) return;
 
@@ -105,7 +137,8 @@ export default function Post({ title, username, description, tags, comments, lik
                         comment: newComment, 
                         date: "Just now", 
                         likes: 0, 
-                        likedBy: [] // Initialize with empty array
+                        likedBy: [],
+                        profilePicture: profilePicture || "/defaultProfilePic.jpg" 
                     }
                 ]);
   
@@ -264,7 +297,7 @@ export default function Post({ title, username, description, tags, comments, lik
                   postComments.map((comment, index) => (
                     <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
                       <Image
-                        src="/defaultProfilePic.jpg"
+                        src={comment.profilePicture || defaultImageUrl}
                         alt={comment.username}
                         width={40}
                         height={40}
