@@ -54,6 +54,26 @@ const CreatePost = () => {
         return data;
     };
 
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_VIDEO_LENGTH = 38; // 38 seconds
+    const validateVideoDuration = (file: File): Promise<boolean> => {
+        return new Promise((resolve) => {
+            const video = document.createElement("video");
+            video.preload = "metadata";
+            video.src = URL.createObjectURL(file);
+
+            video.onloadedmetadata = () => {
+                URL.revokeObjectURL(video.src);
+                if (video.duration > MAX_VIDEO_LENGTH) {
+                    customToast({ message: `Video must be less than ${MAX_VIDEO_LENGTH} seconds.`, type: "error" });
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            };
+        });
+    };
+    
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
     
@@ -77,6 +97,19 @@ const CreatePost = () => {
             return;
         }
 
+        let tooLong = false;
+        hashtags.split(" ").forEach(tag => {
+            if(tag.length > 20){
+                customToast({ message: "Each tag should be less than 20 charecters long.", type: "error" });
+                tooLong = true;
+            }
+        });
+
+        if(tooLong){
+            return;
+        }
+
+    //Image and Video restrictions    
         const allowedTypes = [
             "image/png", "image/jpeg", "image/jpg", 
             "video/mp4", "video/webm", "video/ogg"
@@ -87,17 +120,16 @@ const CreatePost = () => {
             return;
         }
 
-        let tooLong = false;
-
-        hashtags.split(" ").forEach(tag => {
-            if(tag.length > 20){
-                customToast({ message: "Each tag should be less than 20 charecters long.", type: "error" });
-                tooLong = true;
+        if (selectedFile) {
+            if (selectedFile.type.startsWith("image/") && selectedFile.size > MAX_IMAGE_SIZE) {
+                customToast({ message: "Image size must be less than 5MB.", type: "error" });
+                return;
             }
-        });
-
-        if(tooLong){
-            return;
+    
+            if (selectedFile.type.startsWith("video/")) {
+                const isValid = await validateVideoDuration(selectedFile);
+                if (!isValid) return; // Stop if the video is too long
+            }
         }
 
         const formData = new FormData();
