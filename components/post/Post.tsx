@@ -246,16 +246,28 @@ export default function Post({ title, username, description, tags, comments, lik
             <p className="font-bold">{username}</p>
           </div>
         </Link>
+        
         {images.length > 0 && images[0].url ? (
-          <Image 
-            src={images[0].url} 
-            alt={images[0].alt} 
-            width={640} 
-            height={160} 
-            className="mt-4 bg-gray-200 rounded-md" 
-            layout="responsive"
-          />
+          images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
+            <video 
+                controls 
+                className="mt-4 bg-gray-200 rounded-md w-full h-auto"
+            >
+                <source src={images[0].url} type={`video/${images[0].url.split('.').pop()}`} />
+                Your browser does not support the video tag.
+            </video>
+          ) : (
+            <Image 
+              src={images[0].url} 
+              alt={images[0].alt} 
+              width={640} 
+              height={160} 
+              className="mt-4 bg-gray-200 rounded-md" 
+              layout="responsive"
+            />
+          )
         ) : null}
+
         <p className="mt-2 font-semibold">{title}</p>
         <p className="text-gray-500">{description}</p>
         <p className="text-blue-500 text-sm mt-2">{tags.join(' ')}</p>

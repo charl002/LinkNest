@@ -227,6 +227,7 @@ const CreatePost = () => {
                     <input
                         type="file"
                         ref={fileInputRef}
+                        accept="image/png, image/jpeg, image/jpg, video/mp4, video/webm, video/ogg"
                         onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                         className="hidden"
                     />
