@@ -209,6 +209,14 @@ const CreatePost = () => {
                                         height={40} 
                                         className="w-32 h-32 object-cover mx-auto rounded-md shadow-md"
                                     />
+                                ) : selectedFile.type.startsWith("video/") ? (
+                                    <video
+                                        controls
+                                        className="w-40 h-40 object-cover rounded-md shadow-md"
+                                    >
+                                        <source src={URL.createObjectURL(selectedFile)} type={selectedFile.type} />
+                                        Your browser does not support the video tag.
+                                    </video>
                                 ) : (
                                     <p className="text-gray-600">{selectedFile.name}</p>
                                 )}
