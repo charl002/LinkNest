@@ -21,7 +21,7 @@ export async function DELETE(req: Request) {
         if (friendRequests && friendRequests.docs.length > 0) {
             const requestDoc = friendRequests.docs.find(doc => {
                 const data = doc.data();
-                return data.senderUsername === senderUsername && data.receiverUsername === receiverUsername;
+                return (data.senderUsername === senderUsername && data.receiverUsername === receiverUsername || data.senderUsername == receiverUsername && data.receiverUsername == senderUsername);
             });
 
             if (requestDoc) {

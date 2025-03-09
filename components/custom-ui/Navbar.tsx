@@ -15,11 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { House } from 'lucide-react';
 
 const Navbar = () => {
 
   const [userName, setUserName] = useState("User");
-  const [userImage, setUserImage] = useState("/../public/defaultProfilePic.jpg");
+  const [userImage, setUserImage] = useState("/defaultProfilePic.jpg");
   const { data: session } = useSession();
 
   const email = session?.user?.email ?? "";
@@ -48,7 +49,11 @@ const Navbar = () => {
     return (
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">
-          <Link href="/"><span className="text-black">Link</span><span className="text-blue-500">Nest</span></Link>
+          <Link href="/" className="flex items-center">
+            <span className="text-black">Link</span>
+            <span className="text-blue-500">Nest</span> 
+            <span className="ml-2"><House/></span>
+          </Link>
         </h1>
         
         <div className="flex items-center space-x-3">
