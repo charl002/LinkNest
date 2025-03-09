@@ -259,11 +259,11 @@ export default function UserCheck() {
             <div className="w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
                 <Sidebar />
             </div>
-            <section className="flex flex-col h-full">
+            <section className="flex flex-col h-full overflow-hidden">
                 <div className="flex space-x-2 mb-6">
                     <button
                         onClick={() => setActiveTab('user')}
-                        className={`flex-1 px-4 py-2 rounded-lg ${
+                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
                             activeTab === 'user' 
                                 ? 'bg-blue-500 text-white' 
                                 : 'bg-gray-200 hover:bg-gray-300'
@@ -273,7 +273,7 @@ export default function UserCheck() {
                     </button>
                     <button
                         onClick={() => setActiveTab('bluesky')}
-                        className={`flex-1 px-4 py-2 rounded-lg ${
+                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
                             activeTab === 'bluesky' 
                                 ? 'bg-blue-500 text-white' 
                                 : 'bg-gray-200 hover:bg-gray-300'
@@ -283,7 +283,7 @@ export default function UserCheck() {
                     </button>
                     <button
                         onClick={() => setActiveTab('news')}
-                        className={`flex-1 px-4 py-2 rounded-lg ${
+                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
                             activeTab === 'news' 
                                 ? 'bg-blue-500 text-white' 
                                 : 'bg-gray-200 hover:bg-gray-300'
@@ -292,7 +292,7 @@ export default function UserCheck() {
                         News
                     </button>
                 </div>
-                <div className="space-y-6 overflow-y-auto">
+                <div className="space-y-6 overflow-y-auto flex-1">
                     {posts
                         .filter(post => {
                             if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
