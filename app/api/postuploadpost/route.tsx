@@ -24,17 +24,10 @@ export async function POST(request: Request) {
     const text = formData.get("text")?.toString();
     const tags = formData.getAll("tags").map(tag => tag.toString());
     const file = formData.get("file") as File | null;
-    const now = new Date();
-    const datePart = now.toISOString().split("T")[0]; 
-    const timePart = now.toLocaleString("en-US", {
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    });
-    const date = `${datePart} ${timePart}`
+    const createdAt = new Date().toISOString();
 
     // Validate required fields
-    if (!username || !title || !text || !date) {
+    if (!username || !title || !text || !createdAt) {
       return NextResponse.json(
         { message: "Missing required fields: username, title, text, or date" },
         { status: 400 }
@@ -45,7 +38,7 @@ export async function POST(request: Request) {
       username,
       title,
       text,
-      date,
+      createdAt,
       tags: tags || [],
       likes: 0,
       comments: [],

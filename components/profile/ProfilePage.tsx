@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { customToast } from "@/components/ui/customToast";
 import Link from "next/link";
+import { Plus } from 'lucide-react';
 
 interface UserData {
   id: string;
@@ -27,6 +28,7 @@ interface UserData {
     email: string;
     image: string;
     description: string;
+    background: string;
   };
 }
 
@@ -36,6 +38,7 @@ interface Friend {
   username: string;
   name: string;
   email: string;
+  background: string;
 }
 
 interface PostData {
@@ -68,7 +71,7 @@ export default function ProfilePage({ user }: { user: string }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const fileInputRef1 = useRef<HTMLInputElement | null>(null);
-  //const [background, setBackground] = useState<File | null>(null);
+  const [background, setBackground] = useState<File | null>(null);
   const fileInputRef2 = useRef<HTMLInputElement | null>(null);
   const [isFriendsDialogOpen, setIsFriendsDialogOpen] = useState(false);
   const [sessionUsername, setSessionUsername] = useState('');
@@ -253,6 +256,7 @@ export default function ProfilePage({ user }: { user: string }) {
   
     try {
       let profilePictureUrl = userData.data.image; 
+      let backgroundPictureUrl = userData.data.background;
   
       if (profilePicture) {
         const formData = new FormData();
@@ -269,7 +273,25 @@ export default function ProfilePage({ user }: { user: string }) {
           throw new Error(result.message || "Failed to upload profile picture");
         }
   
-        profilePictureUrl = result.imageUrl; 
+        profilePictureUrl = result.fileUrl; 
+      }
+
+      if (background) {
+        const formData = new FormData();
+        formData.append("file", background);
+        formData.append("username", sessionUsername);
+  
+        const response = await fetch("/api/postimage", {
+          method: "POST",
+          body: formData,
+        });
+  
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to upload background picture");
+        }
+  
+        backgroundPictureUrl = result.fileUrl; 
       }
   
       const updateResponse = await fetch("/api/updateuser", {
@@ -282,6 +304,7 @@ export default function ProfilePage({ user }: { user: string }) {
           username,
           description,
           image: profilePictureUrl, 
+          background: backgroundPictureUrl
         }),
       });
   
@@ -312,7 +335,7 @@ export default function ProfilePage({ user }: { user: string }) {
       
           <div className="w-full h-32 bg-gray-300 relative">
             <Image
-              src={userData.data.image}
+              src={userData.data.background || userData.data.image}
               alt="User Profile"
               layout="fill"
               objectFit="cover"
@@ -332,7 +355,16 @@ export default function ProfilePage({ user }: { user: string }) {
 
             <div className="mt-8 flex justify-between items-center">
               <div>
-                <p className="text-lg font-bold">{userData.data.name}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-lg font-bold">{userData.data.name}</p>
+                  {userData.data.email === email && (
+                    <Link href="/createpost">
+                      <div className="px-4 py-0 bg-blue-500 text-white text-sm rounded-full ml-4">
+                        <Plus />
+                      </div>
+                    </Link>
+                  )}
+                </div>
                 <p className="text-gray-500">@{userData.data.username}</p>
                 <br />
                 <p className="text-gray-700">{userData.data.description}</p>
@@ -370,20 +402,8 @@ export default function ProfilePage({ user }: { user: string }) {
                       <Input
                           type="file"
                           ref={fileInputRef2}
-                          readOnly
-                          //onChange={(e) => setBackground(e.target.files?.[0] || null)}
+                          onChange={(e) => setBackground(e.target.files?.[0] || null)}
                           className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="username" className="text-right">
-                        Username
-                      </Label>
-                      <Input
-                        id="username"
-                        value={username}
-                        readOnly
-                        className="col-span-3"
                       />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">

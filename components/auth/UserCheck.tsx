@@ -8,20 +8,7 @@ import Post from "@/components/post/Post";
 import { Toaster } from "sonner";
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
 
-interface Post {
-    id: string;
-    title: string;
-    username: string;
-    description: string;
-    tags: string[];
-    comments: { comment: string; username: string; date: string; likes: number, likedBy: string[] }[];
-    likes: number;
-    images: { url: string; alt: string; thumb: string }[];
-    createdAt: string;
-    profilePicture: string;
-    postType: 'posts' | 'bluesky' | 'news';
-    likedBy: string[];
-}
+import { PostType } from "@/types/post";
 
 export default function UserCheck() {
     const { data: session } = useSession();
@@ -29,9 +16,10 @@ export default function UserCheck() {
     const [username, setUsername] = useState("");
     const [description, setDescription] = useState("");
     const [usernameError, setUsernameError] = useState("");
-    const [posts, setPosts] = useState<Post[]>([]);
+    const [posts, setPosts] = useState<PostType[]>([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
     const [sessionUsername, setSessionUsername] = useState('');
+    const [activeTab, setActiveTab] = useState('user'); // Changed from 'all' to 'user'
 
     useEffect(() => {
         if (!session?.user) return;
@@ -133,8 +121,7 @@ export default function UserCheck() {
                     customResponse.json()
                 ]);
                 
-                let allPosts: Post[] = [];
-
+                let allPosts: PostType[] = [];
                 if (data.success) {
                     allPosts = allPosts.concat(data.posts);
                 }
@@ -146,10 +133,12 @@ export default function UserCheck() {
                     allPosts = allPosts.concat(customData.posts);
                 }
 
-                // Sort posts by createdAt in descending order (newest first)
-                const sortedPosts = allPosts.sort((a, b) => 
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                );
+                const sortedPosts = [...allPosts]
+                    .map(post => ({
+                        ...post,
+                        createdAt: post.createdAt
+                    }))
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 setPosts(sortedPosts);
             } catch (err) {
                 console.error("Error fetching posts:", err);
@@ -266,21 +255,67 @@ export default function UserCheck() {
     }
 
     return (
-        <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen">
-            <Sidebar />
-            <section className="flex flex-col space-y-6 h-full overflow-y-auto">
-                {posts.map((post, index) => (
-                    <Post 
-                        key={`${post.id}-${index}`} 
-                        {...post} 
-                        profilePicture={post.profilePicture || ""}
-                        documentId={post.id}
-                        postType={post.postType}
-                        sessionUsername={sessionUsername}
-                    />
-                ))}
+        <div className="grid grid-cols-[300px_1fr_300px] gap-6 p-6 w-full h-screen">
+            <div className="w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <Sidebar />
+            </div>
+            <section className="flex flex-col h-full overflow-hidden">
+                <div className="flex space-x-2 mb-6">
+                    <button
+                        onClick={() => setActiveTab('user')}
+                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
+                            activeTab === 'user' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                    >
+                        Posts
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('bluesky')}
+                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
+                            activeTab === 'bluesky' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                    >
+                        Bluesky
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('news')}
+                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
+                            activeTab === 'news' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                    >
+                        News
+                    </button>
+                </div>
+                <div className="space-y-6 overflow-y-auto flex-1">
+                    {posts
+                        .filter(post => {
+                            if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
+                            if (activeTab === 'bluesky') return post.postType === 'bluesky';
+                            if (activeTab === 'news') return post.postType === 'news';
+                            return true;
+                        })
+                        .map((post, index) => (
+                            <Post 
+                                key={`${post.id}-${index}`} 
+                                {...post} 
+                                profilePicture={post.profilePicture || ""}
+                                documentId={post.id}
+                                postType={post.postType}
+                                sessionUsername={sessionUsername}
+                            />
+                        ))
+                    }
+                </div>
             </section>
-            <ChatList />
+            <div className="w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <ChatList />
+            </div>
             <Toaster position="bottom-center" richColors></Toaster>
         </div>
     );

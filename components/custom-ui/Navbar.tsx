@@ -15,15 +15,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { House } from 'lucide-react';
 
 const Navbar = () => {
 
   const [userName, setUserName] = useState("User");
+  const [userImage, setUserImage] = useState("/defaultProfilePic.jpg");
   const { data: session } = useSession();
 
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? "User";
-  const userImage = session?.user?.image ?? "../public/defaultProfilePic.jpg";
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -34,6 +35,7 @@ const Navbar = () => {
           if (res.ok) {
             const userData = await res.json();
             setUserName(userData.data.username);
+            setUserImage(userData.data.image);
           }
         } catch (error) {
           console.error("Error fetching username:", error);
@@ -47,7 +49,11 @@ const Navbar = () => {
     return (
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">
-          <a href="/home"><span className="text-black">Link</span><span className="text-blue-500">Nest</span></a>
+          <Link href="/" className="flex items-center">
+            <span className="text-black">Link</span>
+            <span className="text-blue-500">Nest</span> 
+            <span className="ml-2"><House/></span>
+          </Link>
         </h1>
         
         <div className="flex items-center space-x-3">

@@ -5,13 +5,7 @@ import { useSession } from "next-auth/react";
 import { useSocket } from "./SocketProvider";
 import { customToast } from "../ui/customToast";
 
-interface User {
-  id: string;
-  image: string;
-  username: string;
-  name: string;
-  email: string;
-}
+import { User } from "@/types/user";
 
 interface FriendsContextType {
   friends: User[];

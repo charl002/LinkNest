@@ -8,11 +8,12 @@ import { Toaster, toast } from "sonner";
 import Sidebar from "@/components/custom-ui/Sidebar";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
+import ChatMessage from "./ChatMessage";
+import { Video } from 'lucide-react';
 
-interface Message {
-  sender: string;
-  message: string;
-}
+import { Message } from "@/types/message";
+import { User } from "@/types/user";
 
 export default function Chat() {
   const socket = useSocket();
@@ -28,11 +29,17 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [friendUser, setFriendUser] = useState<User | null>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     if (!currentUsername || !friendUsername) return;
 
     async function fetchPreviousMessages() {
       try {
+        setIsLoading(true);
         const response = await fetch(`/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`);
         const data = await response.json();
 
@@ -44,35 +51,55 @@ export default function Chat() {
           data.messages.map((msg: Message) => ({
             sender: msg.sender,
             message: msg.message,
+            date: formatTimestamp(msg.date),
           }))
         );
+
+        const [senderResponse, friendResponse] = await Promise.all([
+          fetch(`/api/getsingleuser?username=${currentUsername}`),
+          fetch(`/api/getsingleuser?username=${friendUsername}`)
+        ]);
+
+        const senderData = await senderResponse.json();
+        const friendData = await friendResponse.json();
+        
+        setCurrentUser(senderData.data);
+        setFriendUser(friendData.data);
+
       } catch (error: unknown) {
         if (error instanceof Error) {
           setErrorMessage(error.message);
         } else {
           setErrorMessage("An unexpected error occurred. Please try again.");
         }
+      } finally {
+        setIsLoading(false);
       }
     }
 
     fetchPreviousMessages();
   }, [currentUsername, friendUsername, router]);
 
+
   useEffect(() => {
     if (!socket || !friendUsername) return;
-
+  
     socket.emit("register", currentUsername);
-
+  
     socket.on("privateMessage", ({ senderId, message }) => {
       if (senderId === friendUsername) {
-        setMessages((prev) => [...prev, { sender: senderId, message }]);
+        setMessages((prev) => [
+          ...prev,
+          { sender: senderId, message, date: formatTimestamp(new Date().toISOString()) }, // Format timestamp
+        ]);
       }
     });
-
+  
     return () => {
       socket.off("privateMessage");
     };
   }, [socket, currentUsername, friendUsername]);
+  
 
   const sendMessage = async () => {
     if (socket && input.trim() && friendUsername && currentUsername) {
@@ -103,7 +130,7 @@ export default function Chat() {
         console.error("Error storing message:", error);
       }
 
-      setMessages((prev) => [...prev, { sender: currentUsername, message: input }]);
+      setMessages((prev) => [...prev, { sender: currentUsername, message: input, date: formatTimestamp(new Date().toISOString()) }]);
       setInput("");
     }
   };
@@ -114,31 +141,47 @@ export default function Chat() {
 
   const handleRedirectToHome = () => {
     setErrorMessage(null);
-    router.push("/home");
+    router.push("/");
   };
+
+  function formatTimestamp(timestamp: string): string {
+    const date = new Date(timestamp);
+    return date.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true,
+    });
+  }
 
   return (
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
       <Sidebar />
       <section className="relative flex flex-col space-y-6 h-full bg-white shadow-md rounded-lg p-4 overflow-hidden">
         <h1 className="text-lg font-semibold">Chat with {friendUsername}</h1>
-        <div
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto w-full space-y-2 pr-2 pb-20"
-        >
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`p-2 rounded-lg max-w-[75%] break-words w-fit ${
-                msg.sender === currentUsername
-                  ? "bg-blue-500 text-white ml-auto"
-                  : "bg-gray-300 text-black mr-auto"
-              }`}
-            >
-              <strong>{msg.sender}:</strong> {msg.message}
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto w-full space-y-5 pr-2 pb-20 p-4 rounded-lg">
+          {isLoading ? (
+          [...Array(8)].map((_, index) => (
+            <div key={index} className={`flex items-start space-x-4 ${index % 2 === 0 ? "justify-start" : "justify-end"}`}>
+              <Skeleton className="w-10 h-10 rounded-full" /> {/* Avatar Skeleton */}
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-24 rounded-md" /> {/* Username & Time Skeleton */}
+                <Skeleton className="h-12 w-40 rounded-md" /> {/* Message Skeleton */}
+              </div>
             </div>
-          ))}
-          <div ref={messagesEndRef} className="pb-10" />
+          ))
+          ) : (
+            messages.map((msg, index) => {
+              const isCurrentUser = msg.sender === currentUsername;
+              const user = isCurrentUser ? currentUser : friendUser;
+
+              return <ChatMessage key={index} message={msg} isCurrentUser={isCurrentUser} user={user} />;
+            })
+          )}
+          <div ref={messagesEndRef} className="pb-2" />
         </div>
         <div className="absolute bottom-0 left-0 w-full p-4 bg-white shadow-md flex items-center space-x-2">
           <input
@@ -154,6 +197,12 @@ export default function Chat() {
             className="px-4 py-2 bg-blue-500 text-white rounded-lg"
           >
             Send
+          </button>
+          <button
+            onClick={() => {router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`)}}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+          >
+            <Video/>
           </button>
         </div>
       </section>

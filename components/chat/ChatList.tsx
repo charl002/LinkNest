@@ -8,48 +8,145 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useFriends } from "../provider/FriendsProvider";
+import { Badge } from "@/components/ui/badge";
+import { useSocket } from "@/components/provider/SocketProvider";
+import { useSearchParams } from "next/navigation"; 
 
-interface User {
-  id: string;
-  image: string;
-  username: string;
-  name: string;
-  email: string;
-}
+import { User } from "@/types/user";
 
 export default function ChatList() {
   const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const router = useRouter(); // Use Next.js router
 
-  const { friends} = useFriends();
+  const { friends } = useFriends();
+  const socket = useSocket();
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
+
+  const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
+
+  const searchParams = useSearchParams();
+  const activeChatFriend = searchParams.get("friend");
 
   useEffect(() => {
-    async function fetchUsers() {
+    async function fetchUsersAndUnreadMessages() {
       try {
+        // 🔹 Fetch all users
         const response = await fetch("/api/getalluser");
         const data = await response.json();
-
         if (data && Array.isArray(data.users)) {
           setUsers(data.users as User[]);
         } else {
           console.error("Unexpected API response:", data);
           setUsers([]);
         }
+        
+        if (currentUser) {
+          const unreadResponse = await fetch(`/api/getunreadmessage?receiver=${currentUser}`);
+          const unreadData = await unreadResponse.json();
+
+          console.log("unreadData", unreadData);
+
+          if (unreadResponse.ok) {
+            setUnreadMessages(unreadData.unreadCounts);
+          } else {
+            console.error("Error fetching unread messages:", unreadData.message);
+          }
+        }
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching users or unread messages:", error);
         setUsers([]);
       }
     }
-    fetchUsers();
-  }, []);
+  
+    fetchUsersAndUnreadMessages();
+  }, [currentUser]);
 
-  const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
+  useEffect(() => {
+    if (!socket || !currentUser) return;
+  
+    socket.on("privateMessage", async (data: { senderId: string; receiverId: string }) => {
+      if (data.receiverId !== currentUser) return; // Ignore messages not meant for the current user
+  
+      console.log("Active Chat Friend:", activeChatFriend);
+  
+      setUnreadMessages((prev = {}) => {
+        // 🔹 If the user is already chatting with the sender, don't increase the unread count
+        if (activeChatFriend === data.senderId) {
+          return { ...prev, [data.senderId]: 0 };
+        }
+        return {
+          ...prev,
+          [data.senderId]: (prev[data.senderId] || 0) + 1,
+        };
+      });
+  
+      // 🔹 If chat is open and the sender is the currently chatting friend, reset unread count
+      if (activeChatFriend === data.senderId) {
+        try {
+          await fetch("/api/postunreadmessage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sender: data.senderId,
+              receiver: data.receiverId,
+              count: 0, // Reset unread count
+            }),
+          });
+        } catch (error) {
+          console.error("Error resetting unread count:", error);
+        }
+        return;
+      }
+  
+      // 🔹 Otherwise, increment unread count normally
+      try {
+        await fetch("/api/postunreadmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: data.senderId,
+            receiver: data.receiverId,
+            count: 1, // Increment unread count
+          }),
+        });
+      } catch (error) {
+        console.error("Error storing unread message:", error);
+      }
+    });
+  
+    return () => {
+      socket.off("privateMessage");
+    };
+  }, [currentUser, socket, activeChatFriend]);
 
-  const openChat = (friendUsername: string, currentUsername: string | null) => {
+  const openChat = async (friendUsername: string, currentUsername: string | null) => {
     if (!currentUsername) return;
+  
+    setUnreadMessages((prev) => ({
+      ...prev,
+      [friendUsername]: 0,
+    }));
+  
+    console.log("friendUsername", friendUsername);
+    console.log("currentUsername", currentUsername);
+
+    try {
+      await fetch("/api/postunreadmessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: friendUsername,
+          receiver: currentUsername,
+          count: 0,
+        }),
+      });
+    } catch (error) {
+      console.error("Error resetting unread count:", error);
+    }
+  
     router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  };
+  };  
 
   return (
     <aside className="bg-white shadow-md p-4 rounded-md">
@@ -74,9 +171,17 @@ export default function ChatList() {
                     <p className="text-sm font-medium">{user.username}</p>
                   </div>
                 </Link>
-                <Button onClick={() => openChat(user.username, currentUser)}>Chat</Button>
+                <div className="flex items-center gap-2">
+                  {unreadMessages && unreadMessages[user.username] > 0 && (
+                    <Badge variant="destructive">
+                      {unreadMessages[user.username]}
+                    </Badge>
+                  )}
+                  <Button onClick={() => openChat(user.username, currentUser)}>
+                    Chat
+                  </Button>
+                </div>
               </div>
-              
             ))
           ) : (
             <p className="text-gray-500">No friends found</p>
