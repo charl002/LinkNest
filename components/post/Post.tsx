@@ -52,37 +52,40 @@ export default function Post({ title, username, description, tags, comments, lik
         fetchSessionUsername();
     }, [session, likedBy, sessionUsername]);
 
-      // Fetch profile pictures for comments
-      useEffect(() => {
-        const fetchProfilePictures = async () => {
-            const updatedComments = await Promise.all(
-                postComments.map(async (comment) => {
-                    if (!comment.profilePicture) {
-                        try {
-                            const response = await fetch(`/api/getuserbyusername?username=${comment.username}`);
-                            if (!response.ok) throw new Error("Failed to fetch profile picture");
+      
+    // Fetch profile pictures for comments
+    const fetchProfilePictures = async (comments: Comment[]) => {
+      const updatedComments = await Promise.all(
+          comments.map(async (comment) => {
+              if (!comment.profilePicture || comment.profilePicture === "/defaultProfilePic.jpg") {
+                  try {
+                      const response = await fetch(`/api/getuserbyusername?username=${comment.username}`);
+                      if (!response.ok) throw new Error("Failed to fetch profile picture");
 
-                            const userData = await response.json();
-                            return {
-                                ...comment,
-                                profilePicture: userData.data.image || "/defaultProfilePic.jpg",
-                            };
-                        } catch (error) {
-                            console.error("Error fetching profile picture:", error);
-                            return { ...comment, profilePicture: "/defaultProfilePic.jpg" };
-                        }
-                    }
-                    return comment;
-                })
-            );
-            setPostComments(updatedComments);
-        };
-        if (comments.length > 0) {
-          fetchProfilePictures();
+                      const userData = await response.json();
+                      return {
+                          ...comment,
+                          profilePicture: userData.data.image || "/defaultProfilePic.jpg",
+                      };
+                  } catch (error) {
+                      console.error("Error fetching profile picture:", error);
+                      return { ...comment, profilePicture: "/defaultProfilePic.jpg" };
+                  }
+              }
+              return comment;
+          })
+      );
+      return updatedComments;
+  };
+
+  useEffect(() => {
+      if (comments.length > 0) {
+          fetchProfilePictures(comments).then(setPostComments);
       }
-    }, [comments]);
+  }, [comments]);
 
     
+
     const handleToggleLike = async () => {
         if (!session?.user || !sessionUsername || isLoading) return;
 
@@ -132,17 +135,21 @@ export default function Post({ title, username, description, tags, comments, lik
                         : comment
                 );
   
-                setPostComments([
-                    ...updatedComments,
-                    { 
-                        username: sessionUsername, 
-                        comment: newComment, 
-                        date: "Just now", 
-                        likes: 0, 
-                        likedBy: [],
-                        profilePicture: profilePicture || "/defaultProfilePic.jpg" 
-                    }
-                ]);
+            // Add the new comment with a temporary profile picture
+            const newCommentData = { 
+              username: sessionUsername, 
+              comment: newComment, 
+              date: "Just now", 
+              likes: 0, 
+              likedBy: [],
+              profilePicture: "/defaultProfilePic.jpg" // Temporary placeholder
+          };
+
+          setPostComments([...updatedComments, newCommentData]);
+
+          // Fetch profile pictures for all comments (including the new one)
+          const updatedCommentsWithProfilePictures = await fetchProfilePictures([...updatedComments, newCommentData]);
+          setPostComments(updatedCommentsWithProfilePictures);
   
                 setNewComment(""); 
             } else {
