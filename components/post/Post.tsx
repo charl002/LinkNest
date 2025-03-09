@@ -6,6 +6,9 @@ import { FiThumbsUp } from 'react-icons/fi';
 import { BiReply } from 'react-icons/bi';
 import { IoSend } from "react-icons/io5";
 import { FaRegThumbsUp, FaThumbsUp, FaRegComment } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface Comment {
     username: string;
@@ -37,7 +40,6 @@ export default function Post({ title, username, description, tags, comments, lik
     const [isLiked, setIsLiked] = useState(false);
     const [newComment, setNewComment] = useState("");
     const [postComments, setPostComments] = useState<Comment[]>(comments);
-    const [showComments, setShowComments] = useState(false); 
     const [isLoading, setIsLoading] = useState(false);
     const [isOverLimit, setIsOverLimit] = useState(false);
 
@@ -282,28 +284,17 @@ export default function Post({ title, username, description, tags, comments, lik
             <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
           </button>
 
-          <button
-            onClick={() => setShowComments(true)}
-            className="flex items-center space-x-2 px-3 py-1 rounded-md transition bg-gray-100 text-gray-600 hover:bg-gray-200"
-          >
-            <FaRegComment />
-            <span>Comment</span>
-          </button>
-        </div>
-        
-        {showComments && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70">
-            <div className="bg-white text-gray-900 p-6 rounded-lg shadow-lg w-[500px] max-h-[600px] overflow-y-auto relative">
-             
-              <button
-                  onClick={() => setShowComments(false)}
-                  className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"
-              >
-                  X
-              </button>
-
-              <h3 className="text-lg font-semibold mb-4">Comments</h3>
-
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="flex items-center space-x-2">
+                <FaRegComment />
+                <span>Comment</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Comments</DialogTitle>
+              </DialogHeader>
               <div className="space-y-4">
                 {postComments.length > 0 ? (
                   postComments.map((comment, index) => (
@@ -319,25 +310,25 @@ export default function Post({ title, username, description, tags, comments, lik
                         <p className="font-bold text-sm text-gray-900">{comment.username} <span className="text-gray-500 text-xs">{comment.date}</span></p>
                         <p className="text-gray-700 break-words overflow-wrap-anywhere">{comment.comment}</p>
                         <div className="flex items-center space-x-3 mt-1 text-gray-500 text-sm">
-                            <button 
-                                onClick={() => handleCommentLike(index, comment.likedBy.includes(sessionUsername))}
-                                className={`flex items-center space-x-1 hover:text-gray-700 ${
-                                    comment.likedBy.includes(sessionUsername) ? 'text-blue-600' : ''
-                                }`}
-                                disabled={isLoading}
-                            >
-                                {comment.likedBy.includes(sessionUsername) ? 
-                                    <FaThumbsUp /> : 
-                                    <FiThumbsUp />
-                                }
-                                <span>{comment.likes}</span>
-                            </button>
-                            <button 
-                                onClick={() => handleReply(comment.username)}
-                                className="flex items-center space-x-1 hover:text-gray-700"
-                            >
-                                <BiReply /> <span>Reply</span>
-                            </button>
+                          <button 
+                              onClick={() => handleCommentLike(index, comment.likedBy.includes(sessionUsername))}
+                              className={`flex items-center space-x-1 hover:text-gray-700 ${
+                                  comment.likedBy.includes(sessionUsername) ? 'text-blue-600' : ''
+                              }`}
+                              disabled={isLoading}
+                          >
+                              {comment.likedBy.includes(sessionUsername) ? 
+                                  <FaThumbsUp /> : 
+                                  <FiThumbsUp />
+                              }
+                              <span>{comment.likes}</span>
+                          </button>
+                          <button 
+                              onClick={() => handleReply(comment.username)}
+                              className="flex items-center space-x-1 hover:text-gray-700"
+                          >
+                              <BiReply /> <span>Reply</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -349,13 +340,11 @@ export default function Post({ title, username, description, tags, comments, lik
 
               <div className="mt-3 flex items-center space-x-2">
                 <div className="flex-1 relative">
-                  <input
+                  <Input
                     type="text"
                     value={newComment}
                     onChange={handleCommentChange}
                     onKeyPress={handleKeyPress}
-                    className={`w-full px-3 py-2 border rounded-lg bg-white text-gray-900 placeholder-gray-500
-                      ${isOverLimit ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                     placeholder="Write a comment... (100 characters max)"
                   />
                   {isOverLimit && (
@@ -364,21 +353,16 @@ export default function Post({ title, username, description, tags, comments, lik
                     </p>
                   )}
                 </div>
-                <button 
+                <Button 
                   onClick={handlePostComment} 
                   disabled={isOverLimit || !newComment.trim()}
-                  className={`px-4 py-2 transition ${
-                    isOverLimit || !newComment.trim() 
-                      ? 'text-gray-400 cursor-not-allowed' 
-                      : 'hover:text-gray-500'
-                  }`}
                 >
                   <IoSend className="inline-block text-xl" />
-                </button>
+                </Button>
               </div>
-            </div>
-          </div>
-        )}
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     );
 }
