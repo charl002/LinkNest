@@ -136,6 +136,13 @@ export default function Chat() {
   };
 
   useEffect(() => {
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }
+  }, [isLoading, messages.length]); // Trigger when loading is complete
+
+  
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 

@@ -11,12 +11,12 @@ const handle = app.getRequestHandler();
 
 const userSockets: Record<string, string> = {};
 
-app.prepare().then(() => {
-  const server = createServer((req, res) => {
-    const parsedUrl = parse(req.url!, true);
-    handle(req, res, parsedUrl);
-  });
+const server = createServer((req, res) => {
+  const parsedUrl = parse(req.url!, true);
+  handle(req, res, parsedUrl);
+});
 
+app.prepare().then(() => {
   const io = new SocketIOServer(server, {
     cors: {
       origin: "*",
@@ -107,3 +107,5 @@ app.prepare().then(() => {
     console.log(`> Ready on http://${hostname}:${port}`);
   });
 });
+
+export default server;
