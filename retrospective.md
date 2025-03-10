@@ -1,4 +1,4 @@
-RETROSPECTIVE 1:
+#RETROSPECTIVE 1:
     Thiha:
     Understanding how to start our chatting server at the same time as the next server was a bit complicated at first.
     Fixing the artifact went well and helped us finally get Azure Deployment working.
@@ -24,24 +24,25 @@ RETROSPECTIVE 1:
     creating Google authentication, which was a little tricky, as well as making the post API that adds posts to the user’s feed.
     What went well was implementing the friend acceptance feature, which integrates with the friend request system Thiha created.
     Something to change would be the performance of our application since it is a little slow.
-RETROSPECTIVE 2:
+
+#RETROSPECTIVE 2:
     Thiha:
-    Went well: Chatting functionality
-    Went bad: Modularity and Comments, and not having tests already implemented.
-    Next sprint: More unit tests, and complete champion features.
+        Went well: Chatting functionality
+        Went bad: Modularity and Comments, and not having tests already implemented.
+        Next sprint: More unit tests, and complete champion features.
     Charles:
-    Went well: Making root dynamically change depending on if the user is signed in.
-    Went bad: Modularity and Comments, and not having tests already implemented.
-    Next sprint: More unit tests, and complete champion features.
+        Went well: Making root dynamically change depending on if the user is signed in.
+        Went bad: Modularity and Comments, and not having tests already implemented.
+        Next sprint: More unit tests, and complete champion features.
     Abdullah:
-    Went well: Adding Video functionality to Feed.
-    Went bad: Modularity and Comments, and not having tests already implemented.
-    Next sprint: More unit tests, and complete champion features.
+        Went well: Adding Video functionality to Feed.
+        Went bad: Modularity and Comments, and not having tests already implemented.
+        Next sprint: More unit tests, and complete champion features.
     Mohammad:
-    Went well: Completing Video Chatting.
-    Went bad: Modularity and Comments, and not having tests already implemented.
-    Next sprint: More unit tests, and complete champion features.
+        Went well: Completing Video Chatting.
+        Went bad: Modularity and Comments, and not having tests already implemented.
+        Next sprint: More unit tests, and complete champion features.
     Ahmed:
-    Went well: Adding Decline friend request and remove friends features.
-    Went bad: Modularity and Comments, and not having tests already implemented.
-    Next sprint: More unit tests, and complete champion features.
+        Went well: Adding Decline friend request and remove friends features.
+        Went bad: Modularity and Comments, and not having tests already implemented.
+        Next sprint: More unit tests, and complete champion features.
