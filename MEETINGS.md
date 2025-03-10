@@ -99,3 +99,21 @@ As of what we all worked on for the Sprint 2 submission:
 **Mohammad**: Mohammad added a create post button on the profile page, made it so you can click on a user in ```/chat```, you will go to their profile and added a pending request section.
 
 **Thiha**: As of me, I fixed bugs related to the ```unread messages``` functionality, added quality of life improvements in ```/chat```, and finally added a test for ```helloworld``` api route, that mocks the server.
+
+### 2025-03-10
+
+We demo'ed our project in front of the class, and we limit tested our deployed application on Render.
+
+**Charles**: Will fix clipping issue with the comments. He will also fix fetching error on deployment regarding the BlueSky Posts.
+
+**Mohammad**: He will focus on deletion of different parts of the application, like user, posts, comments, etc.
+
+**Abdullah**: He will focus on performance, like adding caching and lazy loading for the posts.
+
+**Ahmed**: He will fix the logging out your account bug. Ahmed will also add reactions and emojis to messages in the chat. He will also implement replying to messages.
+
+**Thiha**: I will add toasts for when a video call is happening, and put a message when a call happens. I will also start the group chats.
+
+Also, as a team, we will implement the testings for our API routes.
+
+These tasks are expected to be due by Sunday, meaning March 16th. We are going to have check-ups when we have in class sessions.
