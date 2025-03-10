@@ -41,6 +41,21 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Production Website Link
+## Production Website Links
 
 [`Azure Deployment Website`](https://linknest-fkd5eba5dqbrhzd7.canadacentral-01.azurewebsites.net/).
+[`Render Deployment Website`](https://linknest-rqd1.onrender.com/).
+
+## Screenshots
+![Login Page](public/readme1.png)
+Login with the Sign in button in the top right.
+![Home Page](public/readme2.png)
+Welcome to the home page.
+![Click on PFP](public/readme3.png)
+Click your Profile Picture for different options.
+![Chatting Page](public/readme4.png)
+Add friends and chat with them!
+![Profile Page](public/readme5.png)
+Look at user profiles.
+![Create Post Page](public/readme6.png)
+Create Posts!
