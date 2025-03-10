@@ -48,14 +48,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Screenshots
 ![Login Page](public/readme1.png)
-Login with the Sign in button in the top right.
+Login with the Sign in button in the top right. <br />
 ![Home Page](public/readme2.png)
-Welcome to the home page.
+Welcome to the home page. <br />
 ![Click on PFP](public/readme3.png)
-Click your Profile Picture for different options.
+Click your Profile Picture for different options. <br />
 ![Chatting Page](public/readme4.png)
-Add friends and chat with them!
+Add friends and chat with them! <br />
 ![Profile Page](public/readme5.png)
-Look at user profiles.
+Look at user profiles. <br />
 ![Create Post Page](public/readme6.png)
-Create Posts!
+Create Posts! <br />
