@@ -103,12 +103,6 @@ export default function Chat() {
 
   const sendMessage = async () => {
     if (socket && input.trim() && friendUsername && currentUsername) {
-      socket.emit("privateMessage", {
-        senderId: currentUsername,
-        receiverId: friendUsername,
-        message: input,
-      });
-
       try {
         const response = await fetch("/api/postmessage", {
           method: "POST",
@@ -129,6 +123,26 @@ export default function Chat() {
         toast.error("Error storing message.");
         console.error("Error storing message:", error);
       }
+
+      try {
+        await fetch("/api/postunreadmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: currentUsername,
+            receiver: friendUsername,
+            count: 1, // Increment unread count in Firestore if offline
+          }),
+        });
+      } catch (error) {
+        console.error("Error storing unread message:", error);
+      }
+
+      socket.emit("privateMessage", {
+        senderId: currentUsername,
+        receiverId: friendUsername,
+        message: input,
+      });
 
       setMessages((prev) => [...prev, { sender: currentUsername, message: input, date: formatTimestamp(new Date().toISOString()) }]);
       setInput("");
