@@ -45,8 +45,6 @@ export default function ChatList() {
           const unreadResponse = await fetch(`/api/getunreadmessage?receiver=${currentUser}`);
           const unreadData = await unreadResponse.json();
 
-          console.log("unreadData", unreadData);
-
           if (unreadResponse.ok) {
             setUnreadMessages(unreadData.unreadCounts);
           } else {
@@ -64,14 +62,11 @@ export default function ChatList() {
 
   useEffect(() => {
     if (!socket || !currentUser) return;
-  
+
     socket.on("privateMessage", async (data: { senderId: string; receiverId: string }) => {
       if (data.receiverId !== currentUser) return; // Ignore messages not meant for the current user
-  
-      console.log("Active Chat Friend:", activeChatFriend);
-  
+
       setUnreadMessages((prev = {}) => {
-        // 🔹 If the user is already chatting with the sender, don't increase the unread count
         if (activeChatFriend === data.senderId) {
           return { ...prev, [data.senderId]: 0 };
         }
@@ -80,8 +75,8 @@ export default function ChatList() {
           [data.senderId]: (prev[data.senderId] || 0) + 1,
         };
       });
-  
-      // 🔹 If chat is open and the sender is the currently chatting friend, reset unread count
+
+      // Check if the receiver is online, if not update Firestore
       if (activeChatFriend === data.senderId) {
         try {
           await fetch("/api/postunreadmessage", {
@@ -98,23 +93,8 @@ export default function ChatList() {
         }
         return;
       }
-  
-      // 🔹 Otherwise, increment unread count normally
-      try {
-        await fetch("/api/postunreadmessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sender: data.senderId,
-            receiver: data.receiverId,
-            count: 1, // Increment unread count
-          }),
-        });
-      } catch (error) {
-        console.error("Error storing unread message:", error);
-      }
     });
-  
+
     return () => {
       socket.off("privateMessage");
     };
@@ -127,9 +107,6 @@ export default function ChatList() {
       ...prev,
       [friendUsername]: 0,
     }));
-  
-    console.log("friendUsername", friendUsername);
-    console.log("currentUsername", currentUsername);
 
     try {
       await fetch("/api/postunreadmessage", {
