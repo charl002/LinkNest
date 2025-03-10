@@ -336,10 +336,24 @@ export default function Sidebar() {
                   {filteredUsers.map(user => (
                     <li 
                       key={user.id} 
-                      className="p-2 hover:bg-gray-200 cursor-pointer"
+                      className="p-2 hover:bg-gray-200 cursor-pointer flex justify-between items-center"
                       onClick={() => setFriendName(user.username)}
                     >
-                      {user.username}
+                      <div className="flex items-center gap-3">
+                        <Image
+                          src={user.image}
+                          alt="User Profile"
+                          width={40}
+                          height={40}
+                          className="rounded-full"
+                        />
+                        <span>{user.username}</span>
+                      </div>
+                      <Link key={user.id} href={`/profile/${encodeURIComponent(user.username)}`}>
+                        <div className="px-4 py-2 bg-black text-white text-sm rounded-md">
+                          Visit
+                        </div>
+                      </Link>
                     </li>
                   ))}
                 </ul>

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { customToast } from "@/components/ui/customToast";
 import Link from "next/link";
 import { Plus } from 'lucide-react';
+import LoadingLogo from "@/components/custom-ui/LoadingLogo";
 
 interface UserData {
   id: string;
@@ -327,7 +328,7 @@ export default function ProfilePage({ user }: { user: string }) {
 
   return (
     <div className="bg-white min-h-screen w-full text-gray-800">
-      {loading && <p className="text-center py-6">Loading...</p>}
+      {loading && <LoadingLogo/>}
       {error && <p className="text-red-500 text-center py-6">{error}</p>}
 
       {userData && (
