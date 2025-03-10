@@ -81,3 +81,21 @@ We then had a meeting to see what everyone has worked on, and what they will wor
 **Mohammed**: He implemented the profile picture being updated. For next, he will also implement adding videocalling and polishing the profile picture update due to a bug.
 
 **Thiha**: I added authentication for the chatting, meaning you can't access another user's chat. I also used socket IO to make friend requests appear in real time, and when accepting a friend request. I will now also implement declining a friend request and removing a friend. I also will fix chatting.
+
+### 2025-03-07
+
+Today was the retrospective meeting with Jaya. All and all, we were pretty satisfied with the work we have done in this sprint. But, we do notice that our team has not taken care of the issue board that much, which is a problem if one of the member finishes a task, but its unclear on what to tackle next. We also noticed that some of our issues were too ```broad```, so next time we should create smaller issues with distinct goals.
+
+Another issue is the lack of documentation and modularity in our code, and we have now started to work on this (And continue working on it for Sprint 3).
+
+As of what we all worked on for the Sprint 2 submission:
+
+**Charles**: Fixed the redundancy of /home and /, and now the 'home' is in root ```/```. He also worked on the filtering of the posts, between _Posts_, _News_ and _BlueSky_ with **Ahmed**. Finally, he worked also on fixing bugs.
+
+**Ahmed**: As mentioned before, he helped **Charles** do the filtering for the posts. He also worked on bug fixes.
+
+**Abdullah**: He fixed the profile pictures not appearing in the comment section, fixed bugs related to the comment not blurring everything in the background, and he also implemented posting videos + validation for it.
+
+**Mohammad**: Mohammad added a create post button on the profile page, made it so you can click on a user in ```/chat```, you will go to their profile and added a pending request section.
+
+**Thiha**: As of me, I fixed bugs related to the ```unread messages``` functionality, added quality of life improvements in ```/chat```, and finally added a test for ```helloworld``` api route, that mocks the server.
