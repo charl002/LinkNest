@@ -51,7 +51,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 Login with the Sign in button in the top right. <br />
 ![Home Page](public/readme2.png)
 Welcome to the home page. <br />
-![Click on PFP](public/readme3.png)
+![Click on PFP](public/readme3.png) <br />
 Click your Profile Picture for different options. <br />
 ![Chatting Page](public/readme4.png)
 Add friends and chat with them! <br />
