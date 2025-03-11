@@ -12,8 +12,8 @@ export async function POST(req: Request) {
 
       const { senderUsername, receiverUsername, message, isCallMsg } = await req.json();
 
-      if (!senderUsername || !receiverUsername || !message || !isCallMsg) {
-        return NextResponse.json({ message: {message} }, { status: 400 });
+      if (!senderUsername || !receiverUsername || !message || isCallMsg === undefined) {
+        return NextResponse.json({ message: "Both usernames and message is required!" }, { status: 400 });
       }
 
       const now =  new Date();
