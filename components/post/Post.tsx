@@ -9,6 +9,7 @@ import { FaRegThumbsUp, FaThumbsUp, FaRegComment } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Trash2 } from 'lucide-react';
 
 interface Comment {
     username: string;
@@ -231,31 +232,38 @@ export default function Post({ title, username, description, tags, comments, lik
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
         <Link href={`/profile/${encodeURIComponent(username)}`}>
-          <div className="flex items-center space-x-2">
-            {profilePicture ? (
-              <Image 
-                src={profilePicture} 
-                alt={`${username}'s profile picture`} 
-                width={40} 
-                height={40} 
-                className="rounded-full" 
-                layout="fixed"
-              />
-            ) : (
-              <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-2">
+              {profilePicture ? (
                 <Image 
-                  src={defaultImageUrl} 
-                  alt="Default Profile" 
+                  src={profilePicture} 
+                  alt={`${username}'s profile picture`} 
                   width={40} 
                   height={40} 
                   className="rounded-full" 
+                  layout="fixed"
                 />
-              </div>
+              ) : (
+                <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+                  <Image 
+                    src={defaultImageUrl} 
+                    alt="Default Profile" 
+                    width={40} 
+                    height={40} 
+                    className="rounded-full" 
+                  />
+                </div>
+              )}
+              <p className="font-bold">{username}</p>
+            </div>
+            {sessionUsername === username && (
+              <button>
+                <Trash2/>
+              </button>
             )}
-            <p className="font-bold">{username}</p>
           </div>
         </Link>
-        
+
         {images.length > 0 && images[0].url ? (
           images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
             <video 
@@ -314,7 +322,16 @@ export default function Post({ title, username, description, tags, comments, lik
                         className="rounded-full flex-shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-bold text-sm text-gray-900">{comment.username} <span className="text-gray-500 text-xs">{comment.date}</span></p>
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-sm text-gray-900">
+                          {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
+                        </p>
+                        {sessionUsername === comment.username && (
+                          <button>
+                            <Trash2 />
+                          </button>
+                        )}
+                      </div>
                         <p className="text-gray-700 break-words overflow-wrap-anywhere">{comment.comment}</p>
                         <div className="flex items-center space-x-3 mt-1 text-gray-500 text-sm">
                           <button 
