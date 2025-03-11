@@ -52,6 +52,7 @@ export default function Chat() {
             sender: msg.sender,
             message: msg.message,
             date: formatTimestamp(msg.date),
+            isCallMsg: msg.isCallMsg
           }))
         );
 
@@ -90,7 +91,11 @@ export default function Chat() {
       if (senderId === friendUsername) {
         setMessages((prev) => [
           ...prev,
-          { sender: senderId, message, date: formatTimestamp(new Date().toISOString()) }, // Format timestamp
+          { sender: senderId, 
+            message, 
+            date: formatTimestamp(new Date().toISOString()),
+            isCallMsg: false
+          }, // Format timestamp
         ]);
       }
     });
@@ -111,6 +116,7 @@ export default function Chat() {
             senderUsername: currentUsername,
             receiverUsername: friendUsername,
             message: input,
+            isCallMsg: false
           }),
         });
 
@@ -144,7 +150,12 @@ export default function Chat() {
         message: input,
       });
 
-      setMessages((prev) => [...prev, { sender: currentUsername, message: input, date: formatTimestamp(new Date().toISOString()) }]);
+      setMessages((prev) => [...prev, { 
+        sender: currentUsername, 
+        message: input, 
+        date: formatTimestamp(new Date().toISOString()),
+        isCallMsg: false
+      }]);
       setInput("");
     }
   };
@@ -165,10 +176,47 @@ export default function Chat() {
     router.push("/");
   };
 
-  const handleRedirectToCall = () => {
-    //WIll add logic here for posting a message, and a toast for the receiver when a call starts.
-    router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`);
-  }
+  const handleRedirectToCall = async () => {
+    if (!currentUsername || !friendUsername || !socket) return;
+
+    const callMessage = "📞 I have started a call! Join Up!";
+    
+    try {
+        socket.emit("privateMessage", {
+            senderId: currentUsername,
+            receiverId: friendUsername,
+            message: callMessage,
+        });
+
+        await fetch("/api/postmessage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                senderUsername: currentUsername,
+                receiverUsername: friendUsername,
+                message: callMessage,
+                isCallMsg: true
+            }),
+        });
+
+        setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+                sender: currentUsername,
+                message: callMessage,
+                date: formatTimestamp(new Date().toISOString()),
+                isCallMsg: true
+            },
+        ]);
+
+        setInput("");
+
+        router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`);
+    } catch (error) {
+        console.error("Error starting the call:", error);
+        toast.error("Error starting the call.");
+    }
+};
 
   function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);

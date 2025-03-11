@@ -10,15 +10,15 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
       }
 
-      const { senderUsername, receiverUsername, message } = await req.json();
+      const { senderUsername, receiverUsername, message, isCallMsg } = await req.json();
 
-      if (!senderUsername || !receiverUsername || !message) {
-          return NextResponse.json({ message: "Both usernames and message are required" }, { status: 400 });
+      if (!senderUsername || !receiverUsername || !message || !isCallMsg) {
+        return NextResponse.json({ message: {message} }, { status: 400 });
       }
 
       const now =  new Date();
 
-      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime() };
+      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime(), isCallMsg: isCallMsg };
 
       const { result: docId, error } = await addData("messages", data);
 
