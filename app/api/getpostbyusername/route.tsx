@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "@firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { Comment } from "@/types/comment";
 
 const db = getFirestore(firebase_app);
 
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
                 description: data.text,
                 tags: data.tags || [],
                 likedBy: data.likedBy || [],
-                comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number, likedBy: string[] }) => ({
+                comments: data.comments.map((comment: Comment) => ({
                     comment: comment.comment,
                     username: comment.username,
                     date: comment.date,

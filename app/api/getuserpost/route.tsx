@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
+import { Comment } from "@/types/comment";
 
 interface Post {
     title: string;
@@ -20,7 +21,7 @@ interface Post {
     fileUrl: string;
     likes: number;
     likedBy: string[];
-    comments: { comment: string; username: string; date: string; likes: number, likedBy: string[] }[];
+    comments: Comment[];
 }
 export async function GET(){
     try{
@@ -57,7 +58,7 @@ export async function GET(){
                 description: data.text,
                 tags: data.tags || [],
                 likedBy: data.likedBy || [],
-                comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number, likedBy: string[] }) => ({
+                comments: data.comments.map((comment: Comment) => ({
                     comment: comment.comment,
                     username: comment.username,
                     date: comment.date,

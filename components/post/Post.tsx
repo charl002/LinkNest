@@ -9,15 +9,7 @@ import { FaRegThumbsUp, FaThumbsUp, FaRegComment } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-
-interface Comment {
-    username: string;
-    comment: string;
-    date: string;
-    likes: number;
-    likedBy: string[];
-    profilePicture?: string;
-}
+import { Comment } from "@/types/comment";
 
 interface PostProps {
     title: string;
