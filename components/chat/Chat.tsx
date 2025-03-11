@@ -165,6 +165,11 @@ export default function Chat() {
     router.push("/");
   };
 
+  const handleRedirectToCall = () => {
+    //WIll add logic here for posting a message, and a toast for the receiver when a call starts.
+    router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`);
+  }
+
   function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
     return date.toLocaleString("en-US", {
@@ -220,7 +225,7 @@ export default function Chat() {
             Send
           </button>
           <button
-            onClick={() => {router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`)}}
+            onClick={handleRedirectToCall}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg"
           >
             <Video/>

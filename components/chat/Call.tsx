@@ -34,7 +34,7 @@ function Call() {
       <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4">
         <Link
           className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400"
-          href="/">
+          href={`/chat?friend=${friendUsername}&user=${currentUsername}`}>
           Leave Call
         </Link>
       </div>
