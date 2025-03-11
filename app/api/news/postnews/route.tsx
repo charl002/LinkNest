@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { GET as getNews } from "../getnews/route";
+import { withRetry } from '@/utils/backoff';
 
 interface Results {
   added: (string | null)[];
@@ -21,7 +22,14 @@ export async function POST() {
       throw new Error('Invalid news data format');
     }
 
-    const { results: existingNewsDocs, error: fetchError } = await getAllDocuments('news');
+    const { results: existingNewsDocs, error: fetchError } = await withRetry(
+        () => getAllDocuments('news'),
+        {
+            maxAttempts: 3,
+            initialDelay: 1000,
+            maxDelay: 5000
+        }
+    );
     
     if (fetchError) {
       throw new Error('Failed to fetch existing news');
@@ -51,7 +59,14 @@ export async function POST() {
         createdAt: newsItem.published_at
       };
 
-      const { result, error } = await addData('news', newsItemWithLikes);
+      const { result, error } = await withRetry(
+          () => addData('news', newsItemWithLikes),
+          {
+              maxAttempts: 3,
+              initialDelay: 500,
+              maxDelay: 3000
+          }
+      );
       
       if (error) {
         console.error('Error adding news item:', error);

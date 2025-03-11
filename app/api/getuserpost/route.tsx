@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { Comment } from "@/types/comment";
+import { withRetry } from '@/utils/backoff';
 
 interface Post {
     title: string;
@@ -25,10 +26,23 @@ interface Post {
 }
 export async function GET(){
     try{
-        const { results: postsResults, error: postsError } = await getAllDocuments("posts");
-        // console.log("Posts Results:", postsResults); // Comment this out
-        const { results: usersResults, error: usersError } = await getAllDocuments("users");
-        // console.log("Users Results:", usersResults); // Comment this out
+        const { results: postsResults, error: postsError } = await withRetry(
+            () => getAllDocuments("posts"),
+            {
+                maxAttempts: 3,
+                initialDelay: 500,
+                maxDelay: 3000
+            }
+        );
+
+        const { results: usersResults, error: usersError } = await withRetry(
+            () => getAllDocuments("users"),
+            {
+                maxAttempts: 3,
+                initialDelay: 500,
+                maxDelay: 3000
+            }
+        );
 
         if (postsError || !postsResults) {
             return NextResponse.json({ message: "Error fetching posts", error: postsError }, { status: 500 });

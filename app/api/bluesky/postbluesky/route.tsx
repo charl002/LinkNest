@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { GET as getBluesky } from "../getbluesky/route";
+import { withRetry } from '@/utils/backoff';
 
 interface Results {
   added: (string | null)[];
@@ -21,7 +22,14 @@ export async function POST() {
       throw new Error('Invalid Bluesky data format');
     }
 
-    const { results: existingBlueSkyDocs, error: fetchError } = await getAllDocuments('bluesky');
+    const { results: existingBlueSkyDocs, error: fetchError } = await withRetry(
+        () => getAllDocuments('bluesky'),
+        {
+            maxAttempts: 3,
+            initialDelay: 1000,
+            maxDelay: 5000
+        }
+    );
     
     if (fetchError) {
       throw new Error('Failed to fetch existing Bluesky posts');
@@ -49,7 +57,14 @@ export async function POST() {
         likedBy: []
       };
 
-      const { result, error } = await addData('bluesky', postWithLikes);
+      const { result, error } = await withRetry(
+          () => addData('bluesky', postWithLikes),
+          {
+              maxAttempts: 3,
+              initialDelay: 500,
+              maxDelay: 3000
+          }
+      );
       
       if (error) {
         console.error('Error adding Bluesky post:', error);
