@@ -57,7 +57,7 @@ export async function GET(req: Request) {
             .map(doc => {
                 const data = doc.data();
 
-                const isCall = data.isCall || false; 
+                const isCall = data.isCallMsg || false; 
 
                 return {
                     id: doc.id,

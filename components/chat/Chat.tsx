@@ -46,7 +46,6 @@ export default function Chat() {
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
         }
-
         setMessages(
           data.messages.map((msg: Message) => ({
             sender: msg.sender,
@@ -251,6 +250,7 @@ export default function Chat() {
             messages.map((msg, index) => {
               const isCurrentUser = msg.sender === currentUsername;
               const user = isCurrentUser ? currentUser : friendUser;
+              console.log(msg);
 
               return <ChatMessage key={index} message={msg} isCurrentUser={isCurrentUser} user={user} />;
             })
