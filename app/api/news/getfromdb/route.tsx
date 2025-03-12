@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
+import { withRetry } from '@/utils/backoff';
+import { Comment } from "@/types/comment";
 
 interface NewsPost {
   uuid: string;
@@ -12,12 +14,19 @@ interface NewsPost {
   source: string;
   likes: number;
   likedBy: string[];
-  comments: { comment: string; username: string; date: string; likes: number, likedBy: string[] }[];
+  comments: Comment[];
 }
 
 export async function GET() {
   try {
-    const { results, error } = await getAllDocuments('news');
+    const { results, error } = await withRetry(
+      () => getAllDocuments('news'),
+      {
+        maxAttempts: 3,
+        initialDelay: 1000,
+        maxDelay: 5000
+      }
+    );
 
     if (error) {
       throw new Error('Failed to fetch news posts');
@@ -27,14 +36,33 @@ export async function GET() {
       return NextResponse.json({ posts: [] });
     }
 
-    const posts = results.docs.map(doc => {
+    const posts = await Promise.all(results.docs.map(async (doc) => {
       const data = doc.data() as NewsPost;
+      
+      // Handle image verification with retries
+      let processedImage = null;
+      if (data.image_url) {
+        try {
+          await withRetry(async () => {
+            const response = await fetch(data.image_url, { method: 'HEAD' });
+            if (!response.ok) throw new Error('Image not available');
+          });
+          processedImage = {
+            url: data.image_url,
+            alt: data.title,
+            thumb: data.image_url
+          };
+        } catch (error) {
+          console.error(`Failed to verify image: ${data.image_url}`, error);
+        }
+      }
+
       return {
         title: data.title,
-        username: data.source, // Assuming source is used as username
+        username: data.source,
         description: data.description,
-        tags: data.keywords.split(',').map(tag => tag.trim()), // Split keywords into tags
-        comments: data.comments.map((comment: { comment: string; username: string; date: string; likes: number, likedBy: string[] }) => ({
+        tags: data.keywords.split(',').map(tag => tag.trim()),
+        comments: data.comments.map((comment: Comment) => ({
           comment: comment.comment,
           username: comment.username,
           date: comment.date,
@@ -42,14 +70,14 @@ export async function GET() {
           likedBy: comment.likedBy || []
         })) || [],
         likes: data.likes || 0,
-        images: [{ url: data.image_url, alt: data.title, thumb: data.image_url }], // Create image object
-        profilePicture: '', // Set profile picture if available
-        createdAt: data.createdAt, // Add published_at to the returned object
+        images: processedImage ? [processedImage] : [],
+        profilePicture: '',
+        createdAt: data.createdAt,
         id: doc.id,
         postType: 'news',
         likedBy: data.likedBy
       };
-    });
+    }));
 
     return NextResponse.json({ 
       success: true, 
@@ -59,7 +87,11 @@ export async function GET() {
   } catch (error) {
     console.error('Error in GET /api/news/getfromdb:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch posts' },
+      { 
+        success: false, 
+        error: 'Failed to fetch posts',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
