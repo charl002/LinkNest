@@ -20,6 +20,7 @@ import { customToast } from "@/components/ui/customToast";
 import Link from "next/link";
 import { Plus } from 'lucide-react';
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
+import { Comment } from "@/types/comment";
 
 interface UserData {
   id: string;
@@ -48,7 +49,7 @@ interface PostData {
   username: string;
   description: string;
   tags: string[];
-  comments: { comment: string; username: string; date: string; likes: number, likedBy: string[]; }[];
+  comments: Comment[];
   likes: number;
   images: { url: string; alt: string; thumb: string }[];
   createdAt: string;

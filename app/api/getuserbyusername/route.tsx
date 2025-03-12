@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "@firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { withRetry } from '@/utils/backoff';
 
 const db = getFirestore(firebase_app);
 
@@ -16,7 +17,14 @@ export async function GET(req: Request) {
     
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("username", "==", username));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await withRetry(
+            () => getDocs(q),
+            {
+                maxAttempts: 3,
+                initialDelay: 500,
+                maxDelay: 3000
+            }
+        );
 
         if (querySnapshot.empty) {
             return NextResponse.json({ message: "User not found" }, { status: 404 });

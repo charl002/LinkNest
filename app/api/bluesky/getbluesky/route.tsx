@@ -1,21 +1,36 @@
 import { BskyAgent, AppBskyFeedDefs, AppBskyEmbedImages } from '@atproto/api'
 import { NextResponse } from 'next/server'
+import { withRetry } from '@/utils/backoff';
 
 export async function GET() {
     try {
         const agent = new BskyAgent({
             service: 'https://bsky.social'
-        })
+        });
 
-        await agent.login({
-            identifier: process.env.BLUESKY_USERNAME!,
-            password: process.env.BLUESKY_PASSWORD!
-        })
+        await withRetry(
+            async () => agent.login({
+                identifier: process.env.BLUESKY_USERNAME!,
+                password: process.env.BLUESKY_PASSWORD!
+            }),
+            {
+                maxAttempts: 3,
+                initialDelay: 1000,
+                maxDelay: 5000
+            }
+        );
 
-        const response = await agent.app.bsky.feed.getFeed({
-            feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot',
-            limit: 100
-        })
+        const response = await withRetry(
+            () => agent.app.bsky.feed.getFeed({
+                feed: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot',
+                limit: 100
+            }),
+            {
+                maxAttempts: 3,
+                initialDelay: 1000,
+                maxDelay: 5000
+            }
+        );
         
         console.log('Feed response:', {
             feedLength: response.data.feed.length,
@@ -45,15 +60,15 @@ export async function GET() {
         return NextResponse.json({ success: true, posts })
 
     } catch (error: unknown) {
-        const err = error as Error
+        const err = error as Error;
         console.error('Detailed error:', {
             message: err.message,
             stack: err.stack,
             name: err.name
-        })
+        });
         return NextResponse.json(
             { success: false, error: err.message },
             { status: 500 }
-        )
+        );
     }
 }

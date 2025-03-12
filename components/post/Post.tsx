@@ -9,17 +9,8 @@ import { FaRegThumbsUp, FaThumbsUp, FaRegComment } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Comment } from "@/types/comment";
 import { FaExpand } from "react-icons/fa";
-
-
-interface Comment {
-    username: string;
-    comment: string;
-    date: string;
-    likes: number;
-    likedBy: string[];
-    profilePicture?: string;
-}
 
 interface PostProps {
     title: string;
@@ -356,7 +347,7 @@ export default function Post({ title, username, description, tags, comments, lik
               <DialogHeader>
                 <DialogTitle>Comments</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                 {postComments.length > 0 ? (
                   postComments.map((comment, index) => (
                     <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
@@ -369,7 +360,7 @@ export default function Post({ title, username, description, tags, comments, lik
                       />
                       <div className="min-w-0 flex-1">
                         <p className="font-bold text-sm text-gray-900">{comment.username} <span className="text-gray-500 text-xs">{comment.date}</span></p>
-                        <p className="text-gray-700 break-words overflow-wrap-anywhere">{comment.comment}</p>
+                        <p className="text-gray-700 break-words whitespace-pre-wrap">{comment.comment}</p>
                         <div className="flex items-center space-x-3 mt-1 text-gray-500 text-sm">
                           <button 
                               onClick={() => handleCommentLike(index, comment.likedBy.includes(sessionUsername))}
