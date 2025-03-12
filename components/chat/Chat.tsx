@@ -187,16 +187,28 @@ export default function Chat() {
             message: callMessage,
         });
 
-        await fetch("/api/postmessage", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                senderUsername: currentUsername,
-                receiverUsername: friendUsername,
-                message: callMessage,
-                isCallMsg: true
-            }),
+        const postMessagePromise = fetch("/api/postmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            senderUsername: currentUsername,
+            receiverUsername: friendUsername,
+            message: callMessage,
+            isCallMsg: true, // Flag indicating it's a call message
+          }),
         });
+    
+        const postUnreadMessagePromise = fetch("/api/postunreadmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: currentUsername,
+            receiver: friendUsername,
+            count: 1, // Mark it as unread
+          }),
+        });
+
+        await Promise.all([postMessagePromise, postUnreadMessagePromise]);
 
         setMessages((prevMessages) => [
             ...prevMessages,
@@ -215,7 +227,7 @@ export default function Chat() {
         console.error("Error starting the call:", error);
         toast.error("Error starting the call.");
     }
-};
+  };
 
   function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
@@ -250,7 +262,6 @@ export default function Chat() {
             messages.map((msg, index) => {
               const isCurrentUser = msg.sender === currentUsername;
               const user = isCurrentUser ? currentUser : friendUser;
-              console.log(msg);
 
               return <ChatMessage key={index} message={msg} isCurrentUser={isCurrentUser} user={user} />;
             })

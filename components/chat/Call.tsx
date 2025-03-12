@@ -14,6 +14,37 @@ import AgoraRTC, {
 } from "agora-rtc-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+
+const sendCallEndMessage = async (currentUsername: string, friendUsername: string) => {
+  try {
+    const postMessagePromise = fetch("/api/postmessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        senderUsername: currentUsername,
+        receiverUsername: friendUsername,
+        message: '📞 The call has ended!',
+        isCallMsg: true,
+      }),
+    });
+
+    const postUnreadMessagePromise = fetch("/api/postunreadmessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sender: currentUsername,
+        receiver: friendUsername,
+        count: 1, // Mark it as unread
+      }),
+    });
+
+    await Promise.all([postMessagePromise, postUnreadMessagePromise]);
+
+  } catch (error) {
+    console.error("Error posting call end message:", error);
+  }
+};
 
 function Call() {
   const client = useRTCClient(
@@ -22,11 +53,19 @@ function Call() {
 
   const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
   const searchParams = useSearchParams();
+  const router = useRouter();
   const friendUsername = searchParams.get("friend") ?? "Guest";
   const currentUsername = searchParams.get("user") ?? "Guest";
   const [first, second] = [currentUsername, friendUsername].sort();
   const channelName = `${first}_${second}`;
   
+  const handleLeaveCall = async () => {
+    // Send the call end message
+    await sendCallEndMessage(currentUsername, friendUsername);
+
+    // Leave the call and redirect to the chat page
+    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
+  };
 
   return (
     <AgoraRTCProvider client={client}>
@@ -34,7 +73,8 @@ function Call() {
       <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4">
         <Link
           className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400"
-          href={`/chat?friend=${friendUsername}&user=${currentUsername}`}>
+          href='#'
+          onClick={handleLeaveCall}>
           Leave Call
         </Link>
       </div>
