@@ -3,6 +3,7 @@ import addData from "@/firebase/firestore/addData";
 import { auth } from "@/lib/auth";
 import { getDocument }  from "@/firebase/firestore/getData";
 import updateData from "@/firebase/firestore/updateUnreadCount";
+import { withRetry } from '@/utils/backoff';
 
 export async function POST(req: Request) {
     try {
@@ -19,13 +20,26 @@ export async function POST(req: Request) {
       }
 
       const docId = `${sender}_${receiver}`; // 🔹 Unique doc ID for sender-receiver pair
-      const existingData = await getDocument("unreadmessages", docId);
-
+      const existingData = await withRetry(
+          () => getDocument("unreadmessages", docId),
+          {
+              maxAttempts: 3,
+              initialDelay: 500,
+              maxDelay: 3000
+          }
+      );
 
       if (existingData?.result?.exists()) {
         // If the count is 0, set the count to 0, otherwise increment the count by 1
         const updatedCount = count === 0 ? 0 : (existingData.result.data()?.count || 0) + 1;
-        const { error } = await updateData("unreadmessages", docId, { count: updatedCount });
+        const { error } = await withRetry(
+            () => updateData("unreadmessages", docId, { count: updatedCount }),
+            {
+                maxAttempts: 3,
+                initialDelay: 500,
+                maxDelay: 3000
+            }
+        );
 
         if (error) {
           return NextResponse.json({ message: "Error updating unread messages count", error }, { status: 500 });
