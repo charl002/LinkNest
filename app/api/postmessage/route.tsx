@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
       const now =  new Date();
 
-      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime() };
+      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime(), reaction: [], reactionBy: [] };
 
       const { result: docId, error } = await addData("messages", data);
 

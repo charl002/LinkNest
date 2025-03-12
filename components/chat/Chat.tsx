@@ -11,7 +11,7 @@ import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import ChatMessage from "./ChatMessage";
 import { Video } from 'lucide-react';
-
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@radix-ui/react-hover-card";
 import { Message } from "@/types/message";
 import { User } from "@/types/user";
 
@@ -199,7 +199,22 @@ export default function Chat() {
               const isCurrentUser = msg.sender === currentUsername;
               const user = isCurrentUser ? currentUser : friendUser;
 
-              return <ChatMessage key={index} message={msg} isCurrentUser={isCurrentUser} user={user} />;
+              return (
+                <div key={index} className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} p-2`}>
+                <HoverCard>
+                  <HoverCardTrigger className="inline-block">
+                    <ChatMessage message={msg} isCurrentUser={isCurrentUser} user={user} />
+                  </HoverCardTrigger>
+                  <HoverCardContent className="bg-white shadow-lg p-2 rounded-lg border border-gray-200">
+                    <div className="flex flex-col space-y-2">
+                      <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">Reply</button>
+                      <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">Copy</button>
+                      <button className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">Delete</button>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              </div>          
+              )
             })
           )}
           <div ref={messagesEndRef} className="pb-2" />
