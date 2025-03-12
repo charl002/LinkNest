@@ -80,6 +80,7 @@ export default function ProfilePage({ user }: { user: string }) {
   const [isFriend, setIsFriend] = useState(false);  
   const [isLoading, setIsLoading] = useState(false);
   const [isFriendLoading, setIsFriendLoading] = useState(true);
+  const [isZoomed, setIsZoomed] = useState(false);
 
 
   useEffect(() => {
@@ -345,7 +346,7 @@ export default function ProfilePage({ user }: { user: string }) {
           </div>
 
           <div className="p-4 relative">
-            <div className="absolute -top-12 left-4">
+            <button onClick={() => setIsZoomed(true)} className="absolute -top-12 left-4">
               <Image
                 src={userData.data.image}
                 alt="User Profile"
@@ -353,7 +354,31 @@ export default function ProfilePage({ user }: { user: string }) {
                 height={80}
                 className="rounded-full border-4 border-white shadow-md"
               />
-            </div>
+            </button>
+
+            <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
+              <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-black/90 flex items-center justify-center">
+                <button
+                  onClick={() => setIsZoomed(false)}
+                  className="absolute top-4 right-4 z-50 p-2 bg-white rounded-full hover:bg-gray-200"
+                >
+                  X
+                </button>
+                <DialogHeader>
+                  <DialogTitle className="sr-only">Media Preview</DialogTitle>
+                </DialogHeader>
+                <div className="relative w-[40vw] h-[90vh] flex items-center justify-center">
+                  <Image 
+                    src={userData.data.image}
+                    alt="User Profile"
+                    fill
+                    priority
+                    className="rounded-full border-4 border-white shadow-md"
+                    sizes="100vw"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <div className="mt-8 flex justify-between items-center">
               <div>
