@@ -28,6 +28,7 @@ interface PostProps {
     sessionUsername: string;
 }
 
+
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
     const { data: session } = useSession();
     const [likeCount, setLikeCount] = useState(likes);
@@ -223,6 +224,44 @@ export default function Post({ title, username, description, tags, comments, lik
 
     const defaultImageUrl = "/defaultProfilePic.jpg";
 
+    const handleDeleteComment = async (comment: Comment) => {
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/deletecomment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId: documentId,
+          username: comment.username,
+          comment: comment.comment,
+          date: comment.date,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Remove the deleted comment from the UI
+        const updatedComments = postComments.filter(
+          (c) =>
+            c.username !== comment.username ||
+            c.comment !== comment.comment ||
+            c.date !== comment.date
+        );
+        setPostComments(updatedComments); 
+      } else {
+        console.error("Failed to delete comment:", result.message);
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
         <Link href={`/profile/${encodeURIComponent(username)}`}>
@@ -372,7 +411,8 @@ export default function Post({ title, username, description, tags, comments, lik
                           {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
                         </p>
                         {sessionUsername === comment.username && (
-                          <button>
+                          <button onClick={() => handleDeleteComment(comment)}
+                          disabled={isLoading}>
                             <Trash2 />
                           </button>
                         )}
