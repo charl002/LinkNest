@@ -62,6 +62,7 @@ export async function GET(req: Request) {
                     message: data.message,
                     seen: data.seen,
                     date: new Date(data.date),
+                    reactions: data.reactions,
                 };
             })
             .filter(msg =>

@@ -46,15 +46,17 @@ export default function Chat() {
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
         }
-
+        console.log(data.messages)
         setMessages(
           data.messages.map((msg: Message) => ({
+            id: msg.id,
             sender: msg.sender,
             message: msg.message,
             date: formatTimestamp(msg.date),
+            reactions: msg.reactions || []
           }))
         );
-
+        
         const [senderResponse, friendResponse] = await Promise.all([
           fetch(`/api/getsingleuser?username=${currentUsername}`),
           fetch(`/api/getsingleuser?username=${friendUsername}`)
@@ -86,11 +88,11 @@ export default function Chat() {
   
     socket.emit("register", currentUsername);
   
-    socket.on("privateMessage", ({ senderId, message }) => {
+    socket.on("privateMessage", ({ senderId, message , msgId}) => {
       if (senderId === friendUsername) {
         setMessages((prev) => [
           ...prev,
-          { sender: senderId, message, date: formatTimestamp(new Date().toISOString()) }, // Format timestamp
+          {id: msgId, sender: senderId, message, date: formatTimestamp(new Date().toISOString()), reactions: [] }, // Format timestamp
         ]);
       }
     });
@@ -115,6 +117,15 @@ export default function Chat() {
         });
 
         const data = await response.json();
+
+        socket.emit("privateMessage", { 
+          senderId: currentUsername,
+          receiverId: friendUsername,
+          message: input,
+          msgId: data.docId
+        });
+  
+        setMessages((prev) => [...prev, { id: data.docId, sender: currentUsername, message: input, date: formatTimestamp(new Date().toISOString()) }]);
         if (!response.ok) {
           toast.error(`Error storing message: ${data.message}`);
           return;
@@ -138,13 +149,6 @@ export default function Chat() {
         console.error("Error storing unread message:", error);
       }
 
-      socket.emit("privateMessage", {
-        senderId: currentUsername,
-        receiverId: friendUsername,
-        message: input,
-      });
-
-      setMessages((prev) => [...prev, { sender: currentUsername, message: input, date: formatTimestamp(new Date().toISOString()) }]);
       setInput("");
     }
   };
@@ -164,6 +168,33 @@ export default function Chat() {
     setErrorMessage(null);
     router.push("/");
   };
+
+  const handleAddReaction = async (message: Message, reaction: string) => {
+    try {
+      const response = await fetch("/api/putreaction", {
+        method: "PUT",
+        body: JSON.stringify({
+          messageId: message.id,
+          user: currentUsername,
+          emoji: reaction,
+        }),
+      });
+      console.log(message.id)
+      console.log(currentUsername)
+      console.log(reaction)
+
+      if (!response.ok) {
+        toast.error("Failed to add reaction");
+        console.error("Error adding reaction", response);
+
+        return;
+      }
+      toast.success("Reaction added!");
+    } catch (error) {
+      console.error("Error adding reaction", error);
+      toast.error("An error occured.");
+    }
+  }
 
   function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
@@ -200,39 +231,83 @@ export default function Chat() {
               const user = isCurrentUser ? currentUser : friendUser;
 
               return (
-                <div key={index} className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} p-2`}>
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <div>
-                      <ChatMessage message={msg} isCurrentUser={isCurrentUser} user={user} />
-                    </div>
-                  </HoverCardTrigger>
-                  <HoverCardContent side="top" align="center" sideOffset={5} className="bg-white shadow-lg p-2 rounded-lg border border-gray-200">
-                    <div className="flex flex-col space-y-2">
-                      <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">Reply</button>
-                      <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200" >Copy</button>
-                      <HoverCard>
-                        <HoverCardTrigger asChild>
-                          <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">React</button>
-                        </HoverCardTrigger>
-                        <HoverCardContent side="right" align="center" sideOffset={5} className="bg-white shadow-lg p-2 rounded-lg border border-gray-200">
-                          <div className="flex space-x-2">
-                            <button className="text-lg hover:scale-125">👍</button>
-                            <button className="text-lg hover:scale-125">❤️</button>
-                            <button className="text-lg hover:scale-125">😂</button>
-                            <button className="text-lg hover:scale-125">👎</button>
-                            <button className="text-lg hover:scale-125">😭</button>
-
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                      <button className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">Delete</button>
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
-              </div>          
-              )
-            })
+                <div key={index} className={`relative flex ${isCurrentUser ? "justify-end" : "justify-start"} p-2`}>
+                <div className="relative flex flex-col">
+                  {msg.reactions && msg.reactions.length > 0 && (
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <div
+                          className={`absolute -top-8 ${
+                            isCurrentUser ? "left+25" : "right-0"
+                          } flex space-x-1 bg-white shadow-md rounded-full px-2 py-1 cursor-pointer border border-gray-300`}
+                        >
+                          {msg.reactions.map((reaction, idx) => (
+                            <span key={idx} className="text-sm">{reaction.reaction}</span>
+                          ))}
+                        </div>
+                      </HoverCardTrigger>
+                      <HoverCardContent
+                        side="top"
+                        align="center"
+                        sideOffset={5}
+                        className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
+                      >
+                        <div className="flex flex-col space-y-1">
+                          {msg.reactions.map((reaction, idx) => (
+                            <p key={idx} className="text-xs text-gray-600">
+                              {reaction.user} reacted with {reaction.reaction}
+                            </p>
+                          ))}
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  )}
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div className="relative">
+                        <ChatMessage message={msg} isCurrentUser={isCurrentUser} user={user} />
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent 
+                      side="top" 
+                      align="center" 
+                      sideOffset={5} 
+                      className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
+                    >
+                      <div className="flex flex-col space-y-2">
+                        <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">Reply</button>
+                        <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">Copy</button>
+          
+                        <HoverCard>
+                          <HoverCardTrigger asChild>
+                            <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">React</button>
+                          </HoverCardTrigger>
+                          <HoverCardContent
+                            side="right"
+                            align="center"
+                            sideOffset={5}
+                            className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
+                          >
+                            <div className="flex space-x-2">
+                              {["👍", "❤️", "😂", "👎", "😭"].map((emoji) => (
+                                <button key={emoji} className="text-lg hover:scale-125" onClick={() => handleAddReaction(msg, emoji)}>
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+          
+                        <button className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">Delete</button>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+          
+                </div>
+          
+              </div>
+            );
+          })
           )}
           <div ref={messagesEndRef} className="pb-2" />
         </div>

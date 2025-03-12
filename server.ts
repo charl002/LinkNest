@@ -44,10 +44,10 @@ app.prepare().then(() => {
       }
     });
 
-    socket.on("privateMessage", ({ senderId, receiverId, message }) => {
+    socket.on("privateMessage", ({ senderId, receiverId, message, msgId }) => {
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message });
+        io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message, msgId });
       }
     });
 
