@@ -189,6 +189,19 @@ export default function Chat() {
 
         return;
       }
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.id === message.id
+            ? {
+                ...msg,
+                reactions: [
+                  ...(Array.isArray(msg.reactions) ? msg.reactions : []),
+                  { user: currentUsername || "Unknown", reaction },
+                ],
+              }
+            : msg
+        )
+      );
       toast.success("Reaction added!");
     } catch (error) {
       console.error("Error adding reaction", error);
