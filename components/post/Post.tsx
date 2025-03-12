@@ -257,24 +257,30 @@ export default function Post({ title, username, description, tags, comments, lik
         </Link>
         
         {images.length > 0 && images[0].url ? (
-          images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
-            <video 
-                controls 
-                className="mt-4 bg-gray-200 rounded-md w-full h-auto"
-            >
-                <source src={images[0].url} type={`video/${images[0].url.split('.').pop()}`} />
-                Your browser does not support the video tag.
-            </video>
-          ) : (
-            <Image 
-              src={images[0].url} 
-              alt={images[0].alt} 
-              width={640} 
-              height={160} 
-              className="mt-4 bg-gray-200 rounded-md" 
-              layout="responsive"
-            />
-          )
+          <div className="mt-4 relative w-full overflow-hidden bg-gray-200 rounded-md">
+            {images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
+              <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
+                <video 
+                    controls 
+                    className="absolute inset-0 w-full h-full object-contain"
+                    src={images[0].url}
+                >
+                    Your browser does not support the video tag.
+                </video>
+              </div>
+            ) : (
+              <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
+                <Image 
+                  src={images[0].url} 
+                  alt={images[0].alt} 
+                  fill
+                  priority
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
+            )}
+          </div>
         ) : null}
 
         <p className="mt-2 font-semibold">{title}</p>
