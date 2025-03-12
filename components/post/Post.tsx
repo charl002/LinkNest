@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Comment } from "@/types/comment";
+import { FaExpand } from "react-icons/fa";
 
 interface PostProps {
     title: string;
@@ -34,6 +35,7 @@ export default function Post({ title, username, description, tags, comments, lik
     const [postComments, setPostComments] = useState<Comment[]>(comments);
     const [isLoading, setIsLoading] = useState(false);
     const [isOverLimit, setIsOverLimit] = useState(false);
+    const [isZoomed, setIsZoomed] = useState(false);
 
     useEffect(() => {
         const fetchSessionUsername = async () => {
@@ -249,25 +251,76 @@ export default function Post({ title, username, description, tags, comments, lik
         </Link>
         
         {images.length > 0 && images[0].url ? (
-          images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
-            <video 
-                controls 
-                className="mt-4 bg-gray-200 rounded-md w-full h-auto"
+          <div className="mt-4 relative w-full overflow-hidden bg-gray-200 rounded-md group">
+            <button 
+              onClick={() => setIsZoomed(true)}
+              className="absolute top-2 right-2 z-10 p-2 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
             >
-                <source src={images[0].url} type={`video/${images[0].url.split('.').pop()}`} />
-                Your browser does not support the video tag.
-            </video>
-          ) : (
-            <Image 
-              src={images[0].url} 
-              alt={images[0].alt} 
-              width={640} 
-              height={160} 
-              className="mt-4 bg-gray-200 rounded-md" 
-              layout="responsive"
-            />
-          )
+              <FaExpand />
+            </button>
+            {images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
+              <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
+                <video 
+                    controls 
+                    className="absolute inset-0 w-full h-full object-contain"
+                    src={images[0].url}
+                >
+                    Your browser does not support the video tag.
+                </video>
+              </div>
+            ) : (
+              <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
+                <Image 
+                  src={images[0].url} 
+                  alt={images[0].alt} 
+                  fill
+                  priority
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
+            )}
+          </div>
         ) : null}
+
+      {/* Zoom  media*/}
+        <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/90">
+            <button
+              onClick={() => setIsZoomed(false)}
+              className="absolute top-4 right-4 z-50 p-2 bg-white rounded-full hover:bg-gray-200"
+            >
+              X
+            </button>
+            <DialogHeader>
+              <DialogTitle className="sr-only">Media Preview</DialogTitle>
+            </DialogHeader>
+            <div className="relative w-full h-[90vh] flex items-center justify-center">
+              {images.length > 0 && images[0].url && (
+                images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
+                  <video 
+                    controls 
+                    className="max-w-full max-h-full object-contain"
+                    src={images[0].url}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="relative w-full h-full">
+                    <Image 
+                      src={images[0].url} 
+                      alt={images[0].alt} 
+                      fill
+                      priority
+                      className="object-contain"
+                      sizes="100vw"
+                    />
+                  </div>
+                )
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <p className="mt-2 font-semibold">{title}</p>
         <p className="text-gray-500">{description}</p>
