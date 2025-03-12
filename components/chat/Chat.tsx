@@ -202,13 +202,30 @@ export default function Chat() {
               return (
                 <div key={index} className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} p-2`}>
                 <HoverCard>
-                  <HoverCardTrigger className="inline-block">
-                    <ChatMessage message={msg} isCurrentUser={isCurrentUser} user={user} />
+                  <HoverCardTrigger asChild>
+                    <div>
+                      <ChatMessage message={msg} isCurrentUser={isCurrentUser} user={user} />
+                    </div>
                   </HoverCardTrigger>
-                  <HoverCardContent className="bg-white shadow-lg p-2 rounded-lg border border-gray-200">
+                  <HoverCardContent side="top" align="center" sideOffset={5} className="bg-white shadow-lg p-2 rounded-lg border border-gray-200">
                     <div className="flex flex-col space-y-2">
                       <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">Reply</button>
-                      <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">Copy</button>
+                      <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200" >Copy</button>
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">React</button>
+                        </HoverCardTrigger>
+                        <HoverCardContent side="right" align="center" sideOffset={5} className="bg-white shadow-lg p-2 rounded-lg border border-gray-200">
+                          <div className="flex space-x-2">
+                            <button className="text-lg hover:scale-125">👍</button>
+                            <button className="text-lg hover:scale-125">❤️</button>
+                            <button className="text-lg hover:scale-125">😂</button>
+                            <button className="text-lg hover:scale-125">👎</button>
+                            <button className="text-lg hover:scale-125">😭</button>
+
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
                       <button className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">Delete</button>
                     </div>
                   </HoverCardContent>
