@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Comment } from "@/types/comment";
 import { FaExpand } from "react-icons/fa";
 import { Trash2 } from 'lucide-react';
+import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 
 interface PostProps {
     title: string;
@@ -285,8 +286,8 @@ export default function Post({ title, username, description, tags, comments, lik
 
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
-        <Link href={`/profile/${encodeURIComponent(username)}`}>
           <div className="flex items-center justify-between w-full">
+          <Link href={`/profile/${encodeURIComponent(username)}`}>
             <div className="flex items-center space-x-2">
               {profilePicture ? (
                 <Image 
@@ -310,13 +311,29 @@ export default function Post({ title, username, description, tags, comments, lik
               )}
               <p className="font-bold">{username}</p>
             </div>
+          </Link>
             {sessionUsername === username && (
-              <button onClick={handleDelete}>
-                <Trash2/>
-              </button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button onClick={(e) => e.stopPropagation()}>
+                    <Trash2/>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your post from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </div>
-        </Link>
 
         {images.length > 0 && images[0].url ? (
           <div className="mt-4 relative w-full overflow-hidden bg-gray-200 rounded-md group">
