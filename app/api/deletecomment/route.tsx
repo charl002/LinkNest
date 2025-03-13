@@ -27,11 +27,10 @@ export async function POST(request: Request) {
     }
 
     const comments = postDoc.data().comments;
-    const commentToDelete = comments.find(
-      (c: Comment) =>
-        c.username === username &&
-        c.comment === comment &&
-        c.date === date || "just now"
+    const commentToDelete = comments.find((c: Comment) =>
+      c.username === username &&
+      c.comment === comment &&
+      (c.date === date || date === "Just now")
     );
 
     if (!commentToDelete) {
