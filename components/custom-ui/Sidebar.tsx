@@ -85,18 +85,21 @@ export default function Sidebar() {
     
         setPendingRequests((prev) => {
           if (prev.some((user) => user.username === data.senderUsername)) return prev;
-    
+        
           return [
             ...prev,
             {
               id: userData.id,
               username: data.senderUsername,
               image: userData.data.image || "/default-avatar.png",
-              email: userData.data.email || "", 
+              email: userData.data.email || "",
               name: userData.data.name || "",
+              background: userData.data.background || "", // Provide default
+              description: userData.data.description || "", // Provide default
             },
           ];
         });
+        
     
         customToast({ message: `New friend request from ${data.senderUsername}!`, type: "info" });
     
@@ -286,16 +289,19 @@ export default function Sidebar() {
             return;
         }
 
-      setFriends((prev) => [
-        ...prev,
+        setFriends((prev) => [
+          ...prev,
           {
-              id: userData.id,
-              username: userData.data.username,
-              image: userData.data.image || "/default-avatar.png",
-              email: userData.data.email || "",
-              name: userData.data.name || "",
+            id: userData.id,
+            username: userData.data.username,
+            image: userData.data.image || "/default-avatar.png",
+            email: userData.data.email || "",
+            name: userData.data.name || "",
+            background: userData.data.background || "", // Provide default value
+            description: userData.data.description || "", // Provide default value
           },
-      ]);
+        ]);
+        
 
       if (socket) {
         socket.emit("friendAccepted", {

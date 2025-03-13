@@ -11,6 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Comment } from "@/types/comment";
 import { FaExpand } from "react-icons/fa";
+import { Trash2 } from 'lucide-react';
+import { customToast } from "@/components/ui/customToast";
+import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 
 interface PostProps {
     title: string;
@@ -26,6 +29,7 @@ interface PostProps {
     likedBy: string[];
     sessionUsername: string;
 }
+
 
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
     const { data: session } = useSession();
@@ -222,34 +226,121 @@ export default function Post({ title, username, description, tags, comments, lik
 
     const defaultImageUrl = "/defaultProfilePic.jpg";
 
+    const handleDeleteComment = async (comment: Comment) => {
+    console.log(comment);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/deletecomment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId: documentId,
+          username: comment.username,
+          comment: comment.comment,
+          date: comment.date,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Remove the deleted comment from the UI
+        const updatedComments = postComments.filter(
+          (c) =>
+            c.username !== comment.username ||
+            c.comment !== comment.comment ||
+            c.date !== comment.date
+        );
+        setPostComments(updatedComments); 
+        customToast({ message: `Comment has successfully been removed!`, type: "success" });
+      }
+      else {
+        customToast({ message: `${result.message}`, type: "error" });
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch("/api/deletepost", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: documentId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete post");
+      }
+
+      const data = await response.json();
+      console.log(data.message);
+      customToast({ message: `Post has been deleted`, type: "success" });
+
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    }
+  };
+
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
-        <Link href={`/profile/${encodeURIComponent(username)}`}>
-          <div className="flex items-center space-x-2">
-            {profilePicture ? (
-              <Image 
-                src={profilePicture} 
-                alt={`${username}'s profile picture`} 
-                width={40} 
-                height={40} 
-                className="rounded-full" 
-                layout="fixed"
-              />
-            ) : (
-              <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+          <div className="flex items-center justify-between w-full">
+          <Link href={`/profile/${encodeURIComponent(username)}`}>
+            <div className="flex items-center space-x-2">
+              {profilePicture ? (
                 <Image 
-                  src={defaultImageUrl} 
-                  alt="Default Profile" 
+                  src={profilePicture} 
+                  alt={`${username}'s profile picture`} 
                   width={40} 
                   height={40} 
                   className="rounded-full" 
+                  layout="fixed"
                 />
-              </div>
+              ) : (
+                <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+                  <Image 
+                    src={defaultImageUrl} 
+                    alt="Default Profile" 
+                    width={40} 
+                    height={40} 
+                    className="rounded-full" 
+                  />
+                </div>
+              )}
+              <p className="font-bold">{username}</p>
+            </div>
+          </Link>
+            {sessionUsername === username && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button onClick={(e) => e.stopPropagation()}>
+                    <Trash2/>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your post from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
-            <p className="font-bold">{username}</p>
           </div>
-        </Link>
-        
+
         {images.length > 0 && images[0].url ? (
           <div className="mt-4 relative w-full overflow-hidden bg-gray-200 rounded-md group">
             <button 
@@ -359,7 +450,17 @@ export default function Post({ title, username, description, tags, comments, lik
                         className="rounded-full flex-shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-bold text-sm text-gray-900">{comment.username} <span className="text-gray-500 text-xs">{comment.date}</span></p>
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-sm text-gray-900">
+                          {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
+                        </p>
+                        {sessionUsername === comment.username && (
+                          <button onClick={() => handleDeleteComment(comment)}
+                          disabled={isLoading}>
+                            <Trash2 />
+                          </button>
+                        )}
+                      </div>
                         <p className="text-gray-700 break-words whitespace-pre-wrap">{comment.comment}</p>
                         <div className="flex items-center space-x-3 mt-1 text-gray-500 text-sm">
                           <button 
