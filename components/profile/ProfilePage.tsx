@@ -20,7 +20,7 @@ import { customToast } from "@/components/ui/customToast";
 import Link from "next/link";
 import { Plus } from 'lucide-react';
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
-import { Comment } from "@/types/comment";
+import { PostType } from "@/types/post";
 
 interface UserData {
   id: string;
@@ -43,27 +43,12 @@ interface Friend {
   background: string;
 }
 
-interface PostData {
-  id: string;
-  title: string;
-  username: string;
-  description: string;
-  tags: string[];
-  comments: Comment[];
-  likes: number;
-  images: { url: string; alt: string; thumb: string }[];
-  createdAt: string;
-  profilePicture: string;
-  postType: 'posts';
-  likedBy: string[];
-}
-
 export default function ProfilePage({ user }: { user: string }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsCount, setFriendsCount] = useState<number>(0);
   const [postsCount, setPostsCount] = useState<number>(0);
-  const [posts, setPosts] = useState<PostData[]>([]);
+  const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();

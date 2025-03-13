@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server";
 import { getFirestore, doc, getDoc, updateDoc, arrayRemove } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { Comment } from "@/types/comment";
 
 const db = getFirestore(firebase_app);
-
-interface Comment {
-    username: string;
-    comment: string;
-    likes: number;
-    date: string;
-    likedBy: string[];
-}
 
 export async function POST(request: Request) {
   try {

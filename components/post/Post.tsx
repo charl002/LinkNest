@@ -225,6 +225,7 @@ export default function Post({ title, username, description, tags, comments, lik
     const defaultImageUrl = "/defaultProfilePic.jpg";
 
     const handleDeleteComment = async (comment: Comment) => {
+    console.log(comment);
     setIsLoading(true);
 
     try {
@@ -262,6 +263,26 @@ export default function Post({ title, username, description, tags, comments, lik
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      const response = await fetch("/api/deletepost", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: documentId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete post");
+      }
+
+      const data = await response.json();
+      console.log(data.message);
+
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
         <Link href={`/profile/${encodeURIComponent(username)}`}>
@@ -290,7 +311,7 @@ export default function Post({ title, username, description, tags, comments, lik
               <p className="font-bold">{username}</p>
             </div>
             {sessionUsername === username && (
-              <button>
+              <button onClick={handleDelete}>
                 <Trash2/>
               </button>
             )}
