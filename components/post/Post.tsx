@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Comment } from "@/types/comment";
 import { FaExpand } from "react-icons/fa";
 import { Trash2 } from 'lucide-react';
+import { customToast } from "@/components/ui/customToast";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 
 interface PostProps {
@@ -254,11 +255,14 @@ export default function Post({ title, username, description, tags, comments, lik
             c.date !== comment.date
         );
         setPostComments(updatedComments); 
-      } else {
-        console.error("Failed to delete comment:", result.message);
+        customToast({ message: `Comment has successfully been removed!`, type: "success" });
+      }
+      else {
+        customToast({ message: `${result.message}`, type: "error" });
       }
     } catch (error) {
       console.error("Error deleting comment:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -278,9 +282,11 @@ export default function Post({ title, username, description, tags, comments, lik
 
       const data = await response.json();
       console.log(data.message);
+      customToast({ message: `Post has been deleted`, type: "success" });
 
     } catch (error) {
       console.error("Error deleting post:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
     }
   };
 
