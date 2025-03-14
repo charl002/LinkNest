@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { Comment } from "@/types/comment";
 import { withRetry } from '@/utils/backoff';
+import cache from '@/lib/cache';
 
 interface Post {
     title: string;
@@ -25,6 +26,12 @@ interface Post {
     comments: Comment[];
 }
 export async function GET(){
+    // Check cache first
+    const cachedPosts = cache.get('user-posts');
+    if (cachedPosts) {
+        return NextResponse.json(cachedPosts);
+    }
+
     try{
         const { results: postsResults, error: postsError } = await withRetry(
             () => getAllDocuments("posts"),
@@ -87,10 +94,13 @@ export async function GET(){
             };
         });
 
-        return NextResponse.json({ 
-            success: true, 
-            posts: posts
-          });
+        const result = { success: true, posts: posts };
+        
+        // Store in cache
+        cache.set('user-posts', result);
+
+        return NextResponse.json(result);
+        
     } catch (err) {
         console.error("Unexpected error:", err);
         return NextResponse.json(
