@@ -19,13 +19,7 @@ export async function POST(req: Request) {
 
       const now = new Date();
 
-      const data = { 
-        sender: senderUsername, 
-        receiver: receiverUsername, 
-        message: message, 
-        seen: false, 
-        date: now.getTime() 
-      };
+      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime(), reactions: []};
 
       const { result: docId, error } = await withRetry(
         () => addData("messages", data),
