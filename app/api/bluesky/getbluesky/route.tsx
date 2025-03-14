@@ -1,8 +1,15 @@
 import { BskyAgent, AppBskyFeedDefs, AppBskyEmbedImages } from '@atproto/api'
 import { NextResponse } from 'next/server'
 import { withRetry } from '@/utils/backoff';
+import cache from '@/lib/cache'
 
 export async function GET() {
+    //check cache first
+    const cachedPosts = cache.get('bluesky-posts');
+    if(cachedPosts){
+        return NextResponse.json(cachedPosts);
+    }
+
     try {
         const agent = new BskyAgent({
             service: 'https://bsky.social'
@@ -57,7 +64,12 @@ export async function GET() {
             })) || []
         }))
 
-        return NextResponse.json({ success: true, posts })
+        const result = { success: true, posts };
+
+        // Store in cache
+        cache.set('bluesky-posts', result);
+
+        return NextResponse.json(result);
 
     } catch (error: unknown) {
         const err = error as Error;
