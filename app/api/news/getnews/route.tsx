@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { withRetry } from '@/utils/backoff';
+import cache from '@/lib/cache' 
 
 export async function GET() {
+  // Check cache first
+  const cachedNews = cache.get('news-data');
+  if (cachedNews) {
+    return NextResponse.json(cachedNews);
+  }
+
   try {
     const API_KEY = process.env.NEWS_API_TOKEN;
     
@@ -27,6 +34,9 @@ export async function GET() {
       initialDelay: 1000,
       maxDelay: 5000
     });
+    
+    // Store in cache
+    cache.set('news-data', data);
     
     return NextResponse.json(data);
   }
