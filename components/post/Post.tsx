@@ -74,15 +74,7 @@ export default function Post({ title, username, description, tags, comments, lik
           })
       );
       return updatedComments;
-  };
-
-  useEffect(() => {
-      if (comments.length > 0) {
-          fetchProfilePictures(comments).then(setPostComments);
-      }
-  }, [comments]);
-
-    
+  };    
 
     const handleToggleLike = async () => {
         if (!session?.user || !sessionUsername || isLoading) return;
@@ -427,7 +419,11 @@ export default function Post({ title, username, description, tags, comments, lik
             <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
           </button>
 
-          <Dialog>
+          <Dialog onOpenChange={(isOpen) => {
+              if (isOpen && comments.length > 0) {
+                  fetchProfilePictures(comments).then(setPostComments);
+              }
+          }}>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex items-center space-x-2">
                 <FaRegComment />
