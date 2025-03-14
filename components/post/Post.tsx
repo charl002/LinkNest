@@ -9,15 +9,11 @@ import { FaRegThumbsUp, FaThumbsUp, FaRegComment } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-
-interface Comment {
-    username: string;
-    comment: string;
-    date: string;
-    likes: number;
-    likedBy: string[];
-    profilePicture?: string;
-}
+import { Comment } from "@/types/comment";
+import { FaExpand } from "react-icons/fa";
+import { Trash2 } from 'lucide-react';
+import { customToast } from "@/components/ui/customToast";
+import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 
 interface PostProps {
     title: string;
@@ -34,6 +30,7 @@ interface PostProps {
     sessionUsername: string;
 }
 
+
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
     const { data: session } = useSession();
     const [likeCount, setLikeCount] = useState(likes);
@@ -42,6 +39,7 @@ export default function Post({ title, username, description, tags, comments, lik
     const [postComments, setPostComments] = useState<Comment[]>(comments);
     const [isLoading, setIsLoading] = useState(false);
     const [isOverLimit, setIsOverLimit] = useState(false);
+    const [isZoomed, setIsZoomed] = useState(false);
 
     useEffect(() => {
         const fetchSessionUsername = async () => {
@@ -76,15 +74,7 @@ export default function Post({ title, username, description, tags, comments, lik
           })
       );
       return updatedComments;
-  };
-
-  useEffect(() => {
-      if (comments.length > 0) {
-          fetchProfilePictures(comments).then(setPostComments);
-      }
-  }, [comments]);
-
-    
+  };    
 
     const handleToggleLike = async () => {
         if (!session?.user || !sessionUsername || isLoading) return;
@@ -228,54 +218,192 @@ export default function Post({ title, username, description, tags, comments, lik
 
     const defaultImageUrl = "/defaultProfilePic.jpg";
 
+    const handleDeleteComment = async (comment: Comment) => {
+    console.log(comment);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/deletecomment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          postId: documentId,
+          username: comment.username,
+          comment: comment.comment,
+          date: comment.date,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Remove the deleted comment from the UI
+        const updatedComments = postComments.filter(
+          (c) =>
+            c.username !== comment.username ||
+            c.comment !== comment.comment ||
+            c.date !== comment.date
+        );
+        setPostComments(updatedComments); 
+        customToast({ message: `Comment has successfully been removed!`, type: "success" });
+      }
+      else {
+        customToast({ message: `${result.message}`, type: "error" });
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch("/api/deletepost", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId: documentId }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete post");
+      }
+
+      const data = await response.json();
+      console.log(data.message);
+      customToast({ message: `Post has been deleted`, type: "success" });
+
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+    }
+  };
+
     return (
       <div className="bg-white shadow-md p-4 rounded-md">
-        <Link href={`/profile/${encodeURIComponent(username)}`}>
-          <div className="flex items-center space-x-2">
-            {profilePicture ? (
-              <Image 
-                src={profilePicture} 
-                alt={`${username}'s profile picture`} 
-                width={40} 
-                height={40} 
-                className="rounded-full" 
-                layout="fixed"
-              />
-            ) : (
-              <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+          <div className="flex items-center justify-between w-full">
+          <Link href={`/profile/${encodeURIComponent(username)}`}>
+            <div className="flex items-center space-x-2">
+              {profilePicture ? (
                 <Image 
-                  src={defaultImageUrl} 
-                  alt="Default Profile" 
+                  src={profilePicture} 
+                  alt={`${username}'s profile picture`} 
                   width={40} 
                   height={40} 
                   className="rounded-full" 
+                  layout="fixed"
+                />
+              ) : (
+                <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
+                  <Image 
+                    src={defaultImageUrl} 
+                    alt="Default Profile" 
+                    width={40} 
+                    height={40} 
+                    className="rounded-full" 
+                  />
+                </div>
+              )}
+              <p className="font-bold">{username}</p>
+            </div>
+          </Link>
+            {sessionUsername === username && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button onClick={(e) => e.stopPropagation()}>
+                    <Trash2/>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your post from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+
+        {images.length > 0 && images[0].url ? (
+          <div className="mt-4 relative w-full overflow-hidden bg-gray-200 rounded-md group">
+            <button 
+              onClick={() => setIsZoomed(true)}
+              className="absolute top-2 right-2 z-10 p-2 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <FaExpand />
+            </button>
+            {images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
+              <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
+                <video 
+                    controls 
+                    className="absolute inset-0 w-full h-full object-contain"
+                    src={images[0].url}
+                >
+                    Your browser does not support the video tag.
+                </video>
+              </div>
+            ) : (
+              <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
+                <Image 
+                  src={images[0].url} 
+                  alt={images[0].alt} 
+                  fill
+                  priority
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               </div>
             )}
-            <p className="font-bold">{username}</p>
           </div>
-        </Link>
-        
-        {images.length > 0 && images[0].url ? (
-          images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
-            <video 
-                controls 
-                className="mt-4 bg-gray-200 rounded-md w-full h-auto"
-            >
-                <source src={images[0].url} type={`video/${images[0].url.split('.').pop()}`} />
-                Your browser does not support the video tag.
-            </video>
-          ) : (
-            <Image 
-              src={images[0].url} 
-              alt={images[0].alt} 
-              width={640} 
-              height={160} 
-              className="mt-4 bg-gray-200 rounded-md" 
-              layout="responsive"
-            />
-          )
         ) : null}
+
+      {/* Zoom  media*/}
+        <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/90">
+            <button
+              onClick={() => setIsZoomed(false)}
+              className="absolute top-4 right-4 z-50 p-2 bg-white rounded-full hover:bg-gray-200"
+            >
+              X
+            </button>
+            <DialogHeader>
+              <DialogTitle className="sr-only">Media Preview</DialogTitle>
+            </DialogHeader>
+            <div className="relative w-full h-[90vh] flex items-center justify-center">
+              {images.length > 0 && images[0].url && (
+                images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
+                  <video 
+                    controls 
+                    className="max-w-full max-h-full object-contain"
+                    src={images[0].url}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="relative w-full h-full">
+                    <Image 
+                      src={images[0].url} 
+                      alt={images[0].alt} 
+                      fill
+                      priority
+                      className="object-contain"
+                      sizes="100vw"
+                    />
+                  </div>
+                )
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <p className="mt-2 font-semibold">{title}</p>
         <p className="text-gray-500">{description}</p>
@@ -291,7 +419,11 @@ export default function Post({ title, username, description, tags, comments, lik
             <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
           </button>
 
-          <Dialog>
+          <Dialog onOpenChange={(isOpen) => {
+              if (isOpen && comments.length > 0) {
+                  fetchProfilePictures(comments).then(setPostComments);
+              }
+          }}>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex items-center space-x-2">
                 <FaRegComment />
@@ -302,7 +434,7 @@ export default function Post({ title, username, description, tags, comments, lik
               <DialogHeader>
                 <DialogTitle>Comments</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                 {postComments.length > 0 ? (
                   postComments.map((comment, index) => (
                     <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
@@ -314,8 +446,18 @@ export default function Post({ title, username, description, tags, comments, lik
                         className="rounded-full flex-shrink-0"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-bold text-sm text-gray-900">{comment.username} <span className="text-gray-500 text-xs">{comment.date}</span></p>
-                        <p className="text-gray-700 break-words overflow-wrap-anywhere">{comment.comment}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-sm text-gray-900">
+                          {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
+                        </p>
+                        {sessionUsername === comment.username && (
+                          <button onClick={() => handleDeleteComment(comment)}
+                          disabled={isLoading}>
+                            <Trash2 />
+                          </button>
+                        )}
+                      </div>
+                        <p className="text-gray-700 break-words whitespace-pre-wrap">{comment.comment}</p>
                         <div className="flex items-center space-x-3 mt-1 text-gray-500 text-sm">
                           <button 
                               onClick={() => handleCommentLike(index, comment.likedBy.includes(sessionUsername))}

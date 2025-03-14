@@ -2,6 +2,7 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
+import { withRetry } from '@/utils/backoff';
 
 // Azure Storage Configuration
 const sasToken = process.env.AZURE_SAS;
@@ -53,17 +54,31 @@ export async function POST(request: Request) {
       const blobName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`;
       const blobClient = containerClient.getBlockBlobClient(blobName);
 
-      // Upload to Azure Blob Storage
-      await blobClient.uploadData(buffer, {
-        blobHTTPHeaders: { blobContentType: file.type },
-      });
+      // Upload to Azure Blob Storage with retry
+      await withRetry(
+        () => blobClient.uploadData(buffer, {
+          blobHTTPHeaders: { blobContentType: file.type },
+        }),
+        {
+          maxAttempts: 3,
+          initialDelay: 1000,
+          maxDelay: 5000
+        }
+      );
 
       // Add file URL to post data
       postData.fileUrl = `${blobPublicUrl}${encodeURIComponent(blobName)}`;
     }
 
     // Add post data to Firestore
-    const { result, error } = await addData("posts", postData);
+    const { result, error } = await withRetry(
+        () => addData("posts", postData),
+        {
+            maxAttempts: 3,
+            initialDelay: 500,
+            maxDelay: 3000
+        }
+    );
     
     if (error) {
       console.error("Firestore error:", error);

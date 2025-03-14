@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { auth } from "@/lib/auth";
+import { withRetry } from '@/utils/backoff';
 
 interface Message {
     id: string;
@@ -22,9 +23,17 @@ export async function GET(req: Request) {
           return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { results: getUsersResults, error: getUsersError } = await getAllDocuments("users");
+        const { results: getUsersResults, error: getUsersError } = await withRetry(
+          () => getAllDocuments("users"),
+          {
+            maxAttempts: 3,
+            initialDelay: 500,
+            maxDelay: 3000
+          }
+        );
 
         if (getUsersError || !getUsersResults) {
+          console.error("Error fetching users:", getUsersError);
           return NextResponse.json({ message: "Error fetching messages", error: getUsersError }, { status: 500 });
         }
 
@@ -42,9 +51,17 @@ export async function GET(req: Request) {
           return NextResponse.json({ message: "Sender and receiver usernames are required" }, { status: 400 });
         }
 
-        const { results, error } = await getAllDocuments("messages");
+        const { results, error } = await withRetry(
+          () => getAllDocuments("messages"),
+          {
+            maxAttempts: 3,
+            initialDelay: 500,
+            maxDelay: 3000
+          }
+        );
 
         if (error || !results) {
+            console.error("Error fetching messages:", error);
             return NextResponse.json({ message: "Error fetching messages", error }, { status: 500 });
         }
 
@@ -74,6 +91,10 @@ export async function GET(req: Request) {
         return NextResponse.json({ messages }, { status: 200 });
 
     } catch (error) {
-      return NextResponse.json({ message: 'Error getting messages!', error }, { status: 500 });
+      console.error("Server error:", error);
+      return NextResponse.json({ 
+        message: 'Error getting messages!', 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      }, { status: 500 });
     }
 }

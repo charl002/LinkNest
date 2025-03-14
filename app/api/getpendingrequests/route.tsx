@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
+import { withRetry } from '@/utils/backoff';
 
 interface FriendRequest {
   receiverUsername: string;
@@ -16,7 +17,14 @@ export async function GET(req: Request) {
             return NextResponse.json({ message: "Missing username parameter" }, { status: 400 });
         }
 
-        const { results, error } = await getAllDocuments("friend_requests");
+        const { results, error } = await withRetry(
+            () => getAllDocuments("friend_requests"),
+            {
+                maxAttempts: 3,
+                initialDelay: 500,
+                maxDelay: 3000
+            }
+        );
         if (error || !results) {
             return NextResponse.json({ message: "Error fetching friend requests", error }, { status: 500 });
         }
@@ -32,6 +40,9 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ pendingRequests }, { status: 200 });
     } catch (err) {
-        return NextResponse.json({ message: "Unexpected error occurred", error: err }, { status: 500 });
+        return NextResponse.json({ 
+            message: "Unexpected error occurred", 
+            error: err instanceof Error ? err.message : 'Unknown error'
+        }, { status: 500 });
     }
 }

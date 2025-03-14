@@ -1,18 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import Post from "../post/Post"; 
 import { useSession } from "next-auth/react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -20,6 +12,8 @@ import { customToast } from "@/components/ui/customToast";
 import Link from "next/link";
 import { Plus } from 'lucide-react';
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
+import { PostType } from "@/types/post";
+import { User } from "@/types/user";
 
 interface UserData {
   id: string;
@@ -33,36 +27,12 @@ interface UserData {
   };
 }
 
-interface Friend {
-  id: string;
-  image: string;
-  username: string;
-  name: string;
-  email: string;
-  background: string;
-}
-
-interface PostData {
-  id: string;
-  title: string;
-  username: string;
-  description: string;
-  tags: string[];
-  comments: { comment: string; username: string; date: string; likes: number, likedBy: string[]; }[];
-  likes: number;
-  images: { url: string; alt: string; thumb: string }[];
-  createdAt: string;
-  profilePicture: string;
-  postType: 'posts';
-  likedBy: string[];
-}
-
 export default function ProfilePage({ user }: { user: string }) {
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friends, setFriends] = useState<User[]>([]);
   const [friendsCount, setFriendsCount] = useState<number>(0);
   const [postsCount, setPostsCount] = useState<number>(0);
-  const [posts, setPosts] = useState<PostData[]>([]);
+  const [posts, setPosts] = useState<PostType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: session } = useSession();
@@ -79,101 +49,110 @@ export default function ProfilePage({ user }: { user: string }) {
   const [isFriend, setIsFriend] = useState(false);  
   const [isLoading, setIsLoading] = useState(false);
   const [isFriendLoading, setIsFriendLoading] = useState(true);
+  const [isZoomed, setIsZoomed] = useState(false);
 
+  const fetchUser = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/getuserbyusername?username=${user}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to fetch user");
+      }
+
+      setUserData(result);
+      setUsername(result.data.username);
+      setDescription(result.data.description);
+    } catch (err) {
+      setError((err as Error).message + " in LinkNest");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const fetchFriends = useCallback(async () => {
+    if (!sessionUsername) return;
+    setIsFriendLoading(true);
+    try {
+      const response = await fetch(`/api/getfriends?username=${user}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to fetch friends");
+      }
+
+      setFriendsCount(result.friends.length);
+
+      const friendsData = await Promise.all(
+        result.friends.map(async (friendUsername: string) => {
+          const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+          const userData = await userResponse.json();
+
+          if (userResponse.ok) {
+            return { id: userData.id, ...userData.data };
+          } else {
+            console.error(`User ${friendUsername} not found`);
+            return null;
+          }
+        })
+      );
+      const filteredFriends = friendsData.filter(Boolean);
+      setFriends(filteredFriends);
+      setIsFriend(filteredFriends.some(friend => friend.username === sessionUsername));
+    } catch (err) {
+      console.error("Error fetching friends:", err);
+    } finally {
+      setIsFriendLoading(false);
+    }
+  }, [user, sessionUsername]);
+
+  const fetchPosts = useCallback(async () => {
+    try {
+      const [userResponse, postsResponse] = await Promise.all([
+        fetch(`/api/getsingleuser?email=${email}`),
+        fetch(`/api/getpostbyusername?username=${user}`)
+      ]);
+
+      if (!userResponse.ok) {
+        throw new Error("Failed to fetch user");
+      }
+
+      const sessionUser = await userResponse.json();
+      setSessionUsername(sessionUser.data?.username || "Unknown");
+
+      if (!postsResponse.ok) {
+        throw new Error("Failed to fetch posts");
+      }
+
+      const result = await postsResponse.json();
+      const posts = result.posts || [];
+
+      setPostsCount(posts.length);
+      setPosts(posts);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    }
+  }, [user, email]);
 
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch(`/api/getuserbyusername?username=${user}`);
-        const result = await response.json();
+    let isMounted = true;
+    const abortController = new AbortController();
 
-        if (!response.ok) {
-          throw new Error(result.message || "Failed to fetch user");
-        }
-
-        setUserData(result);
-        setUsername(result.data.username);
-        setDescription(result.data.description);
-      } catch (err) {
-        setError((err as Error).message + " in LinkNest");
-      } finally {
-        setLoading(false);
+    const fetchData = async () => {
+      if (isMounted) {
+        await fetchPosts();
+        await fetchUser();
+        await fetchFriends();
       }
-    }
+    };
 
-    async function fetchFriends() {
-      if(!sessionUsername) return;
-      setIsFriendLoading(true);
-      try {
-        const response = await fetch(`/api/getfriends?username=${user}`);
-        const result = await response.json();
+    fetchData();
 
-        if (!response.ok) {
-          throw new Error(result.message || "Failed to fetch friends");
-        }
-
-        setFriendsCount(result.friends.length);
-
-        const friendsData = await Promise.all(
-          result.friends.map(async (friendUsername: string) => {
-            const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
-            const userData = await userResponse.json();
-
-            if (userResponse.ok) {
-              return { id: userData.id, ...userData.data };
-            } else {
-              console.error(`User ${friendUsername} not found`);
-              return null;
-            }
-          })
-        );
-        const filteredFriends = friendsData.filter(Boolean);
-        setFriends(filteredFriends);
-        setIsFriend(filteredFriends.some(friend => friend.username === sessionUsername));
-      } catch (err) {
-        console.error("Error fetching friends:", err);
-      } finally {
-        setIsFriendLoading(false); 
-      }
-    }
-
-    async function fetchPosts() {
-      try {
-        const response = await fetch(`/api/getsingleuser?email=${email}`);
-        const sessionUser = await response.json();
-
-        if (response.ok) {
-            setSessionUsername(sessionUser.data.username)
-        } else {
-            console.error(sessionUser.message);
-        }
-
-        const response2 = await fetch(`/api/getpostbyusername?username=${user}`);
-        const result = await response2.json();
-
-        if (!response2.ok) {
-            throw new Error(result.message || "Failed to fetch posts"); // Changed error message
-        }
-
-        if (!result.posts) {
-            console.error("No posts found in response:", result);
-            setPosts([]);
-            setPostsCount(0);
-            return;
-        }
-
-        setPostsCount(result.posts.length);
-        setPosts(result.posts);
-      } catch (err) {
-        console.error("Error fetching friends:", err);
-      }
-    }
-
-    
-    fetchPosts();
-    fetchUser();
-    fetchFriends();
-  }, [user, email, sessionUsername]);
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [fetchPosts, fetchUser, fetchFriends]);
 
 
    const handleAddFriend = async () => {
@@ -344,7 +323,7 @@ export default function ProfilePage({ user }: { user: string }) {
           </div>
 
           <div className="p-4 relative">
-            <div className="absolute -top-12 left-4">
+            <button onClick={() => setIsZoomed(true)} className="absolute -top-12 left-4">
               <Image
                 src={userData.data.image}
                 alt="User Profile"
@@ -352,7 +331,32 @@ export default function ProfilePage({ user }: { user: string }) {
                 height={80}
                 className="rounded-full border-4 border-white shadow-md"
               />
-            </div>
+            </button>
+
+            <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
+              <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 flex items-center justify-center bg-transparent shadow-none border-none">
+                <button
+                  onClick={() => setIsZoomed(false)}
+                  className="absolute top-4 right-4 z-50 p-2 bg-white rounded-full hover:bg-gray-200"
+                >
+                  X
+                </button>
+                <DialogHeader>
+                  <DialogTitle className="sr-only">Media Preview</DialogTitle>
+                </DialogHeader>
+                <div className="relative w-[40vw] h-[90vh] flex items-center justify-center">
+                  <Image 
+                    src={userData.data.image}
+                    alt="User Profile"
+                    fill
+                    priority
+                    className="rounded-full border-4 border-white shadow-md"
+                    sizes="100vw"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+
 
             <div className="mt-8 flex justify-between items-center">
               <div>

@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
+import { withRetry } from '@/utils/backoff';
 
 export async function GET() {
     try {
-        const { results, error } = await getAllDocuments("users");
+        const { results, error } = await withRetry(
+            () => getAllDocuments("users"),
+            {
+                maxAttempts: 3,
+                initialDelay: 500,
+                maxDelay: 3000
+            }
+        );
         if (error || !results) {
             return NextResponse.json({ message: "Error fetching users", error }, { status: 500 });
         }
