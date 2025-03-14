@@ -20,10 +20,10 @@ export const postMessageAndUnread = async (
     });
 
     const postMessageData = await postMessageResponse.json();
-    if (!postMessageResponse.ok) {
-      console.error(`Error storing message: ${postMessageData.message}`);
-      return;
-    }
+    // if (!postMessageResponse.ok) {
+    //   console.error(`Error storing message: ${postMessageData.message}`);
+    //   return;
+    // }
 
     // Post unread message count to the API
     await fetch("/api/postunreadmessage", {
@@ -35,6 +35,10 @@ export const postMessageAndUnread = async (
         count: 1, // Increment unread count if the user is offline
       }),
     });
+
+    // Returns the doc ID of the message.
+    return postMessageData;
+
   } catch (error) {
     console.error("Error storing message or unread message:", error);
   }
