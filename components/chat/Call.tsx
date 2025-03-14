@@ -1,5 +1,6 @@
 "use client";
 
+import { postMessageAndUnread } from "@/utils/messageUtils";
 import AgoraRTC, {
   AgoraRTCProvider,
   LocalVideoTrack,
@@ -18,29 +19,7 @@ import { useRouter } from "next/navigation";
 
 const sendCallEndMessage = async (currentUsername: string, friendUsername: string) => {
   try {
-    const postMessagePromise = fetch("/api/postmessage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        senderUsername: currentUsername,
-        receiverUsername: friendUsername,
-        message: '📞 The call has ended!',
-        isCallMsg: true,
-      }),
-    });
-
-    const postUnreadMessagePromise = fetch("/api/postunreadmessage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender: currentUsername,
-        receiver: friendUsername,
-        count: 1, // Mark it as unread
-      }),
-    });
-
-    await Promise.all([postMessagePromise, postUnreadMessagePromise]);
-
+    await postMessageAndUnread(currentUsername, friendUsername, '📞 The call has ended!', true);
   } catch (error) {
     console.error("Error posting call end message:", error);
   }

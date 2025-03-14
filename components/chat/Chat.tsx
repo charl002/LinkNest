@@ -11,9 +11,11 @@ import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import ChatMessage from "./ChatMessage";
 import { Video } from 'lucide-react';
+import { Socket } from "socket.io-client";
 
 import { Message } from "@/types/message";
 import { User } from "@/types/user";
+import { postMessageAndUnread } from "@/utils/messageUtils";
 
 export default function Chat() {
   const socket = useSocket();
@@ -46,6 +48,7 @@ export default function Chat() {
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
         }
+
         setMessages(
           data.messages.map((msg: Message) => ({
             sender: msg.sender,
@@ -80,7 +83,7 @@ export default function Chat() {
     fetchPreviousMessages();
   }, [currentUsername, friendUsername, router]);
 
-
+  // This useEffect listens for messages on the Socket IO
   useEffect(() => {
     if (!socket || !friendUsername) return;
   
@@ -103,51 +106,18 @@ export default function Chat() {
       socket.off("privateMessage");
     };
   }, [socket, currentUsername, friendUsername]);
-  
 
+  // 
   const sendMessage = async () => {
     if (socket && input.trim() && friendUsername && currentUsername) {
-      try {
-        const response = await fetch("/api/postmessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            senderUsername: currentUsername,
-            receiverUsername: friendUsername,
-            message: input,
-            isCallMsg: false
-          }),
-        });
+      const message = input;
+      const isCallMsg = false; // Flag for regular message
 
-        const data = await response.json();
-        if (!response.ok) {
-          toast.error(`Error storing message: ${data.message}`);
-          return;
-        }
-      } catch (error) {
-        toast.error("Error storing message.");
-        console.error("Error storing message:", error);
-      }
-
-      try {
-        await fetch("/api/postunreadmessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sender: currentUsername,
-            receiver: friendUsername,
-            count: 1, // Increment unread count in Firestore if offline
-          }),
-        });
-      } catch (error) {
-        console.error("Error storing unread message:", error);
-      }
-
-      socket.emit("privateMessage", {
-        senderId: currentUsername,
-        receiverId: friendUsername,
-        message: input,
-      });
+      // Post message and unread count, and emit socket message
+      await Promise.all([
+        postMessageAndUnread(currentUsername, friendUsername, message, isCallMsg),
+        emitPrivateMessage(socket, currentUsername, friendUsername, message),
+      ]);
 
       setMessages((prev) => [...prev, { 
         sender: currentUsername, 
@@ -155,80 +125,63 @@ export default function Chat() {
         date: formatTimestamp(new Date().toISOString()),
         isCallMsg: false
       }]);
+
       setInput("");
     }
   };
 
+  // This makes sure that the page scrolls to the most recent message
   useEffect(() => {
     if (messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }
   }, [isLoading, messages.length]); // Trigger when loading is complete
 
-  
+  // Scolls to the newest message when a new message is added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Redirects home
   const handleRedirectToHome = () => {
     setErrorMessage(null);
     router.push("/");
   };
 
+  //Handles the logic of entering a VideoCall with a friend
   const handleRedirectToCall = async () => {
     if (!currentUsername || !friendUsername || !socket) return;
 
     const callMessage = "📞 I have started a call! Join Up!";
+    const isCallMsg = true;
     
     try {
-        socket.emit("privateMessage", {
-            senderId: currentUsername,
-            receiverId: friendUsername,
-            message: callMessage,
-        });
-
-        const postMessagePromise = fetch("/api/postmessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            senderUsername: currentUsername,
-            receiverUsername: friendUsername,
-            message: callMessage,
-            isCallMsg: true, // Flag indicating it's a call message
-          }),
-        });
-    
-        const postUnreadMessagePromise = fetch("/api/postunreadmessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sender: currentUsername,
-            receiver: friendUsername,
-            count: 1, // Mark it as unread
-          }),
-        });
-
-        await Promise.all([postMessagePromise, postUnreadMessagePromise]);
-
-        setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-                sender: currentUsername,
-                message: callMessage,
-                date: formatTimestamp(new Date().toISOString()),
-                isCallMsg: true
-            },
-        ]);
-
-        setInput("");
-
-        router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`);
+      // Post call message and unread count, and emit socket message
+      await Promise.all([
+        postMessageAndUnread(currentUsername, friendUsername, callMessage, isCallMsg),
+        emitPrivateMessage(socket, currentUsername, friendUsername, callMessage),
+      ]);
+  
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          sender: currentUsername,
+          message: callMessage,
+          date: formatTimestamp(new Date().toISOString()),
+          isCallMsg: isCallMsg,
+        },
+      ]);
+  
+      setInput(""); // Clear the input field
+  
+      router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`);
     } catch (error) {
-        console.error("Error starting the call:", error);
-        toast.error("Error starting the call.");
+      console.error("Error starting the call:", error);
+      toast.error("Error starting the call.");
     }
   };
 
+  // Formating the timestamp so its human readable
   function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
     return date.toLocaleString("en-US", {
@@ -241,6 +194,15 @@ export default function Chat() {
       hour12: true,
     });
   }
+
+  // Helper function to emit private message via socket
+  const emitPrivateMessage = (socket: Socket, sender: string, receiver: string, message: string) => {
+    socket.emit("privateMessage", {
+      senderId: sender,
+      receiverId: receiver,
+      message: message,
+    });
+  };
 
   return (
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
