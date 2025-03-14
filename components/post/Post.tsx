@@ -334,7 +334,7 @@ export default function Post({ title, username, description, tags, comments, lik
           </div>
 
         {images.length > 0 && images[0].url ? (
-          <div className="mt-4 relative w-full overflow-hidden bg-gray-200 rounded-md group">
+          <div className="mt-4 relative w-full overflow-hidden bg-black rounded-md group">
             <button 
               onClick={() => setIsZoomed(true)}
               className="absolute top-2 right-2 z-10 p-2 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
