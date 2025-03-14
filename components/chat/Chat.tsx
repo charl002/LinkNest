@@ -208,6 +208,42 @@ export default function Chat() {
     }
   };
 
+  const handleRemoveReaction = async (message: Message) => {
+    try {
+      const response = await fetch('/api/deletereaction', {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messageId: message.id,
+          user: currentUsername,
+        }),
+      });
+
+      if (!response.ok){
+        toast.error("Failed to remove reaction");
+        return;
+      }
+      const updatedMessageRes = await fetch(`/api/getmessage?messageId=${message.id}`);
+        const updatedMessageData = await updatedMessageRes.json();
+
+        if (!updatedMessageRes.ok) {
+            toast.error("Failed to fetch updated message");
+            return;
+        }
+
+        setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+                msg.id === message.id ? { ...msg, reactions: updatedMessageData.reactions } : msg
+            )
+        );
+
+        toast.success("Reaction removed!");
+    } catch (error) {
+        console.error("Error removing reaction:", error);
+        toast.error("An error occurred.");
+    }
+  };
+
   function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
     return date.toLocaleString("en-US", {
@@ -306,6 +342,14 @@ export default function Chat() {
                                   {emoji}
                                 </button>
                               ))}
+                              {(msg.reactions ?? []).some((reaction) => reaction.user === currentUsername) && (
+                                <button
+                                    className="text-lg text-red-500 hover:scale-125"
+                                    onClick={() => handleRemoveReaction(msg)}
+                                >
+                                    ❌
+                                </button>
+                            )}
                             </div>
                           </HoverCardContent>
                         </HoverCard>
