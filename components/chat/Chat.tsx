@@ -179,9 +179,6 @@ export default function Chat() {
           emoji: reaction,
         }),
       });
-      console.log(message.id)
-      console.log(currentUsername)
-      console.log(reaction)
 
       if (!response.ok) {
         toast.error("Failed to add reaction");
@@ -189,25 +186,27 @@ export default function Chat() {
 
         return;
       }
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === message.id
-            ? {
-                ...msg,
-                reactions: [
-                  ...(Array.isArray(msg.reactions) ? msg.reactions : []),
-                  { user: currentUsername || "Unknown", reaction },
-                ],
-              }
-            : msg
-        )
-      );
-      toast.success("Reaction added!");
+
+      const updatedMessageRes = await fetch(`/api/getmessage?messageId=${message.id}`);
+        const updatedMessageData = await updatedMessageRes.json();
+
+        if (!updatedMessageRes.ok) {
+            toast.error("Failed to fetch updated message");
+            return;
+        }
+
+        setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+                msg.id === message.id ? { ...msg, reactions: updatedMessageData.reactions } : msg
+            )
+        );
+
+        toast.success("Reaction updated!");
     } catch (error) {
-      console.error("Error adding reaction", error);
-      toast.error("An error occured.");
+        console.error("Error updating reaction:", error);
+        toast.error("An error occurred.");
     }
-  }
+  };
 
   function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
