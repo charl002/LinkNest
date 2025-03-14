@@ -83,7 +83,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
             </span>
           </div>
         </div>
-        {remoteUsers.length > 0 ? (
+        {remoteUsers.length > 0 && remoteUsers.length < 2 ? (
           remoteUsers.map((user) => (
             <div key={user.uid} className="relative w-full h-full">
               <RemoteUser
