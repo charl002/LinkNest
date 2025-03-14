@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { SessionProvider } from "next-auth/react";
 import { SocketProvider } from "@/components/provider/SocketProvider";
 import { FriendsProvider } from "@/components/provider/FriendsProvider";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "LinkNest",
@@ -18,16 +19,23 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
      <body className="bg-gray-100 text-gray-900 antialiased">
-      <SessionProvider session={session}>
-        <SocketProvider>
-          <FriendsProvider>
-            <Navbar />
-            <main className="flex min-h-screen">{children}</main>
-          </FriendsProvider>
-        </SocketProvider>
-      </SessionProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+        >
+        <SessionProvider session={session}>
+          <SocketProvider>
+            <FriendsProvider>
+              <Navbar />
+              <main className="flex min-h-screen">{children}</main>
+            </FriendsProvider>
+          </SocketProvider>
+        </SessionProvider>
+      </ThemeProvider>
       </body>
     </html>
   );
