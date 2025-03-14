@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Comment } from "@/types/comment";
-import { FaExpand } from "react-icons/fa";
 import { Trash2 } from 'lucide-react';
 import { customToast } from "@/components/ui/customToast";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
@@ -334,13 +333,7 @@ export default function Post({ title, username, description, tags, comments, lik
           </div>
 
         {images.length > 0 && images[0].url ? (
-          <div className="mt-4 relative w-full overflow-hidden bg-black rounded-md group">
-            <button 
-              onClick={() => setIsZoomed(true)}
-              className="absolute top-2 right-2 z-10 p-2 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <FaExpand />
-            </button>
+          <div className="mt-4 relative w-full overflow-hidden bg-transparent rounded-md group">
             {images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
               <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
                 <video 
@@ -352,7 +345,7 @@ export default function Post({ title, username, description, tags, comments, lik
                 </video>
               </div>
             ) : (
-              <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
+              <button onClick={() => setIsZoomed(true)} className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
                 <Image 
                   src={images[0].url} 
                   alt={images[0].alt} 
@@ -361,14 +354,14 @@ export default function Post({ title, username, description, tags, comments, lik
                   className="object-contain"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-              </div>
+              </button>
             )}
           </div>
         ) : null}
 
       {/* Zoom  media*/}
         <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
-          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/90">
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-transparent border-none">
             <button
               onClick={() => setIsZoomed(false)}
               className="absolute top-4 right-4 z-50 p-2 bg-white rounded-full hover:bg-gray-200"
