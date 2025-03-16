@@ -105,15 +105,16 @@ export default function Sidebar() {
       }
     };
 
+    const handleCall = (data: { senderId: string; message: string }) => {
+      customToast({ message: data.message, type: "info" });
+    };
   
     socket.on("newFriendRequest", handleNewFriendRequest);
-    socket.on("call", (data: { senderId: string; message: string }) => {
-      // Custom toast notification
-      customToast({ message: data.message, type: "info" });
-    });
+    socket.on("call", handleCall);
   
     return () => {
       socket.off("newFriendRequest", handleNewFriendRequest);
+      socket.off("call", handleCall);
     };
   }, [socket, senderUsername]);
 
