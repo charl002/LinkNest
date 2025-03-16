@@ -21,8 +21,7 @@ export default function ChatList() {
 
   const { friends } = useFriends();
   const socket = useSocket();
-  const [unreadMessages, setUnreadMessages] = useState<Record<string, { count: number; messageSnippet: string }>>({});
-
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, { count: number; message: string }>>({});
 
   const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
 
@@ -72,14 +71,14 @@ export default function ChatList() {
         const messageSnippet = data.message.length > 30 ? data.message.substring(0, 30) + "..." : data.message; // Truncate the message if it's too long
   
         if (activeChatFriend === data.senderId) {
-          return { ...prev, [data.senderId]: { count: 0, messageSnippet } }; // Reset unread count when chat is opened
+          return { ...prev, [data.senderId]: { count: 0, message: messageSnippet } }; // Reset unread count when chat is opened
         }
   
         return {
           ...prev,
           [data.senderId]: {
             count: (prev[data.senderId]?.count || 0) + 1,
-            messageSnippet, // Store the latest message as a snippet
+            message: messageSnippet, // Store the latest message as a snippet
           },
         };
       });
@@ -114,7 +113,7 @@ export default function ChatList() {
   
     setUnreadMessages((prev) => ({
       ...prev,
-      [friendUsername]: { count: 0, messageSnippet: "" }, // Reset message snippet when chat is opened
+      [friendUsername]: { count: 0, message: "" }, // Reset message snippet when chat is opened
     }));
 
     try {
@@ -132,7 +131,7 @@ export default function ChatList() {
     }
   
     router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  };  
+  };
 
   return (
     <aside className="bg-white shadow-md p-4 rounded-md">
@@ -146,7 +145,7 @@ export default function ChatList() {
               className="relative flex items-center justify-between p-2 bg-gray-100 rounded-md"
             >
               {/* Only render Badge if unread count is greater than 0 */}
-              {unreadMessages[user.username]?.count > 0 && (
+              {unreadMessages[user.username] && unreadMessages[user.username].count > 0 && (
                 <Badge variant="destructive" className="absolute top-0 right-0 -mr-0 -mt-3">
                   {unreadMessages[user.username].count}
                 </Badge>
@@ -166,9 +165,9 @@ export default function ChatList() {
               </Link>
 
               <div>
-                {unreadMessages[user.username]?.messageSnippet && (
+                {unreadMessages[user.username]?.message && (
                   <span className="text-xs text-gray-500">
-                    {unreadMessages[user.username].messageSnippet}
+                    {unreadMessages[user.username].message}
                   </span>
                 )}
               </div>

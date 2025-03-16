@@ -48,7 +48,7 @@ export default function Chat() {
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
         }
-        console.log(data.messages)
+
         setMessages(
           data.messages.map((msg: Message) => ({
             id: msg.id,
