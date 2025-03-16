@@ -115,6 +115,7 @@ export default function ChatList() {
     }));
 
     try {
+      console.log('REMOVING COUNT!');
       await fetch("/api/postunreadmessage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -122,6 +123,7 @@ export default function ChatList() {
           sender: friendUsername,
           receiver: currentUsername,
           count: 0,
+          message: ""
         }),
       });
     } catch (error) {
