@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useSocket } from "../provider/SocketProvider";
+import LoadingLogo from "../custom-ui/LoadingLogo";
 
 function Call() {
   const client = useRTCClient(
@@ -86,7 +87,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   const deviceLoading = isLoadingMic || isLoadingCam;
   if (deviceLoading)
     return (
-      <div className="flex flex-col items-center pt-40">Loading devices...</div>
+      <LoadingLogo></LoadingLogo>
     );
 
   return (

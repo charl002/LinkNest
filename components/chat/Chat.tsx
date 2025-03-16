@@ -336,7 +336,7 @@ export default function Chat() {
                         <ChatMessage message={msg} isCurrentUser={isCurrentUser} user={user} />
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent 
+                    <HoverCardContent
                       side="top" 
                       align="center" 
                       sideOffset={5} 
@@ -378,9 +378,7 @@ export default function Chat() {
                       </div>
                     </HoverCardContent>
                   </HoverCard>
-          
                 </div>
-          
               </div>
             );
           })

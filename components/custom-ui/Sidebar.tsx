@@ -106,7 +106,7 @@ export default function Sidebar() {
     };
 
     const handleCall = (data: { senderId: string; message: string }) => {
-      customToast({ message: data.message, type: "info" });
+      customToast({ message: data.message, type: "info", duration: 60000 });
     };
   
     socket.on("newFriendRequest", handleNewFriendRequest);
