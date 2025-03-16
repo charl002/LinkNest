@@ -163,9 +163,11 @@ export default function Chat() {
     
     try {
       // Post call message and unread count, and emit socket message
-      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, input, false);
+      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, callMessage, true);
 
       emitPrivateMessage(socket, currentUsername, friendUsername, callMessage, postMessageData.docId);
+
+      socket.emit("call", { senderId: currentUsername, receiverId: friendUsername });
 
       setMessages((prevMessages) => [
         ...prevMessages,

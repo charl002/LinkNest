@@ -66,9 +66,7 @@ export default function Sidebar() {
   
     console.log("Registering user to WebSocket:", senderUsername);
     socket.emit("register", senderUsername);
-  
-    console.log("Listening for new friend requests...");
-  
+    
     const handleNewFriendRequest = async (data: { senderUsername: string }) => {
       console.log("Received new friend request:", data);
     
@@ -100,15 +98,19 @@ export default function Sidebar() {
           ];
         });
         
-    
         customToast({ message: `New friend request from ${data.senderUsername}!`, type: "info" });
     
       } catch (error) {
         console.error("Error fetching user details:", error);
       }
-    };    
+    };
+
   
     socket.on("newFriendRequest", handleNewFriendRequest);
+    socket.on("call", (data: { senderId: string; message: string }) => {
+      // Custom toast notification
+      customToast({ message: data.message, type: "info" });
+    });
   
     return () => {
       socket.off("newFriendRequest", handleNewFriendRequest);

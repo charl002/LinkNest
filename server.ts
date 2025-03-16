@@ -51,6 +51,14 @@ app.prepare().then(() => {
       }
     });
 
+    // Inside the socket connection
+    socket.on("call", ({ senderId, receiverId }) => {
+      const receiverSocketId = userSockets[receiverId];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("call", { senderId, message: `${senderId} is calling you!` });
+      }
+    });
+
     socket.on("newFriendRequest", ({ senderUsername, receiverUsername }) => {
       console.log(`New friend request from ${senderUsername} to ${receiverUsername}`);
     
