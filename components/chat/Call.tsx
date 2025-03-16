@@ -1,6 +1,6 @@
 "use client";
 
-import { postMessageAndUnread } from "@/utils/messageUtils";
+import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 import AgoraRTC, {
   AgoraRTCProvider,
   LocalVideoTrack,
@@ -16,14 +16,7 @@ import AgoraRTC, {
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-
-const sendCallEndMessage = async (currentUsername: string, friendUsername: string) => {
-  try {
-    await postMessageAndUnread(currentUsername, friendUsername, '📞 The call has ended!', true);
-  } catch (error) {
-    console.error("Error posting call end message:", error);
-  }
-};
+import { useSocket } from "../provider/SocketProvider";
 
 function Call() {
   const client = useRTCClient(
@@ -37,6 +30,7 @@ function Call() {
   const currentUsername = searchParams.get("user") ?? "Guest";
   const [first, second] = [currentUsername, friendUsername].sort();
   const channelName = `${first}_${second}`;
+  const socket = useSocket();
   
   const handleLeaveCall = async () => {
     // Send the call end message
@@ -44,6 +38,19 @@ function Call() {
 
     // Leave the call and redirect to the chat page
     router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
+  };
+
+  const sendCallEndMessage = async (currentUsername: string, friendUsername: string) => {
+    try {
+      if(!socket) return;
+
+      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, '📞 The call has ended!', true);
+  
+      emitPrivateMessage(socket, currentUsername, friendUsername, '📞 The call has ended!', postMessageData.docId, true);
+      
+    } catch (error) {
+      console.error("Error posting call end message:", error);
+    }
   };
 
   return (

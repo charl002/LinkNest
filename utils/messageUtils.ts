@@ -1,5 +1,7 @@
 // utils/messageUtils.ts
 
+import { Socket } from "socket.io-client";
+
 export const postMessageAndUnread = async (
   sender: string,
   receiver: string,
@@ -42,4 +44,14 @@ export const postMessageAndUnread = async (
   } catch (error) {
     console.error("Error storing message or unread message:", error);
   }
+};
+
+export const emitPrivateMessage = (socket: Socket, sender: string, receiver: string, message: string, docId: string, isCallMsg: boolean ) => {
+  socket.emit("privateMessage", {
+    senderId: sender,
+    receiverId: receiver,
+    message: message,
+    msgId: docId,
+    isCallMsg: isCallMsg
+  });
 };

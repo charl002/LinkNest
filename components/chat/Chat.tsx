@@ -11,12 +11,11 @@ import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import ChatMessage from "./ChatMessage";
 import { Video } from 'lucide-react';
-import { Socket } from "socket.io-client";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@radix-ui/react-hover-card";
 import { Message } from "@/types/message";
 import { User } from "@/types/user";
-import { postMessageAndUnread } from "@/utils/messageUtils";
+import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 
 export default function Chat() {
   const socket = useSocket();
@@ -92,7 +91,7 @@ export default function Chat() {
   
     socket.emit("register", currentUsername);
   
-    socket.on("privateMessage", ({ senderId, message , msgId}) => {
+    socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg}) => {
       if (senderId === friendUsername) {
         setMessages((prev) => [
           ...prev,
@@ -101,7 +100,7 @@ export default function Chat() {
             sender: senderId, 
             message, 
             date: formatTimestamp(new Date().toISOString()),
-            isCallMsg: false,
+            isCallMsg: isCallMsg,
             reactions: []
           }, // Format timestamp
         ]);
@@ -118,7 +117,7 @@ export default function Chat() {
       try {
         const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, input, false);
 
-        emitPrivateMessage(socket, currentUsername, friendUsername, input, postMessageData.docId);
+        emitPrivateMessage(socket, currentUsername, friendUsername, input, postMessageData.docId, false);
   
         setMessages((prev) => [...prev, { 
           id: postMessageData, 
@@ -165,7 +164,7 @@ export default function Chat() {
       // Post call message and unread count, and emit socket message
       const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, callMessage, true);
 
-      emitPrivateMessage(socket, currentUsername, friendUsername, callMessage, postMessageData.docId);
+      emitPrivateMessage(socket, currentUsername, friendUsername, callMessage, postMessageData.docId, true);
 
       socket.emit("call", { senderId: currentUsername, receiverId: friendUsername });
 
@@ -277,16 +276,6 @@ export default function Chat() {
       hour12: true,
     });
   }
-
-  // Helper function to emit private message via socket
-  const emitPrivateMessage = (socket: Socket, sender: string, receiver: string, message: string, docId: string ) => {
-    socket.emit("privateMessage", {
-      senderId: sender,
-      receiverId: receiver,
-      message: message,
-      msgId: docId      
-    });
-  };
 
   return (
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
