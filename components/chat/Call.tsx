@@ -44,9 +44,9 @@ function Call() {
     try {
       if(!socket) return;
 
-      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, '📞 The call has ended!', true);
+      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, '📞 I left the call room.', true);
   
-      emitPrivateMessage(socket, currentUsername, friendUsername, '📞 The call has ended!', postMessageData.docId, true);
+      emitPrivateMessage(socket, currentUsername, friendUsername, '📞 I left the call room.', postMessageData.docId, true);
       
     } catch (error) {
       console.error("Error posting call end message:", error);

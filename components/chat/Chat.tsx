@@ -157,7 +157,7 @@ export default function Chat() {
   const handleRedirectToCall = async () => {
     if (!currentUsername || !friendUsername || !socket) return;
 
-    const callMessage = "📞 I have started a call! Join Up!";
+    const callMessage = "📞 I entered the call! Join Up!";
     const isCallMsg = true;
     
     try {
