@@ -35,6 +35,7 @@ export const postMessageAndUnread = async (
         sender: sender,
         receiver: receiver,
         count: 1, // Increment unread count if the user is offline
+        message: message
       }),
     });
 

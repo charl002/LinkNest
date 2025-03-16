@@ -21,7 +21,8 @@ export default function ChatList() {
 
   const { friends } = useFriends();
   const socket = useSocket();
-  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, { count: number; messageSnippet: string }>>({});
+
 
   const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
 
@@ -63,16 +64,23 @@ export default function ChatList() {
   useEffect(() => {
     if (!socket || !currentUser) return;
 
-    socket.on("privateMessage", async (data: { senderId: string; receiverId: string }) => {
+    socket.on("privateMessage", async (data: { senderId: string; receiverId: string, message: string }) => {
       if (data.receiverId !== currentUser) return; // Ignore messages not meant for the current user
 
+      // This will increment the unread msg count if you are not currently chatting with this person.
       setUnreadMessages((prev = {}) => {
+        const messageSnippet = data.message.length > 30 ? data.message.substring(0, 30) + "..." : data.message; // Truncate the message if it's too long
+  
         if (activeChatFriend === data.senderId) {
-          return { ...prev, [data.senderId]: 0 };
+          return { ...prev, [data.senderId]: { count: 0, messageSnippet } }; // Reset unread count when chat is opened
         }
+  
         return {
           ...prev,
-          [data.senderId]: (prev[data.senderId] || 0) + 1,
+          [data.senderId]: {
+            count: (prev[data.senderId]?.count || 0) + 1,
+            messageSnippet, // Store the latest message as a snippet
+          },
         };
       });
 
@@ -86,6 +94,7 @@ export default function ChatList() {
               sender: data.senderId,
               receiver: data.receiverId,
               count: 0, // Reset unread count
+              message: data.message
             }),
           });
         } catch (error) {
@@ -105,7 +114,7 @@ export default function ChatList() {
   
     setUnreadMessages((prev) => ({
       ...prev,
-      [friendUsername]: 0,
+      [friendUsername]: { count: 0, messageSnippet: "" }, // Reset message snippet when chat is opened
     }));
 
     try {
@@ -130,39 +139,50 @@ export default function ChatList() {
       <h2 className="text-lg font-semibold mb-4">Friends</h2>
       <ScrollArea className="w-full max-h-120 overflow-y-auto">
         <div className="flex flex-col space-y-2">
-          {friends.length > 0 ? (
-            friends.map((user, index) => (
-              <div 
-                key={user.id || `${user.username}-${index}`}
-                className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
-              >
-                <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
-                  <div className="flex items-center space-x-2">
-                    <Image 
-                      src={user.image} 
-                      alt={user.username} 
-                      width={40} 
-                      height={40} 
-                      className="rounded-full border"
-                    />
-                    <p className="text-sm font-medium">{user.username}</p>
-                  </div>
-                </Link>
-                <div className="flex items-center gap-2">
-                  {unreadMessages && unreadMessages[user.username] > 0 && (
-                    <Badge variant="destructive">
-                      {unreadMessages[user.username]}
-                    </Badge>
-                  )}
-                  <Button onClick={() => openChat(user.username, currentUser)}>
-                    Chat
-                  </Button>
+        {friends.length > 0 ? (
+          friends.map((user, index) => (
+            <div 
+              key={user.id || `${user.username}-${index}`}
+              className="relative flex items-center justify-between p-2 bg-gray-100 rounded-md"
+            >
+              {/* Only render Badge if unread count is greater than 0 */}
+              {unreadMessages[user.username]?.count > 0 && (
+                <Badge variant="destructive" className="absolute top-0 right-0 -mr-0 -mt-3">
+                  {unreadMessages[user.username].count}
+                </Badge>
+              )}
+              
+              <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
+                <div className="flex items-center space-x-2">
+                  <Image 
+                    src={user.image} 
+                    alt={user.username} 
+                    width={40} 
+                    height={40} 
+                    className="rounded-full border"
+                  />
+                  <p className="text-sm font-medium">{user.username}</p>
                 </div>
+              </Link>
+
+              <div>
+                {unreadMessages[user.username]?.messageSnippet && (
+                  <span className="text-xs text-gray-500">
+                    {unreadMessages[user.username].messageSnippet}
+                  </span>
+                )}
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No friends found</p>
-          )}
+
+              <div className="flex items-center gap-2">
+                <Button onClick={() => openChat(user.username, currentUser)}>
+                  Chat
+                </Button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500">No friends found</p>
+        )}
         </div>
       </ScrollArea>
     </aside>
