@@ -285,7 +285,7 @@ export default function Post({ title, username, description, tags, comments, lik
       <div className="bg-white shadow-md p-4 rounded-md">
           <div className="flex items-center justify-between w-full">
           <Link href={`/profile/${encodeURIComponent(username)}`}>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-110 active:scale-90">
               {profilePicture ? (
                 <Image 
                   src={profilePicture} 
@@ -312,7 +312,7 @@ export default function Post({ title, username, description, tags, comments, lik
             {sessionUsername === username && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button onClick={(e) => e.stopPropagation()}>
+                  <Button onClick={(e) => e.stopPropagation()} className="transition-transform duration-200 hover:scale-110 active:scale-90">
                     <Trash2/>
                   </Button>
                 </AlertDialogTrigger>
@@ -404,7 +404,7 @@ export default function Post({ title, username, description, tags, comments, lik
         <div className="mt-4 flex items-center space-x-6">
           <button
             onClick={handleToggleLike}
-            className={`flex items-center space-x-2 px-3 py-1 rounded-md transition text-sm 
+            className={`flex items-center space-x-2 px-3 py-1 rounded-md transition text-sm transition-transform duration-200 hover:scale-110 active:scale-90 
                 ${isLiked ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'} hover:bg-blue-200`}
             disabled={isLoading}
           >
@@ -418,7 +418,7 @@ export default function Post({ title, username, description, tags, comments, lik
               }
           }}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center space-x-2">
+              <Button variant="outline" className="flex items-center space-x-2 transition-transform duration-200 hover:scale-110 active:scale-90">
                 <FaRegComment />
                 <span>Comment</span>
               </Button>
@@ -444,7 +444,7 @@ export default function Post({ title, username, description, tags, comments, lik
                           {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
                         </p>
                         {sessionUsername === comment.username && (
-                          <button onClick={() => handleDeleteComment(comment)}
+                          <button className="transition-transform duration-200 hover:scale-110 active:scale-90" onClick={() => handleDeleteComment(comment)}
                           disabled={isLoading}>
                             <Trash2 />
                           </button>

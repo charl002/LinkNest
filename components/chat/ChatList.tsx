@@ -137,7 +137,7 @@ export default function ChatList() {
                 className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
               >
                 <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-110 active:scale-90">
                     <Image 
                       src={user.image} 
                       alt={user.username} 
@@ -154,7 +154,7 @@ export default function ChatList() {
                       {unreadMessages[user.username]}
                     </Badge>
                   )}
-                  <Button onClick={() => openChat(user.username, currentUser)}>
+                  <Button className="transition-transform duration-200 hover:scale-110 active:scale-90" onClick={() => openChat(user.username, currentUser)}>
                     Chat
                   </Button>
                 </div>

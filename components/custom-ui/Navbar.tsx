@@ -50,10 +50,8 @@ const Navbar = () => {
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">
           <Link href="/" className="flex items-center">
-            <div className="transition-transform duration-200 hover:scale-105 active:scale-95">
-              <span className="text-black">Link</span>
-              <span className="text-blue-500">Nest</span> 
-            </div>
+            <span className="text-black">Link</span>
+            <span className="text-blue-500">Nest</span> 
             <span className="ml-2 transition-transform duration-200 hover:scale-110 active:scale-90"><House/></span>
           </Link>
         </h1>
@@ -73,7 +71,7 @@ const Navbar = () => {
                       priority
                       className="rounded-full border border-gray-300"
                     />
-                    <div className="flex flex-col transition-transform duration-200 hover:scale-105 active:scale-95">
+                    <div className="flex flex-col">
                       <p className="text-gray-700 font-medium">{name}</p>
                       <p className="text-gray-500 text-sm">@{userName}</p>
                     </div>
