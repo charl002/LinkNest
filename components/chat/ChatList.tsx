@@ -173,7 +173,7 @@ export default function ChatList() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button className="transition-transform duration-200 hover:scale-110 active:scale-90" onClick={() => openChat(user.username, currentUser)}>
+                  <Button className="transition-transform duration-200 hover:scale-105 active:scale-95" onClick={() => openChat(user.username, currentUser)}>
                     Chat
                   </Button>
                 </div>

@@ -27,8 +27,10 @@ function Call() {
   const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
   const searchParams = useSearchParams();
   const router = useRouter();
-  const friendUsername = searchParams.get("friend") ?? "Guest";
-  const currentUsername = searchParams.get("user") ?? "Guest";
+  const friend = searchParams.get("friend") ?? "Guest";
+  const friendUsername = decodeURIComponent(friend);
+  const current = searchParams.get("user") ?? "Guest";
+  const currentUsername = decodeURIComponent(current);
   const [first, second] = [currentUsername, friendUsername].sort();
   const channelName = `${first}_${second}`;
   const socket = useSocket();

@@ -181,7 +181,7 @@ export default function Chat() {
   
       setInput(""); // Clear the input field
   
-      router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`);
+      router.push(`/channel?friend=${encodeURIComponent(friendUsername)}&user=${encodeURIComponent(currentUsername)}`);
     } catch (error) {
       console.error("Error starting the call:", error);
       toast.error("Error starting the call.");
