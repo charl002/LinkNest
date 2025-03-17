@@ -109,13 +109,17 @@ export default function ChatList() {
   const openChat = async (friendUsername: string, currentUsername: string | null) => {
     if (!currentUsername) return;
   
+    // Reset unread messages immediately
     setUnreadMessages((prev) => ({
       ...prev,
       [friendUsername]: { count: 0, message: "" }, // Reset message snippet when chat is opened
     }));
-
+  
+    // Perform the fetch request asynchronously but navigate immediately
+    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
+  
+    // Use async function for the fetch to run in parallel
     try {
-      console.log('REMOVING COUNT!');
       await fetch("/api/postunreadmessage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,15 +127,13 @@ export default function ChatList() {
           sender: friendUsername,
           receiver: currentUsername,
           count: 0,
-          message: ""
+          message: "",
         }),
       });
     } catch (error) {
       console.error("Error resetting unread count:", error);
     }
-  
-    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  };
+  };  
 
   return (
     <aside className="bg-white shadow-md p-4 rounded-md">
