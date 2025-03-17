@@ -431,18 +431,22 @@ export default function Post({ title, username, description, tags, comments, lik
                 {postComments.length > 0 ? (
                   postComments.map((comment, index) => (
                     <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
-                      <Image
-                        src={comment.profilePicture || defaultImageUrl}
-                        alt={comment.username}
-                        width={40}
-                        height={40}
-                        className="rounded-full flex-shrink-0"
-                      />
+                      <Link key={index} href={`/profile/${encodeURIComponent(comment.username)}`}>
+                        <Image
+                          src={comment.profilePicture || defaultImageUrl}
+                          alt={comment.username}
+                          width={40}
+                          height={40}
+                          className="rounded-full flex-shrink-0 transition-transform duration-200 hover:scale-110 active:scale-90"
+                        />
+                      </Link>
                       <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="font-bold text-sm text-gray-900">
+                      <Link key={index} href={`/profile/${encodeURIComponent(comment.username)}`}>
+                        <p className="font-bold text-sm text-gray-900 transition-transform duration-200 hover:scale-105 active:scale-95">
                           {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
                         </p>
+                      </Link>
                         {sessionUsername === comment.username && (
                           <button className="transition-transform duration-200 hover:scale-110 active:scale-90" onClick={() => handleDeleteComment(comment)}
                           disabled={isLoading}>

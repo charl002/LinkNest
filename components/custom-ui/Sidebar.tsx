@@ -359,7 +359,7 @@ export default function Sidebar() {
                         <span>{user.username}</span>
                       </div>
                       <Link key={user.id} href={`/profile/${encodeURIComponent(user.username)}`}>
-                        <div className="px-4 py-2 bg-black text-white text-sm rounded-md">
+                        <div className="px-4 py-2 bg-black text-white text-sm rounded-md transition-transform duration-200 hover:scale-110 active:scale-90">
                           Visit
                         </div>
                       </Link>

@@ -396,13 +396,13 @@ export default function Chat() {
           />
           <button
             onClick={sendMessage}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
           >
             Send
           </button>
           <button
             onClick={handleRedirectToCall}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
           >
             <Video/>
           </button>
