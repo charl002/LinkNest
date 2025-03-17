@@ -1,5 +1,6 @@
 "use client";
 
+import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 import AgoraRTC, {
   AgoraRTCProvider,
   LocalVideoTrack,
@@ -14,6 +15,9 @@ import AgoraRTC, {
 } from "agora-rtc-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useSocket } from "../provider/SocketProvider";
+import LoadingLogo from "../custom-ui/LoadingLogo";
 
 function Call() {
   const client = useRTCClient(
@@ -22,11 +26,33 @@ function Call() {
 
   const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
   const searchParams = useSearchParams();
+  const router = useRouter();
   const friendUsername = searchParams.get("friend") ?? "Guest";
   const currentUsername = searchParams.get("user") ?? "Guest";
   const [first, second] = [currentUsername, friendUsername].sort();
   const channelName = `${first}_${second}`;
+  const socket = useSocket();
   
+  const handleLeaveCall = async () => {
+    // Send the call end message
+    await sendCallEndMessage(currentUsername, friendUsername);
+
+    // Leave the call and redirect to the chat page
+    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
+  };
+
+  const sendCallEndMessage = async (currentUsername: string, friendUsername: string) => {
+    try {
+      if(!socket) return;
+
+      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, '📞 I left the call room.', true);
+  
+      emitPrivateMessage(socket, currentUsername, friendUsername, '📞 I left the call room.', postMessageData.docId, true);
+      
+    } catch (error) {
+      console.error("Error posting call end message:", error);
+    }
+  };
 
   return (
     <AgoraRTCProvider client={client}>
@@ -34,7 +60,8 @@ function Call() {
       <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4">
         <Link
           className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400"
-          href="/">
+          href='#'
+          onClick={handleLeaveCall}>
           Leave Call
         </Link>
       </div>
@@ -60,7 +87,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   const deviceLoading = isLoadingMic || isLoadingCam;
   if (deviceLoading)
     return (
-      <div className="flex flex-col items-center pt-40">Loading devices...</div>
+      <LoadingLogo></LoadingLogo>
     );
 
   return (

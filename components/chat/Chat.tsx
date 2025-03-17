@@ -11,9 +11,11 @@ import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
 import ChatMessage from "./ChatMessage";
 import { Video } from 'lucide-react';
+
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@radix-ui/react-hover-card";
 import { Message } from "@/types/message";
 import { User } from "@/types/user";
+import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 
 export default function Chat() {
   const socket = useSocket();
@@ -46,13 +48,14 @@ export default function Chat() {
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
         }
-        console.log(data.messages)
+
         setMessages(
           data.messages.map((msg: Message) => ({
             id: msg.id,
             sender: msg.sender,
             message: msg.message,
             date: formatTimestamp(msg.date),
+            isCallMsg: msg.isCallMsg,
             reactions: msg.reactions || []
           }))
         );
@@ -82,17 +85,24 @@ export default function Chat() {
     fetchPreviousMessages();
   }, [currentUsername, friendUsername, router]);
 
-
+  // This useEffect listens for messages on the Socket IO
   useEffect(() => {
     if (!socket || !friendUsername) return;
   
     socket.emit("register", currentUsername);
   
-    socket.on("privateMessage", ({ senderId, message , msgId}) => {
+    socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg}) => {
       if (senderId === friendUsername) {
         setMessages((prev) => [
           ...prev,
-          {id: msgId, sender: senderId, message, date: formatTimestamp(new Date().toISOString()), reactions: [] }, // Format timestamp
+          { 
+            id: msgId,
+            sender: senderId, 
+            message, 
+            date: formatTimestamp(new Date().toISOString()),
+            isCallMsg: isCallMsg,
+            reactions: []
+          }, // Format timestamp
         ]);
       }
     });
@@ -101,74 +111,84 @@ export default function Chat() {
       socket.off("privateMessage");
     };
   }, [socket, currentUsername, friendUsername]);
-  
 
   const sendMessage = async () => {
     if (socket && input.trim() && friendUsername && currentUsername) {
       try {
-        const response = await fetch("/api/postmessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            senderUsername: currentUsername,
-            receiverUsername: friendUsername,
-            message: input,
-          }),
-        });
+        const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, input, false);
 
-        const data = await response.json();
-
-        socket.emit("privateMessage", { 
-          senderId: currentUsername,
-          receiverId: friendUsername,
-          message: input,
-          msgId: data.docId
-        });
+        emitPrivateMessage(socket, currentUsername, friendUsername, input, postMessageData.docId, false);
   
-        setMessages((prev) => [...prev, { id: data.docId, sender: currentUsername, message: input, date: formatTimestamp(new Date().toISOString()) }]);
-        if (!response.ok) {
-          toast.error(`Error storing message: ${data.message}`);
-          return;
-        }
+        setMessages((prev) => [...prev, { 
+          id: postMessageData, 
+          sender: currentUsername, 
+          message: input, 
+          date: formatTimestamp(new Date().toISOString()),
+          isCallMsg: false
+        }]);
       } catch (error) {
         toast.error("Error storing message.");
         console.error("Error storing message:", error);
-      }
-
-      try {
-        await fetch("/api/postunreadmessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sender: currentUsername,
-            receiver: friendUsername,
-            count: 1, // Increment unread count in Firestore if offline
-          }),
-        });
-      } catch (error) {
-        console.error("Error storing unread message:", error);
       }
 
       setInput("");
     }
   };
 
+  // This makes sure that the page scrolls to the most recent message
   useEffect(() => {
     if (messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     }
   }, [isLoading, messages.length]); // Trigger when loading is complete
 
-  
+  // Scolls to the newest message when a new message is added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, []);
 
+  // Redirects home
   const handleRedirectToHome = () => {
     setErrorMessage(null);
     router.push("/");
   };
 
+  //Handles the logic of entering a VideoCall with a friend
+  const handleRedirectToCall = async () => {
+    if (!currentUsername || !friendUsername || !socket) return;
+
+    const callMessage = "📞 I entered the call! Join Up!";
+    const isCallMsg = true;
+    
+    try {
+      // Post call message and unread count, and emit socket message
+      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, callMessage, true);
+
+      emitPrivateMessage(socket, currentUsername, friendUsername, callMessage, postMessageData.docId, true);
+
+      socket.emit("call", { senderId: currentUsername, receiverId: friendUsername });
+
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          id: postMessageData.docId,
+          sender: currentUsername,
+          message: callMessage,
+          date: formatTimestamp(new Date().toISOString()),
+          isCallMsg: isCallMsg,
+        },
+      ]);
+  
+      setInput(""); // Clear the input field
+  
+      router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`);
+    } catch (error) {
+      console.error("Error starting the call:", error);
+      toast.error("Error starting the call.");
+    }
+  };
+
+  // Formating the timestamp so its human readable
   const handleAddReaction = async (message: Message, reaction: string) => {
     try {
       const response = await fetch("/api/putreaction", {
@@ -316,7 +336,7 @@ export default function Chat() {
                         <ChatMessage message={msg} isCurrentUser={isCurrentUser} user={user} />
                       </div>
                     </HoverCardTrigger>
-                    <HoverCardContent 
+                    <HoverCardContent
                       side="top" 
                       align="center" 
                       sideOffset={5} 
@@ -358,9 +378,7 @@ export default function Chat() {
                       </div>
                     </HoverCardContent>
                   </HoverCard>
-          
                 </div>
-          
               </div>
             );
           })
@@ -383,7 +401,7 @@ export default function Chat() {
             Send
           </button>
           <button
-            onClick={() => {router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`)}}
+            onClick={handleRedirectToCall}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg"
           >
             <Video/>
