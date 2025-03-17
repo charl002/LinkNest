@@ -23,8 +23,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@radix-ui/react-hover-card";
-import { Message } from "@/types/message";
-import { User } from "@/types/user";
+import type { Message } from "@/types/message";
+import type { User } from "@/types/user";
 import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 
 export default function Chat() {
@@ -38,13 +38,21 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [friendUser, setFriendUser] = useState<User | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
+
+  // Function to scroll to bottom of messages
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      // Only scroll the message container, not the page
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
+  };
 
   useEffect(() => {
     if (!currentUsername || !friendUsername) return;
@@ -161,17 +169,23 @@ export default function Chat() {
     }
   };
 
-  // // This makes sure that the page scrolls to the most recent message
-  // useEffect(() => {
-  //   if (messages.length > 0) {
-  //     messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-  //   }
-  // }, [isLoading, messages.length]); // Trigger when loading is complete
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    // Wait for the DOM to update
+    setTimeout(scrollToBottom, 100);
+  }, [messages]);
 
-  // // Scolls to the newest message when a new message is added
-  // useEffect(() => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  // }, []);
+  // Scroll to bottom when loading completes
+  useEffect(() => {
+    if (!isLoading) {
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [isLoading]);
+
+  // Initial scroll when component mounts
+  useEffect(() => {
+    setTimeout(scrollToBottom, 300);
+  }, []);
 
   // Redirects home
   const handleRedirectToHome = () => {
@@ -327,13 +341,16 @@ export default function Chat() {
   }
 
   return (
-    <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
+    <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-[calc(100vh-40px)] overflow-hidden">
       <Sidebar />
-      <section className="relative flex flex-col space-y-6 bg-white shadow-md rounded-lg p-4 overflow-hidden">
-        <h1 className="text-lg font-semibold">Chat with {friendUsername}</h1>
+      <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
+        <h1 className="text-lg font-semibold p-4">
+          Chat with {friendUsername}
+        </h1>
         <div
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 pb-20 p-4 rounded-lg"
+          className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
+          style={{ scrollbarWidth: "thin" }}
         >
           {isLoading
             ? [...Array(8)].map((_, index) => (
@@ -472,20 +489,28 @@ export default function Chat() {
                   </div>
                 );
               })}
-          <div ref={messagesEndRef} className="pb-2" />
         </div>
-
-        <div className="absolute bottom-0 left-0 w-full p-4 bg-white shadow-md flex items-center space-x-2">
+        <div className="p-4 bg-white shadow-md flex items-center space-x-2 mt-auto">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="flex-1 p-2 border rounded-lg w-full"
             placeholder="Type a message..."
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+                // Also scroll to bottom after sending
+                setTimeout(scrollToBottom, 100);
+              }
+            }}
           />
           <button
-            onClick={sendMessage}
+            onClick={() => {
+              sendMessage();
+              // Also scroll to bottom after sending
+              setTimeout(scrollToBottom, 100);
+            }}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg"
           >
             Send
