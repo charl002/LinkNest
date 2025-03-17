@@ -135,17 +135,17 @@ export default function Chat() {
     }
   };
 
-  // This makes sure that the page scrolls to the most recent message
-  useEffect(() => {
-    if (messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-    }
-  }, [isLoading, messages.length]); // Trigger when loading is complete
+  // // This makes sure that the page scrolls to the most recent message
+  // useEffect(() => {
+  //   if (messages.length > 0) {
+  //     messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+  //   }
+  // }, [isLoading, messages.length]); // Trigger when loading is complete
 
-  // Scolls to the newest message when a new message is added
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
+  // // Scolls to the newest message when a new message is added
+  // useEffect(() => {
+  //   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // }, []);
 
   // Redirects home
   const handleRedirectToHome = () => {
@@ -280,9 +280,12 @@ export default function Chat() {
   return (
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-screen overflow-hidden">
       <Sidebar />
-      <section className="relative flex flex-col space-y-6 h-full bg-white shadow-md rounded-lg p-4 overflow-hidden">
+      <section className="relative flex flex-col space-y-6 bg-white shadow-md rounded-lg p-4 overflow-hidden">
         <h1 className="text-lg font-semibold">Chat with {friendUsername}</h1>
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto w-full space-y-5 pr-2 pb-20 p-4 rounded-lg">
+        <div
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto max-h-[calc(95vh-200px)] w-full space-y-5 pr-2 pb-20 p-4 rounded-lg"
+        >
           {isLoading ? (
           [...Array(8)].map((_, index) => (
             <div key={index} className={`flex items-start space-x-4 ${index % 2 === 0 ? "justify-start" : "justify-end"}`}>
