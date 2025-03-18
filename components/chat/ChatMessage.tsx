@@ -72,7 +72,7 @@ export default function ChatMessage({ message, isCurrentUser, user }: ChatMessag
               </Avatar>
             </div>
           </Link>
-          <p className="text-black-600 text-sm">{message.message}</p>
+          <p className="text-black-600 text-sm break-words">{message.message}</p>
         </div>
       )}
 
