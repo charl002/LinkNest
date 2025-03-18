@@ -306,7 +306,7 @@ export default function ProfilePage({ user }: { user: string }) {
   
 
   return (
-    <div className="bg-white min-h-screen w-full text-gray-800">
+    <div className="bg-white h-[calc(100vh-120px)] w-full text-gray-800">
       {loading && <LoadingLogo/>}
       {error && <p className="text-red-500 text-center py-6">{error}</p>}
 
@@ -457,7 +457,7 @@ export default function ProfilePage({ user }: { user: string }) {
                 {postsCount === 1 || postsCount == 0 ? " Post" : " Posts"}
               </p>
               <p 
-                className="cursor-pointer hover:underline transition-transform duration-200 hover:scale-110 active:scale-90"
+                className="cursor-pointer hover:underline transition-transform duration-200 hover:scale-105 active:scale-95"
                 onClick={() => setIsFriendsDialogOpen(true)}
               >
                 <span className="font-bold text-black">{friendsCount}</span>
@@ -505,7 +505,7 @@ export default function ProfilePage({ user }: { user: string }) {
             </div>
           </div>
 
-          <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-320px)]">
+          <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-500px)]">
             {postsCount > 0 ? (posts.map((post, index) => 
               <Post 
                   key={`${post.id}-${index}`} 
