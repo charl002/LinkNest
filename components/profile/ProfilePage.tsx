@@ -505,7 +505,7 @@ export default function ProfilePage({ user }: { user: string }) {
             </div>
           </div>
 
-          <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-475px)]">
+          <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-500px)]">
             {postsCount > 0 ? (posts.map((post, index) => 
               <Post 
                   key={`${post.id}-${index}`} 
