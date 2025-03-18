@@ -26,12 +26,20 @@ interface Post {
     comments: Comment[];
 }
 export async function GET(){
-    // Check cache first
+    // Check server cache first
     const cachedPosts = cache.get('user-posts');
-    console.log("Cache hit:", cachedPosts);
     if (cachedPosts) {
-        return NextResponse.json(cachedPosts);
+        console.log("[SERVER CACHE] Returning cached user posts");
+        return new Response(JSON.stringify(cachedPosts), {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'public, max-age=30, stale-while-revalidate=60'
+            },
+        });
     }
+
+    console.log("[SERVER CACHE] Expired - Fetching new user posts from Firestore...");
 
     try{
         const { results: postsResults, error: postsError } = await withRetry(
@@ -60,12 +68,14 @@ export async function GET(){
             return NextResponse.json({ message: "Error fetching users", error: usersError }, { status: 500 });
         }
 
-        if (postsResults.empty) {
-            return NextResponse.json({ posts: [] }, { status: 200 });
-        }
-
-        if (usersResults.empty) {
-            return NextResponse.json({ posts: [] }, { status: 200 });
+        if (postsResults.empty || usersResults.empty) {
+            return new Response(JSON.stringify({ posts: [] }), {
+                status: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'public, max-age=30, stale-while-revalidate=60'
+                },
+            });
         }
 
         const usersMap = new Map(usersResults.docs.map(doc => [doc.data().username, doc.data()]));
@@ -95,12 +105,19 @@ export async function GET(){
             };
         });
 
-        const result = { success: true, posts: posts };
-        
-        // Store in cache
-        cache.set('user-posts', result);
+        const responseData = { success: true, posts };
 
-        return NextResponse.json(result);
+        // Store in server cache
+        cache.set('user-posts', responseData);
+        console.log("[CACHE UPDATE] Stored new user posts in server cache.");
+
+        return new Response(JSON.stringify(responseData), {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'public, max-age=30, stale-while-revalidate=60'
+            },
+        });
 
     } catch (err) {
         console.error("Unexpected error:", err);

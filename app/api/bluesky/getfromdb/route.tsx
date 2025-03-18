@@ -26,17 +26,17 @@ export async function GET() {
    // Check server-side cache
    const cachedData = cache.get('bluesky-posts');
    if (cachedData) {
-    console.log("[SERVER CACHE] Returning cached posts");
+    console.log("[SERVER CACHE] Returning cached bluesky posts");
      return new Response(JSON.stringify(cachedData), {
        status: 200,
        headers: {
          'Content-Type': 'application/json',
-         'Cache-Control': 'public, max-age=600, stale-while-revalidate=1200'
+         'Cache-Control': 'public, max-age=30, stale-while-revalidate=60'
        },
      });
    }
 
-   console.log("[SERVER CACHE] Expired - Fetching new data from Firestore...");
+   console.log("[SERVER CACHE] Expired - Fetching new bluesky posts from Firestore...");
   
   try {
     const { results, error } = await withRetry(
@@ -57,7 +57,7 @@ export async function GET() {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=600, stale-while-revalidate=1200'
+          'Cache-Control': 'public, max-age=30, stale-while-revalidate=60'
         },
       });
     }
@@ -116,13 +116,13 @@ export async function GET() {
 
     // Store in server cache
      cache.set('bluesky-posts', responseData);
-     console.log("[CACHE UPDATE] Stored new posts in server cache.");
+     console.log("[CACHE UPDATE] Stored new bluesky posts in server cache.");
 
      return NextResponse.json(responseData, {
        status: 200,
        headers: {
          'Content-Type': 'application/json',
-         'Cache-Control': 'public, max-age=600, stale-while-revalidate=1200'
+         'Cache-Control': 'public, max-age=30, stale-while-revalidate=60'
        },
      });
 
