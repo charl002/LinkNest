@@ -28,6 +28,7 @@ interface Post {
 export async function GET(){
     // Check cache first
     const cachedPosts = cache.get('user-posts');
+    console.log("Cache hit:", cachedPosts);
     if (cachedPosts) {
         return NextResponse.json(cachedPosts);
     }
@@ -100,7 +101,7 @@ export async function GET(){
         cache.set('user-posts', result);
 
         return NextResponse.json(result);
-        
+
     } catch (err) {
         console.error("Unexpected error:", err);
         return NextResponse.json(
