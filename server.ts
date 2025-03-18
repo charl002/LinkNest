@@ -44,10 +44,18 @@ app.prepare().then(() => {
       }
     });
 
-    socket.on("privateMessage", ({ senderId, receiverId, message }) => {
+    socket.on("privateMessage", ({ senderId, receiverId, message, msgId, isCallMsg }) => {
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message });
+        io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message, msgId, isCallMsg });
+      }
+    });
+
+    // Inside the socket connection
+    socket.on("call", ({ senderId, receiverId }) => {
+      const receiverSocketId = userSockets[receiverId];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("call", { senderId, message: `${senderId} is calling you!` });
       }
     });
 
