@@ -109,13 +109,17 @@ export default function ChatList() {
   const openChat = async (friendUsername: string, currentUsername: string | null) => {
     if (!currentUsername) return;
   
+    // Reset unread messages immediately
     setUnreadMessages((prev) => ({
       ...prev,
       [friendUsername]: { count: 0, message: "" }, // Reset message snippet when chat is opened
     }));
-
+  
+    // Perform the fetch request asynchronously but navigate immediately
+    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
+  
+    // Use async function for the fetch to run in parallel
     try {
-      console.log('REMOVING COUNT!');
       await fetch("/api/postunreadmessage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,60 +127,67 @@ export default function ChatList() {
           sender: friendUsername,
           receiver: currentUsername,
           count: 0,
-          message: ""
+          message: "",
         }),
       });
     } catch (error) {
       console.error("Error resetting unread count:", error);
     }
-  
-    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  };
+  };  
 
   return (
-    <aside className="bg-white shadow-md p-4 rounded-md">
+    <aside className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)] overflow-y-auto">
       <h2 className="text-lg font-semibold mb-4">Friends</h2>
       <ScrollArea className="w-full max-h-120 overflow-y-auto">
         <div className="flex flex-col space-y-2">
           {friends.length > 0 ? (
             friends.map((user, index) => (
-              <div 
-                key={user.id || `${user.username}-${index}`}
-                className="relative flex items-center justify-between p-2 bg-gray-100 rounded-md"
-              >
-                {/* Only render Badge if unread count is greater than 0 */}
-                {unreadMessages[user.username]?.count > 0 && (
-                  <Badge variant="destructive" className="absolute top-0 right-0 -mr-0 ">
-                    {unreadMessages[user.username].count}
-                  </Badge>
-                )}
-
-                <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
-                  <div className="flex items-center space-x-2">
-                    <Image 
-                      src={user.image} 
-                      alt={user.username} 
-                      width={40} 
-                      height={40} 
-                      className="rounded-full border"
-                    />
-                    <p className="text-sm font-medium">{user.username}</p>
-                  </div>
-                </Link>
-
-                <div className="flex-1 ml-2">
-                  {/* Render message snippet if unread */}
-                  {unreadMessages[user.username]?.message && (
-                    <span className="text-xs text-gray-800" onClick={() => openChat(user.username, currentUser)}>
-                      {unreadMessages[user.username].message.length > 30 ? unreadMessages[user.username].message.substring(0, 30) + "..." : unreadMessages[user.username].message}
-                    </span>
+              <div key={`${index}`} className="bg-gray-100 mt-6">
+                <div 
+                  key={user.id || `${user.username}-${index}`}
+                  className="relative flex items-center justify-between p-2 rounded-md"
+                >
+                  {/* Only render Badge if unread count is greater than 0 */}
+                  {unreadMessages != undefined && unreadMessages[user.username]?.count > 0 && (
+                    <Badge variant="destructive" className="absolute top-0 right-0 -mr-0 ">
+                      {unreadMessages[user.username].count}
+                    </Badge>
                   )}
+
+                  <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
+                    <div className="flex items-center space-x-2">
+                      <Image 
+                        src={user.image} 
+                        alt={user.username} 
+                        width={40} 
+                        height={40} 
+                        className="rounded-full border"
+                      />
+                      <p className="text-sm font-medium">{user.username}</p>
+                    </div>
+                  </Link>
+
+                  <div className="flex items-center gap-2">
+                    <Button onClick={() => openChat(user.username, currentUser)}>
+                      Chat
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Button onClick={() => openChat(user.username, currentUser)}>
-                    Chat
-                  </Button>
+                <div className="flex-1 ml-6 pb-2">
+                  {/* Ensure unreadMessages is defined and check for the message */}
+                  {unreadMessages != undefined && unreadMessages?.[user.username]?.message ? (
+                    <span
+                      className="text-xs text-gray-500"
+                      onClick={() => openChat(user.username, currentUser)}
+                    >
+                      {unreadMessages[user.username].message.length > 30
+                        ? unreadMessages[user.username].message.substring(0, 30) + "..."
+                        : unreadMessages[user.username].message}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-black-800">Chat with this person!</span> // Default text when no unread message
+                  )}
                 </div>
               </div>
             ))

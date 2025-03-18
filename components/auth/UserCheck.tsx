@@ -259,7 +259,7 @@ export default function UserCheck() {
             <div className="w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
                 <Sidebar />
             </div>
-            <section className="flex flex-col h-full overflow-hidden">
+            <section className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
                 <div className="flex space-x-2 mb-6">
                     <button
                         onClick={() => setActiveTab('user')}
@@ -292,7 +292,7 @@ export default function UserCheck() {
                         News
                     </button>
                 </div>
-                <div className="space-y-6 overflow-y-auto flex-1">
+                <div className="space-y-6 overflow-y-auto flex-1 h-[calc(100vh-120px)]">
                     {posts
                         .filter(post => {
                             if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
