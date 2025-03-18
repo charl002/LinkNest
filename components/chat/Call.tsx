@@ -1,6 +1,5 @@
 "use client";
 
-import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 import AgoraRTC, {
   AgoraRTCProvider,
   LocalVideoTrack,
@@ -15,9 +14,8 @@ import AgoraRTC, {
 } from "agora-rtc-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
-import { useSocket } from "../provider/SocketProvider";
-import LoadingLogo from "../custom-ui/LoadingLogo";
+import { useState } from "react";
+
 
 function Call() {
   const client = useRTCClient(
@@ -26,44 +24,26 @@ function Call() {
 
   const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const friend = searchParams.get("friend") ?? "Guest";
-  const friendUsername = decodeURIComponent(friend);
-  const current = searchParams.get("user") ?? "Guest";
-  const currentUsername = decodeURIComponent(current);
+  const friendUsername = searchParams.get("friend") ?? "Guest";
+  const currentUsername = searchParams.get("user") ?? "Guest";
   const [first, second] = [currentUsername, friendUsername].sort();
   const channelName = `${first}_${second}`;
-  const socket = useSocket();
+  const [isCameraHidden, setIsCameraHidden] = useState(true);
   
-  const handleLeaveCall = async () => {
-    // Send the call end message
-    await sendCallEndMessage(currentUsername, friendUsername);
-
-    // Leave the call and redirect to the chat page
-    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  };
-
-  const sendCallEndMessage = async (currentUsername: string, friendUsername: string) => {
-    try {
-      if(!socket) return;
-
-      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, '📞 I left the call room.', true);
-  
-      emitPrivateMessage(socket, currentUsername, friendUsername, '📞 I left the call room.', postMessageData.docId, true);
-      
-    } catch (error) {
-      console.error("Error posting call end message:", error);
-    }
-  };
 
   return (
     <AgoraRTCProvider client={client}>
-      <Videos currentUsername={currentUsername} friendUsername={friendUsername} channelName={channelName} AppID={appId} />
-      <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4">
+      <Videos currentUsername={currentUsername} friendUsername={friendUsername} channelName={channelName} AppID={appId} isCameraHidden={isCameraHidden} />
+      <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4 gap-4">
+        <button
+          className="px-5 py-3 text-base font-medium text-center text-white bg-blue-500 rounded-lg hover:bg-blue-400 transition-transform duration-200 hover:scale-110 active:scale-90"
+          onClick={() => setIsCameraHidden(!isCameraHidden)}
+        >
+          {isCameraHidden ? "Show Camera" : "Hide Camera"}
+        </button>
         <Link
-          className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400"
-          href='#'
-          onClick={handleLeaveCall}>
+          className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400 transition-transform duration-200 hover:scale-110 active:scale-90"
+          href="/">
           Leave Call
         </Link>
       </div>
@@ -71,8 +51,8 @@ function Call() {
   );
 }
 
-function Videos(props: {currentUsername: string; friendUsername: string; channelName: string; AppID: string }) {
-  const { currentUsername, friendUsername, AppID, channelName } = props;
+function Videos(props: {currentUsername: string; friendUsername: string; channelName: string; AppID: string; isCameraHidden: boolean }) {
+  const { currentUsername, friendUsername, AppID, channelName, isCameraHidden } = props;
   const { isLoading: isLoadingMic, localMicrophoneTrack } = useLocalMicrophoneTrack();
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
   const remoteUsers = useRemoteUsers();
@@ -89,7 +69,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   const deviceLoading = isLoadingMic || isLoadingCam;
   if (deviceLoading)
     return (
-      <LoadingLogo></LoadingLogo>
+      <div className="flex flex-col items-center pt-40">Loading devices...</div>
     );
 
   return (
@@ -103,7 +83,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
         <div className="relative w-full h-full">
           <LocalVideoTrack
             track={localCameraTrack}
-            play={true}
+            play={!isCameraHidden}
             className="border-4 border-green-500 rounded-sm"
           />
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 mt-2">
@@ -112,7 +92,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
             </span>
           </div>
         </div>
-        {remoteUsers.length > 0 && remoteUsers.length < 2 ? (
+        {remoteUsers.length > 0 ? (
           remoteUsers.map((user) => (
             <div key={user.uid} className="relative w-full h-full">
               <RemoteUser
