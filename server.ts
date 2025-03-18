@@ -55,6 +55,7 @@ app.prepare().then(() => {
     socket.on("call", ({ senderId, receiverId }) => {
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
+        console.log('CALLING! IN SERVER TS')
         io.to(receiverSocketId).emit("call", { senderId, message: `${senderId} is calling you!` });
       }
     });

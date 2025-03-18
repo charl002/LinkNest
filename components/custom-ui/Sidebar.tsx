@@ -106,6 +106,7 @@ export default function Sidebar() {
     };
 
     const handleCall = (data: { senderId: string; message: string }) => {
+      console.log('CALL, INSIDE OF SIDEBAR!');
       customToast({ message: data.message, type: "info", duration: 60000 });
     };
   
