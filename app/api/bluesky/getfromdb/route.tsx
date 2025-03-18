@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';
 import { Comment } from "@/types/comment";
+import cache from "@/lib/cache";
 
 interface BlueskyPost {
   text: string;
@@ -22,6 +23,21 @@ interface BlueskyPost {
 }
 
 export async function GET() {
+   // Check server-side cache
+   const cachedData = cache.get('bluesky-posts');
+   if (cachedData) {
+    console.log("[SERVER CACHE] Returning cached posts");
+     return new Response(JSON.stringify(cachedData), {
+       status: 200,
+       headers: {
+         'Content-Type': 'application/json',
+         'Cache-Control': 'public, max-age=600, stale-while-revalidate=1200'
+       },
+     });
+   }
+
+   console.log("[SERVER CACHE] Expired - Fetching new data from Firestore...");
+  
   try {
     const { results, error } = await withRetry(
       () => getAllDocuments('bluesky'),
@@ -37,14 +53,20 @@ export async function GET() {
     }
 
     if (!results) {
-      return NextResponse.json({ posts: [] });
+      return new Response(JSON.stringify({ posts: [] }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=600, stale-while-revalidate=1200'
+        },
+      });
     }
 
     const posts = await Promise.all(results.docs.map(async (doc) => {
       const data = doc.data() as BlueskyPost;
       
       // Handle image loading with retries
-let processedImages: Array<{url: string; alt: string; thumb: string} | null> = [];
+      let processedImages: Array<{url: string; alt: string; thumb: string} | null> = [];
       if (data.images && data.images.length > 0) {
         processedImages = await Promise.all(
           data.images.map(async (image) => {
@@ -87,10 +109,22 @@ let processedImages: Array<{url: string; alt: string; thumb: string} | null> = [
       };
     }));
 
-    return NextResponse.json({ 
+    const responseData = {
       success: true, 
       posts: posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    });
+    };
+
+    // Store in server cache
+     cache.set('bluesky-posts', responseData);
+     console.log("[CACHE UPDATE] Stored new posts in server cache.");
+
+     return NextResponse.json(responseData, {
+       status: 200,
+       headers: {
+         'Content-Type': 'application/json',
+         'Cache-Control': 'public, max-age=600, stale-while-revalidate=1200'
+       },
+     });
 
   } catch (error) {
     console.error('Error in GET /api/bluesky/getfromdb:', error);
