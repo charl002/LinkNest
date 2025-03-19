@@ -14,6 +14,7 @@ import { FaExpand } from "react-icons/fa";
 import { Trash2 } from 'lucide-react';
 import { customToast } from "@/components/ui/customToast";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
+import { useInView } from 'react-intersection-observer';
 
 interface PostProps {
     title: string;
@@ -32,6 +33,10 @@ interface PostProps {
 
 
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
+    const { ref, inView } = useInView({
+        threshold: 0.1,
+        triggerOnce: true
+    });
     const { data: session } = useSession();
     const [likeCount, setLikeCount] = useState(likes);
     const [isLiked, setIsLiked] = useState(false);
@@ -282,8 +287,12 @@ export default function Post({ title, username, description, tags, comments, lik
     }
   };
 
+    if (!inView) {
+        return <div ref={ref} className="h-[300px] bg-gray-100 animate-pulse rounded-md" />;
+    }
+
     return (
-      <div className="bg-white shadow-md p-4 rounded-md">
+      <div ref={ref} className="bg-white shadow-md p-4 rounded-md">
           <div className="flex items-center justify-between w-full">
           <Link href={`/profile/${encodeURIComponent(username)}`}>
             <div className="flex items-center space-x-2">

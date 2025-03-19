@@ -63,8 +63,8 @@ export default function Home() {
 
   // Render the public view for non-authenticated users
   return (
-    <div className="flex flex-col items-center gap-6 p-6 w-full h-screen">
-      <section className="flex flex-col space-y-6 max-w-2xl w-full h-full overflow-y-auto">
+    <div className="flex flex-col items-center gap-6 p-6 w-full h-[calc(100vh-90px)] overflow-y-auto">
+      <section className="flex flex-col space-y-6 max-w-2xl w-full h-[calc(100vh-120px)]">
         {posts.map((post, index) => (
           <Post 
             key={`${post.id}-${index}`} 

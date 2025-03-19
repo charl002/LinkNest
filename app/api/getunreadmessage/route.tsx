@@ -21,14 +21,17 @@ export async function GET(req: Request) {
         return NextResponse.json({ message: "No unread messages found"}, { status: 200 });
       }
 
-      const unreadCounts: Record<string, number> = {};
+      const unreadCounts: Record<string, { count: number; message: string }> = {};
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        unreadCounts[data.sender] = data.count;
+        unreadCounts[data.sender] = {
+          count: data.count,
+          message: data.message, // Retrieve the message field
+        };
       });
 
       return NextResponse.json({ unreadCounts }, { status: 200 });
     } catch (error) {
-      return NextResponse.json({ message: "Error unread messages for this receiver", error: error }, { status: 500 });
+      return NextResponse.json({ message: "Error fetching unread messages for this receiver", error: error }, { status: 500 });
     }
 }

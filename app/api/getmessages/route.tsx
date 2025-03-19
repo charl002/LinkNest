@@ -9,7 +9,8 @@ interface Message {
     receiver: string;
     message: string;
     seen: boolean;
-    date: Date; 
+    date: Date;
+    isCallMsg: boolean;
 }
 
 export async function GET(req: Request) {
@@ -72,6 +73,9 @@ export async function GET(req: Request) {
         const messages: Message[] = results.docs
             .map(doc => {
                 const data = doc.data();
+
+                const isCall = data.isCallMsg || false; 
+
                 return {
                     id: doc.id,
                     sender: data.sender,
@@ -79,6 +83,7 @@ export async function GET(req: Request) {
                     message: data.message,
                     seen: data.seen,
                     date: new Date(data.date),
+                    isCallMsg: isCall,
                     reactions: data.reactions,
                 };
             })
