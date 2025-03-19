@@ -9,6 +9,7 @@ import { Toaster } from "sonner";
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
 
 import { PostType } from "@/types/post";
+import { useInView } from 'react-intersection-observer';
 
 export default function UserCheck() {
     const { data: session } = useSession();
@@ -19,7 +20,15 @@ export default function UserCheck() {
     const [posts, setPosts] = useState<PostType[]>([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
     const [sessionUsername, setSessionUsername] = useState('');
-    const [activeTab, setActiveTab] = useState('user'); // Changed from 'all' to 'user'
+    const [activeTab, setActiveTab] = useState('user');
+    const [allPosts, setAllPosts] = useState<PostType[]>([]);
+    const [pageSize] = useState(5);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const { ref, inView } = useInView({
+        threshold: 0,
+        rootMargin: '100px'
+    });
 
     useEffect(() => {
         if (!session?.user) return;
@@ -94,11 +103,9 @@ export default function UserCheck() {
     useEffect(() => {
         if (!session?.user) return;
 
-        const fetchPosts = async () => {
+        const fetchInitialPosts = async () => {
             setLoadingPosts(true);
-
             const sessionEmail = session?.user?.email;
-
             const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
             const sessionUser = await response.json();
 
@@ -121,25 +128,19 @@ export default function UserCheck() {
                     customResponse.json()
                 ]);
                 
-                let allPosts: PostType[] = [];
-                if (data.success) {
-                    allPosts = allPosts.concat(data.posts);
-                }
+                let fetchedPosts: PostType[] = [];
+                if (data.success) fetchedPosts = fetchedPosts.concat(data.posts);
+                if (newsData.success) fetchedPosts = fetchedPosts.concat(newsData.posts);
+                if (customData.success) fetchedPosts = fetchedPosts.concat(customData.posts);
 
-                if (newsData.success) {
-                    allPosts = allPosts.concat(newsData.posts);
-                }
-                if (customData.success) {
-                    allPosts = allPosts.concat(customData.posts);
-                }
+                const sortedPosts = fetchedPosts.sort((a, b) => 
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
 
-                const sortedPosts = [...allPosts]
-                    .map(post => ({
-                        ...post,
-                        createdAt: post.createdAt
-                    }))
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                setPosts(sortedPosts);
+                setAllPosts(sortedPosts);
+                setPosts(sortedPosts.slice(0, pageSize));
+                setHasMore(sortedPosts.length > pageSize);
+                setCurrentPage(0);
             } catch (err) {
                 console.error("Error fetching posts:", err);
             } finally {
@@ -147,8 +148,48 @@ export default function UserCheck() {
             }
         };
 
-        fetchPosts();
-    }, [session]);
+        fetchInitialPosts();
+    }, [session, pageSize]);
+
+    // Simplify infinite scroll effect
+    useEffect(() => {
+        if (inView && hasMore && !loadingPosts) {
+            const nextPage = currentPage + 1;
+            const start = nextPage * pageSize;
+            const end = start + pageSize;
+
+            const nextBatch = allPosts
+                .filter(post => {
+                    if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
+                    if (activeTab === 'bluesky') return post.postType === 'bluesky';
+                    if (activeTab === 'news') return post.postType === 'news';
+                    return true;
+                })
+                .slice(start, end);
+            
+            if (nextBatch.length > 0) {
+                setPosts(prev => [...prev, ...nextBatch]);
+                setCurrentPage(nextPage);
+                setHasMore(end < allPosts.length);
+            } else {
+                setHasMore(false);
+            }
+        }
+    }, [inView, hasMore, currentPage, pageSize, loadingPosts, allPosts, activeTab]);
+
+    // Update tab change effect
+    useEffect(() => {
+        setCurrentPage(0);
+        const relevantPosts = allPosts
+            .filter(post => {
+                if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
+                if (activeTab === 'bluesky') return post.postType === 'bluesky';
+                if (activeTab === 'news') return post.postType === 'news';
+                return true;
+            });
+        setPosts(relevantPosts.slice(0, pageSize));
+        setHasMore(relevantPosts.length > pageSize);
+    }, [activeTab, allPosts, pageSize]);
 
     const checkUsernameAvailability = async (username: string) => {
         try {
@@ -293,27 +334,24 @@ export default function UserCheck() {
                     </button>
                 </div>
                 <div className="space-y-6 overflow-y-auto flex-1 h-[calc(100vh-120px)]">
-                    {posts
-                        .filter(post => {
-                            if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
-                            if (activeTab === 'bluesky') return post.postType === 'bluesky';
-                            if (activeTab === 'news') return post.postType === 'news';
-                            return true;
-                        })
-                        .map((post, index) => (
-                            <Post 
-                                key={`${post.id}-${index}`} 
-                                {...post} 
-                                profilePicture={post.profilePicture || ""}
-                                documentId={post.id}
-                                postType={post.postType}
-                                sessionUsername={sessionUsername}
-                            />
-                        ))
-                    }
+                    {posts.map((post, index) => (
+                        <Post 
+                            key={`${post.id}-${index}`} 
+                            {...post} 
+                            profilePicture={post.profilePicture || ""}
+                            documentId={post.id}
+                            postType={post.postType}
+                            sessionUsername={sessionUsername}
+                        />
+                    ))}
+                    {hasMore && (
+                        <div ref={ref} className="h-20 flex items-center justify-center">
+                            {loadingPosts && <LoadingLogo />}
+                        </div>
+                    )}
                 </div>
             </section>
-                <ChatList />
+            <ChatList />
             <Toaster position="bottom-center" richColors></Toaster>
         </div>
     );
