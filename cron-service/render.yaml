@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: data-fetch-cron
+    env: node
+    buildCommand: npm install
+    startCommand: node cron-server.js
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: NEWS_API_TOKEN
+        sync: false
+      - key: BLUESKY_USERNAME
+        sync: false
+      - key: BLUESKY_PASSWORD
+        sync: false 
