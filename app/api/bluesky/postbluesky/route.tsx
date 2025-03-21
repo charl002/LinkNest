@@ -69,7 +69,7 @@ export async function POST() {
       };
 
       const { result, error } = await withRetry(
-          () => addData('bluesky', postWithLikes),
+          () => addData('bluesky', postWithLikes, post.id),
           {
               maxAttempts: 3,
               initialDelay: 500,
