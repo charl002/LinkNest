@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';
 import { Comment } from "@/types/comment";
+import cache from "@/lib/cache"; 
 
 interface NewsPost {
   uuid: string;
@@ -18,6 +19,21 @@ interface NewsPost {
 }
 
 export async function GET() {
+  // Check server-side cache
+  const cachedData = cache.get('news-posts');
+  if (cachedData) {
+   console.log("[SERVER CACHE] Returning cached news posts");
+    return new Response(JSON.stringify(cachedData), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=600, stale-while-revalidate=30'
+      },
+    });
+  }
+
+  console.log("[SERVER CACHE] Expired - Fetching new news posts from Firestore...");
+
   try {
     const { results, error } = await withRetry(
       () => getAllDocuments('news'),
@@ -33,7 +49,13 @@ export async function GET() {
     }
 
     if (!results) {
-      return NextResponse.json({ posts: [] });
+      return new Response(JSON.stringify({ posts: [] }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=600, stale-while-revalidate=30'
+        },
+      });
     }
 
     const posts = await Promise.all(results.docs.map(async (doc) => {
@@ -79,9 +101,21 @@ export async function GET() {
       };
     }));
 
-    return NextResponse.json({ 
+    const responseData = {
       success: true, 
       posts: posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    };
+
+    // Store in server cache
+    cache.set('news-posts', responseData);
+    console.log("[CACHE UPDATE] Stored new news posts in server cache.");
+
+    return NextResponse.json(responseData, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=600, stale-while-revalidate=30'
+      },
     });
 
   } catch (error) {
