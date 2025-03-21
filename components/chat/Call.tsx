@@ -18,6 +18,8 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useSocket } from "../provider/SocketProvider";
 import LoadingLogo from "../custom-ui/LoadingLogo";
+import { useEffect } from "react";
+
 
 
 function Call() {
@@ -78,6 +80,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
   const remoteUsers = useRemoteUsers();
   const { audioTracks } = useRemoteAudioTracks(remoteUsers);
+  const router = useRouter();
 
   useJoin({
     appid: AppID,
@@ -87,6 +90,14 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   usePublish([localMicrophoneTrack, localCameraTrack]);
 
   audioTracks.map((track) => track.play());
+
+  useEffect(() => {
+    if (remoteUsers.length >= 2) {
+      alert("The call is full. You cannot join at this moment.");
+      router.push("/"); 
+    }
+  }, [remoteUsers, router]);
+
   const deviceLoading = isLoadingMic || isLoadingCam;
   if (deviceLoading)
     return (
