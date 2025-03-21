@@ -153,42 +153,46 @@ export default function UserCheck() {
 
     // Simplify infinite scroll effect
     useEffect(() => {
-        if (inView && hasMore && !loadingPosts) {
-            const nextPage = currentPage + 1;
-            const start = nextPage * pageSize;
-            const end = start + pageSize;
+        if (!inView || !hasMore || loadingPosts) return;
 
-            const nextBatch = allPosts
-                .filter(post => {
-                    if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
-                    if (activeTab === 'bluesky') return post.postType === 'bluesky';
-                    if (activeTab === 'news') return post.postType === 'news';
-                    return true;
-                })
-                .slice(start, end);
-            
-            if (nextBatch.length > 0) {
-                setPosts(prev => [...prev, ...nextBatch]);
-                setCurrentPage(nextPage);
-                setHasMore(end < allPosts.length);
-            } else {
-                setHasMore(false);
-            }
+        const nextPage = currentPage + 1;
+        const start = nextPage * pageSize;
+        const end = start + pageSize;
+
+        const filteredPosts = allPosts.filter(post => {
+            if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
+            if (activeTab === 'bluesky') return post.postType === 'bluesky';
+            if (activeTab === 'news') return post.postType === 'news';
+            return true;
+        });
+
+        if (start >= filteredPosts.length) {
+            setHasMore(false);
+            return;
         }
-    }, [inView, hasMore, currentPage, pageSize, loadingPosts, allPosts, activeTab]);
 
-    // Update tab change effect
+        const nextBatch = filteredPosts.slice(start, end);
+        if (nextBatch.length > 0) {
+            setPosts(prev => [...prev, ...nextBatch]);
+            setCurrentPage(nextPage);
+            setHasMore(end < filteredPosts.length);
+        } else {
+            setHasMore(false);
+        }
+    }, [inView, hasMore, loadingPosts]);
+
+    // Tab change effect
     useEffect(() => {
         setCurrentPage(0);
-        const relevantPosts = allPosts
-            .filter(post => {
-                if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
-                if (activeTab === 'bluesky') return post.postType === 'bluesky';
-                if (activeTab === 'news') return post.postType === 'news';
-                return true;
-            });
-        setPosts(relevantPosts.slice(0, pageSize));
-        setHasMore(relevantPosts.length > pageSize);
+        const filteredPosts = allPosts.filter(post => {
+            if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
+            if (activeTab === 'bluesky') return post.postType === 'bluesky';
+            if (activeTab === 'news') return post.postType === 'news';
+            return true;
+        });
+        
+        setPosts(filteredPosts.slice(0, pageSize));
+        setHasMore(filteredPosts.length > pageSize);
     }, [activeTab, allPosts, pageSize]);
 
     const checkUsernameAvailability = async (username: string) => {
@@ -344,11 +348,9 @@ export default function UserCheck() {
                             sessionUsername={sessionUsername}
                         />
                     ))}
-                    {hasMore && (
-                        <div ref={ref} className="h-20 flex items-center justify-center">
-                            {loadingPosts && <LoadingLogo />}
-                        </div>
-                    )}
+                    <div ref={ref}>
+                        {hasMore && <div className="text-center py-4">Loading more posts...</div>}
+                    </div>
                 </div>
             </section>
             <ChatList />
