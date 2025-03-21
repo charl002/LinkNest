@@ -69,7 +69,7 @@ export async function GET() {
                 .slice(0, 50);
 
             posts = shuffledPosts.map((item: AppBskyFeedDefs.FeedViewPost) => ({
-                id: item.post.id as string,
+                id: item.post.uri.split('/').pop() || item.post.cid,
                 text: (item.post.record as AppBskyFeedDefs.PostView).text as string,
                 createdAt: (item.post.record as AppBskyFeedDefs.PostView).createdAt as string,
                 author: {
