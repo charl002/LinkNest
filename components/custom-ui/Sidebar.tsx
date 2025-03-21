@@ -110,12 +110,12 @@ export default function Sidebar() {
       customToast({ message: data.message, type: "info", duration: 60000 });
     };
   
-    socket.on("newFriendRequest", handleNewFriendRequest);
-    socket.on("call", handleCall);
+    socket.on("newFriendRequestToUser", handleNewFriendRequest);
+    socket.on("callUser", handleCall);
   
     return () => {
-      socket.off("newFriendRequest", handleNewFriendRequest);
-      socket.off("call", handleCall);
+      socket.off("newFriendRequestToUser", handleNewFriendRequest);
+      socket.off("callUser", handleCall);
     };
   }, [socket, senderUsername]);
 

@@ -84,8 +84,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
       socket.off("updateFriendsList");
       socket.off("friendRequestAccepted");
     };
-  }, [session?.user?.email, socket, username]);  
-  
+  }, [session?.user?.email, socket, username]);
 
   return (
     <FriendsContext.Provider value={{ friends, setFriends }}>
