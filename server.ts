@@ -32,17 +32,17 @@ app.prepare().then(() => {
       console.log(`User ${userId} connected with socket ID ${socket.id}`);
     });
 
-    socket.on("sendFriendRequest", ({ senderId, receiverId }) => {
-      const receiverSocketId = userSockets[receiverId];
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("friendRequestReceived", {
-          senderId,
-          message: `${senderId} sent you a friend request!`,
-        });
-      } else {
-        console.log(`User ${receiverId} not found or not connected`);
-      }
-    });
+    // socket.on("sendFriendRequest", ({ senderId, receiverId }) => {
+    //   const receiverSocketId = userSockets[receiverId];
+    //   if (receiverSocketId) {
+    //     io.to(receiverSocketId).emit("friendRequestReceived", {
+    //       senderId,
+    //       message: `${senderId} sent you a friend request!`,
+    //     });
+    //   } else {
+    //     console.log(`User ${receiverId} not found or not connected`);
+    //   }
+    // });
 
     socket.on("privateMessage", ({ senderId, receiverId, message, msgId, isCallMsg }) => {
       const receiverSocketId = userSockets[receiverId];
