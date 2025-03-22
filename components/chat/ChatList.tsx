@@ -155,7 +155,7 @@ export default function ChatList() {
                   )}
 
                   <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-105 active:scale-95">
                       <Image 
                         src={user.image} 
                         alt={user.username} 
@@ -168,7 +168,7 @@ export default function ChatList() {
                   </Link>
 
                   <div className="flex items-center gap-2">
-                    <Button onClick={() => openChat(user.username, currentUser)}>
+                    <Button className="transition-transform duration-200 hover:scale-105 active:scale-95" onClick={() => openChat(user.username, currentUser)}>
                       Chat
                     </Button>
                   </div>
