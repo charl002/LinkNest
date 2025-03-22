@@ -37,13 +37,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     //   console.log("Received newFriendRequest:", data);
     // });
 
-    socketInstance.on('call', (data) => {
-      console.log("Received Call:", data);
-    });
+    // socketInstance.on('call', (data) => {
+    //   console.log("Received Call:", data);
+    // });
 
-    socketInstance.on('callUser', (data) => {
-      console.log("Received Call User:", data);
-    });
+    // socketInstance.on('callUser', (data) => {
+    //   console.log("Received Call User:", data);
+    // });
 
     return () => {
       socketInstance.disconnect();
