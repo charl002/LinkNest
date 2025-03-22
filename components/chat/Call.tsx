@@ -39,6 +39,11 @@ function Call() {
   const [first, second] = [currentUsername, friendUsername].sort();
   const channelName = `${first}_${second}`;
   const socket = useSocket();
+  const SECRET_KEY = "secret-key"; 
+  
+  const encryptMessage = (message: string): string => {
+    return CryptoJS.AES.encrypt(message, SECRET_KEY).toString();
+  };
   
   const handleLeaveCall = async () => {
     // Send the call end message
@@ -52,9 +57,9 @@ function Call() {
     try {
       if(!socket) return;
 
-      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, '📞 I left the call room.', true);
+      const postMessageData = await postMessageAndUnread(currentUsername, friendUsername, encryptMessage('📞 I left the call room.'), true);
   
-      emitPrivateMessage(socket, currentUsername, friendUsername, '📞 I left the call room.', postMessageData.docId, true);
+      emitPrivateMessage(socket, currentUsername, friendUsername, encryptMessage('📞 I left the call room.'), postMessageData.docId, true);
       
     } catch (error) {
       console.error("Error posting call end message:", error);

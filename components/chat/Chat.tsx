@@ -26,6 +26,7 @@ import {
 import type { Message } from "@/types/message";
 import type { User } from "@/types/user";
 import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
+import CryptoJS from "crypto-js";
 
 export default function Chat() {
   const socket = useSocket();
@@ -44,6 +45,18 @@ export default function Chat() {
   const [friendUser, setFriendUser] = useState<User | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
+  const SECRET_KEY = "secret-key"; 
+
+  const decryptMessage = (encryptedMessage: string): string => {
+    try {
+      console.log("ENCRYPTED: " + encryptedMessage);
+      const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
+      return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+      console.error("Failed to decrypt message:", error);
+      return "[Decryption Error]";
+    }
+  };
 
   // Function to scroll to bottom of messages
   const scrollToBottom = () => {
@@ -64,30 +77,30 @@ export default function Chat() {
           `/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`
         );
         const data = await response.json();
-
+    
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
         }
-
+    
         setMessages(
           data.messages.map((msg: Message) => ({
             id: msg.id,
             sender: msg.sender,
-            message: msg.message,
+            message: decryptMessage(msg.message), // Decrypt the message
             date: formatTimestamp(msg.date),
             isCallMsg: msg.isCallMsg,
             reactions: msg.reactions || [],
           }))
         );
-
+    
         const [senderResponse, friendResponse] = await Promise.all([
           fetch(`/api/getsingleuser?username=${currentUsername}`),
           fetch(`/api/getsingleuser?username=${friendUsername}`),
         ]);
-
+    
         const senderData = await senderResponse.json();
         const friendData = await friendResponse.json();
-
+    
         setCurrentUser(senderData.data);
         setFriendUser(friendData.data);
       } catch (error: unknown) {

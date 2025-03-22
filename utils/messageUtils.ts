@@ -1,6 +1,11 @@
-// utils/messageUtils.ts
-
 import { Socket } from "socket.io-client";
+import CryptoJS from "crypto-js";
+
+const SECRET_KEY = "secret-key"; 
+
+const encryptMessage = (message: string): string => {
+  return CryptoJS.AES.encrypt(message, SECRET_KEY).toString();
+};
 
 export const postMessageAndUnread = async (
   sender: string,
@@ -9,50 +14,53 @@ export const postMessageAndUnread = async (
   isCallMsg: boolean
 ) => {
   try {
-    // Post message to the API
+    const encryptedMessage = encryptMessage(message);
+
     const postMessageResponse = await fetch("/api/postmessage", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         senderUsername: sender,
         receiverUsername: receiver,
-        message: message,
+        message: encryptedMessage,
         isCallMsg: isCallMsg,
       }),
     });
 
     const postMessageData = await postMessageResponse.json();
-    // if (!postMessageResponse.ok) {
-    //   console.error(`Error storing message: ${postMessageData.message}`);
-    //   return;
-    // }
 
-    // Post unread message count to the API
     await fetch("/api/postunreadmessage", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sender: sender,
         receiver: receiver,
-        count: 1, // Increment unread count if the user is offline
-        message: message
+        count: 1,
+        message: encryptedMessage
       }),
     });
 
-    // Returns the doc ID of the message.
     return postMessageData;
-
   } catch (error) {
     console.error("Error storing message or unread message:", error);
   }
 };
 
-export const emitPrivateMessage = (socket: Socket, sender: string, receiver: string, message: string, docId: string, isCallMsg: boolean ) => {
+export const emitPrivateMessage = (
+  socket: Socket,
+  sender: string,
+  receiver: string,
+  message: string,
+  docId: string,
+  isCallMsg: boolean
+) => {
+  const encryptedMessage = encryptMessage(message);
+
   socket.emit("privateMessage", {
     senderId: sender,
     receiverId: receiver,
-    message: message,
+    message: encryptedMessage,
     msgId: docId,
-    isCallMsg: isCallMsg
+    isCallMsg: isCallMsg,
   });
 };
