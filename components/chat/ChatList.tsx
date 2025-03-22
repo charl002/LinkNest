@@ -142,7 +142,7 @@ export default function ChatList() {
         <div className="flex flex-col space-y-2">
           {friends.length > 0 ? (
             friends.map((user, index) => (
-              <div key={`${index}`} className="bg-gray-100 mt-6">
+              <div key={`${index}`} className="bg-gray-100 mt-6 rounded-md shadow-md">
                 <div 
                   key={user.id || `${user.username}-${index}`}
                   className="relative flex items-center justify-between p-2 rounded-md"

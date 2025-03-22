@@ -14,7 +14,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    // Might break when on production
     const socketInstance: Socket = io(socketUrl, {
       transports: ["websocket", "polling"],
     });

@@ -195,7 +195,7 @@ export default function Chat() {
 
   //Handles the logic of entering a VideoCall with a friend
   const handleRedirectToCall = async () => {
-    if (!currentUsername || !friendUsername || !socket) return;
+    if (!currentUsername || !friendUsername) return;
 
     const callMessage = "📞 I entered the call! Join Up!";
     const isCallMsg = true;
@@ -209,20 +209,22 @@ export default function Chat() {
         true
       );
 
-      emitPrivateMessage(
-        socket,
-        currentUsername,
-        friendUsername,
-        callMessage,
-        postMessageData.docId,
-        true
-      );
+      if(socket){
+        emitPrivateMessage(
+          socket,
+          currentUsername,
+          friendUsername,
+          callMessage,
+          postMessageData.docId,
+          true
+        );
 
-      socket.emit("call", {
-        senderId: currentUsername,
-        receiverId: friendUsername,
-      });
-
+        socket.emit("call", {
+          senderId: currentUsername,
+          receiverId: friendUsername,
+        });
+      }
+      
       setMessages((prevMessages) => [
         ...prevMessages,
         {

@@ -32,7 +32,7 @@ export default function ChatMessage({ message, isCurrentUser, user }: ChatMessag
                 <span className="text-xs text-gray-500">{message.date}</span>
               </div>
             </Link>
-            <p className="text-black-600 text-sm">{message.message}</p>
+            <p className="text-black-600 text-sm break-all">{message.message}</p>
           </div>
         </div>
       )}
@@ -72,7 +72,7 @@ export default function ChatMessage({ message, isCurrentUser, user }: ChatMessag
               </Avatar>
             </div>
           </Link>
-          <p className="text-black-600 text-sm">{message.message}</p>
+          <p className="text-black-600 text-sm break-all">{message.message}</p>
         </div>
       )}
 

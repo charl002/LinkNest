@@ -32,18 +32,6 @@ app.prepare().then(() => {
       console.log(`User ${userId} connected with socket ID ${socket.id}`);
     });
 
-    socket.on("sendFriendRequest", ({ senderId, receiverId }) => {
-      const receiverSocketId = userSockets[receiverId];
-      if (receiverSocketId) {
-        io.to(receiverSocketId).emit("friendRequestReceived", {
-          senderId,
-          message: `${senderId} sent you a friend request!`,
-        });
-      } else {
-        console.log(`User ${receiverId} not found or not connected`);
-      }
-    });
-
     socket.on("privateMessage", ({ senderId, receiverId, message, msgId, isCallMsg }) => {
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
@@ -51,20 +39,21 @@ app.prepare().then(() => {
       }
     });
 
-    // Inside the socket connection
+    // For some reason this socket does not work on prod, but works on dev. Will look into it another time.
     socket.on("call", ({ senderId, receiverId }) => {
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("call", { senderId, message: `${senderId} is calling you!` });
+        console.log('CALL USERID ', receiverSocketId);
+        io.to(receiverSocketId).emit("call", { message: `${senderId} is calling you!` });
       }
     });
 
+    // Listens for new friend requests.
     socket.on("newFriendRequest", ({ senderUsername, receiverUsername }) => {
       console.log(`New friend request from ${senderUsername} to ${receiverUsername}`);
-    
       const receiverSocketId = userSockets[receiverUsername];
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("newFriendRequest", { senderUsername });
+        io.to(receiverSocketId).emit("newFriendRequest", { senderUsername: senderUsername });
       } else {
         console.log(`User ${receiverUsername} is not online`);
       }
@@ -80,8 +69,6 @@ app.prepare().then(() => {
     
       const receiverSocketId = userSockets[receiver]; // Receiver who accepted the request
       const senderSocketId = userSockets[sender]; // Sender who originally sent the request
-    
-      console.log(`Receiver Socket ID: ${receiverSocketId}, Sender Socket ID: ${senderSocketId}`);
     
       if (receiverSocketId) {
         console.log(`Emitting friendRequestAccepted to ${receiver}`);
