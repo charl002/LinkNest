@@ -57,7 +57,7 @@ app.prepare().then(() => {
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
         console.log('CALLING! IN SERVER TS');
-        io.to(receiverSocketId).emit("callUser", { senderId, message: `${senderId} is calling you!` });
+        io.to(receiverSocketId).emit("call", { message: `${senderId} is calling you!` });
       }
     });
 
@@ -67,7 +67,7 @@ app.prepare().then(() => {
       const receiverSocketId = userSockets[receiverUsername];
       console.log(receiverSocketId);
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("newFriendRequestToUser", { senderUsername: senderUsername });
+        io.to(receiverSocketId).emit("newFriendRequest", { senderUsername: senderUsername });
       } else {
         console.log(`User ${receiverUsername} is not online`);
       }

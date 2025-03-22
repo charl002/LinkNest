@@ -81,9 +81,11 @@ export default function Sidebar() {
       //   customToast({ message: data.message, type: "info", duration: 60000 });
       // };
 
-      // socket.on("callUser", handleCall);
+      socket.on("call", async ({ message }) => {
+        customToast({ message: message, type: "info", duration: 60000 });
+      });
 
-      socket.on("newFriendRequestToUser", async ({ senderUsername }) => {
+      socket.on("newFriendRequest", async ({ senderUsername }) => {
         console.log("Received new friend request:", senderUsername);
 
         if (!senderUsername) return;
@@ -130,7 +132,8 @@ export default function Sidebar() {
       });
 
       return () => {
-        socket.off("privateMessage");
+        socket.off("newFriendRequest");
+        socket.off("call");
       };
     }
   }, [socket, senderUsername]);
