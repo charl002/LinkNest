@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import ChatList from "@/components/chat/ChatList";
 import Sidebar from "@/components/custom-ui/Sidebar";
@@ -29,6 +29,7 @@ export default function UserCheck() {
         threshold: 0,
         rootMargin: '100px'
     });
+    const scrollRef = useRef({ allPosts, currentPage, pageSize, hasMore, loadingPosts });
 
     useEffect(() => {
         if (!session?.user) return;
@@ -151,49 +152,49 @@ export default function UserCheck() {
         fetchInitialPosts();
     }, [session, pageSize]);
 
-    // Simplify infinite scroll effect
-    useEffect(() => {
-        if (!inView || !hasMore || loadingPosts) return;
-
-        const nextPage = currentPage + 1;
-        const start = nextPage * pageSize;
-        const end = start + pageSize;
-
-        const filteredPosts = allPosts.filter(post => {
+    const filterPosts = useCallback((posts: PostType[]) => {
+        return posts.filter(post => {
             if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
             if (activeTab === 'bluesky') return post.postType === 'bluesky';
             if (activeTab === 'news') return post.postType === 'news';
             return true;
         });
+    }, [activeTab]);
 
-        if (start >= filteredPosts.length) {
-            setHasMore(false);
-            return;
-        }
-
-        const nextBatch = filteredPosts.slice(start, end);
-        if (nextBatch.length > 0) {
-            setPosts(prev => [...prev, ...nextBatch]);
-            setCurrentPage(nextPage);
-            setHasMore(end < filteredPosts.length);
-        } else {
-            setHasMore(false);
-        }
-    }, [inView, hasMore, loadingPosts]);
-
-    // Tab change effect
+    // Effect for tab changes
     useEffect(() => {
-        setCurrentPage(0);
-        const filteredPosts = allPosts.filter(post => {
-            if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
-            if (activeTab === 'bluesky') return post.postType === 'bluesky';
-            if (activeTab === 'news') return post.postType === 'news';
-            return true;
-        });
-        
+        const filteredPosts = filterPosts(allPosts);
         setPosts(filteredPosts.slice(0, pageSize));
+        setCurrentPage(0);
         setHasMore(filteredPosts.length > pageSize);
-    }, [activeTab, allPosts, pageSize]);
+    }, [activeTab, allPosts, pageSize, filterPosts]);
+
+    // Update ref when values change
+    useEffect(() => {
+        scrollRef.current = { allPosts, currentPage, pageSize, hasMore, loadingPosts };
+    }, [allPosts, currentPage, pageSize, hasMore, loadingPosts]);
+
+    // Simplified infinite scroll effect
+    useEffect(() => {
+        if (!inView || !scrollRef.current.hasMore || scrollRef.current.loadingPosts) return;
+        
+        const timer = setTimeout(() => {
+            const filteredPosts = filterPosts(scrollRef.current.allPosts);
+            const nextPage = scrollRef.current.currentPage + 1;
+            const start = nextPage * scrollRef.current.pageSize;
+            const end = start + scrollRef.current.pageSize;
+
+            if (start < filteredPosts.length) {
+                setPosts(prev => [...prev, ...filteredPosts.slice(start, end)]);
+                setCurrentPage(nextPage);
+                setHasMore(end < filteredPosts.length);
+            } else {
+                setHasMore(false);
+            }
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [inView, filterPosts]);
 
     const checkUsernameAvailability = async (username: string) => {
         try {
