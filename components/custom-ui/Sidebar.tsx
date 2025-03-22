@@ -66,29 +66,36 @@ export default function Sidebar() {
   
     console.log("Registering user to WebSocket:", senderUsername);
     socket.emit("register", senderUsername);
+
+    // const handleCall = (data: { senderId: string; message: string }) => {
+    //   console.log('CALL, INSIDE OF SIDEBAR!');
+    //   customToast({ message: data.message, type: "info", duration: 60000 });
+    // };
+  
+    // socket.on("callUser", handleCall);
+
+    socket.on("newFriendRequestToUser", async ({ senderUsername }) => {
+      console.log("Received new friend request:", senderUsername);
     
-    const handleNewFriendRequest = async (data: { senderUsername: string }) => {
-      console.log("Received new friend request:", data);
-    
-      if (!data.senderUsername) return;
-    
+      if (!senderUsername) return;
+
       try {
-        const response = await fetch(`/api/getuserbyusername?username=${data.senderUsername}`);
+        const response = await fetch(`/api/getuserbyusername?username=${senderUsername}`);
         const userData = await response.json();
     
         if (!response.ok) {
-          console.error(`Error fetching user details for ${data.senderUsername}:`, userData);
+          console.error(`Error fetching user details for ${senderUsername}:`, userData);
           return;
         }
     
         setPendingRequests((prev) => {
-          if (prev.some((user) => user.username === data.senderUsername)) return prev;
+          if (prev.some((user) => user.username === senderUsername)) return prev;
         
           return [
             ...prev,
             {
               id: userData.id,
-              username: data.senderUsername,
+              username: senderUsername,
               image: userData.data.image || "/default-avatar.png",
               email: userData.data.email || "",
               name: userData.data.name || "",
@@ -98,24 +105,16 @@ export default function Sidebar() {
           ];
         });
         
-        customToast({ message: `New friend request from ${data.senderUsername}!`, type: "info" });
+        customToast({ message: `New friend request from ${senderUsername}!`, type: "info" });
     
       } catch (error) {
         console.error("Error fetching user details:", error);
       }
-    };
-
-    const handleCall = (data: { senderId: string; message: string }) => {
-      console.log('CALL, INSIDE OF SIDEBAR!');
-      customToast({ message: data.message, type: "info", duration: 60000 });
-    };
-  
-    socket.on("newFriendRequestToUser", handleNewFriendRequest);
-    socket.on("callUser", handleCall);
+    });
   
     return () => {
-      socket.off("newFriendRequestToUser", handleNewFriendRequest);
-      socket.off("callUser", handleCall);
+      // socket.off("newFriendRequestToUser", handleNewFriendRequest);
+      // socket.off("callUser", handleCall);
     };
   }, [socket, senderUsername]);
 
@@ -182,7 +181,7 @@ export default function Sidebar() {
 
       if (socket) {
         socket.emit("newFriendRequest", {
-          senderUsername,
+          senderUsername: senderUsername,
           receiverUsername: friendName,
         });
       }

@@ -65,7 +65,7 @@ app.prepare().then(() => {
     
       const receiverSocketId = userSockets[receiverUsername];
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("newFriendRequestToUser", { senderUsername });
+        io.to(receiverSocketId).emit("newFriendRequestToUser", { senderUsername: senderUsername });
       } else {
         console.log(`User ${receiverUsername} is not online`);
       }
