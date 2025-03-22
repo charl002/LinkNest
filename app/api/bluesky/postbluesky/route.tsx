@@ -19,8 +19,11 @@ export async function POST() {
     const data = await response.json();
     
     if (!data || !data.posts || !Array.isArray(data.posts)) {
+      console.error('Invalid Bluesky data format:', data);
       throw new Error('Invalid Bluesky data format');
     }
+
+    console.log(`Fetched ${data.posts.length} posts from Bluesky API`);
 
     const { results: existingBlueSkyDocs, error: fetchError } = await withRetry(
         () => getAllDocuments('bluesky'),
@@ -32,6 +35,7 @@ export async function POST() {
     );
     
     if (fetchError) {
+      console.error('Error fetching existing posts:', fetchError);
       throw new Error('Failed to fetch existing Bluesky posts');
     }
 
@@ -39,12 +43,19 @@ export async function POST() {
       existingBlueSkyDocs?.docs.map(doc => doc.data().id) || []
     );
 
+    console.log(`Found ${existingIds.size} existing posts in database`);
+
     const results: Results = {
       added: [],
       skipped: []
     };
 
     for (const post of data.posts) {
+      if (!post.id) {
+        console.error('Post missing ID:', post);
+        continue;
+      }
+
       if (existingIds.has(post.id)) {
         results.skipped.push(post.id);
         continue;
@@ -58,7 +69,7 @@ export async function POST() {
       };
 
       const { result, error } = await withRetry(
-          () => addData('bluesky', postWithLikes),
+          () => addData('bluesky', postWithLikes, post.id),
           {
               maxAttempts: 3,
               initialDelay: 500,
@@ -73,6 +84,12 @@ export async function POST() {
       
       results.added.push(result);
     }
+
+    console.log('Post processing complete:', {
+      total: data.posts.length,
+      added: results.added.length,
+      skipped: results.skipped.length
+    });
 
     if (results.added.length === 0) {
       return NextResponse.json(
