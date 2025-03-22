@@ -83,7 +83,7 @@ export default function Sidebar() {
 
       // socket.on("callUser", handleCall);
 
-      socket.on("newFriendRequest", async ({ senderUsername }) => {
+      socket.on("newFriendRequestToUser", async ({ senderUsername }) => {
         console.log("Received new friend request:", senderUsername);
 
         if (!senderUsername) return;
