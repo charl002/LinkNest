@@ -45,6 +45,7 @@ app.prepare().then(() => {
     // });
 
     socket.on("privateMessage", ({ senderId, receiverId, message, msgId, isCallMsg }) => {
+      console.log('THE ID IS', receiverId)
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message, msgId, isCallMsg });
@@ -62,10 +63,11 @@ app.prepare().then(() => {
 
     socket.on("newFriendRequest", ({ senderUsername, receiverUsername }) => {
       console.log(`New friend request from ${senderUsername} to ${receiverUsername}`);
-    
+      // console.log('THE ID ID IS', receiverUsername)
       const receiverSocketId = userSockets[receiverUsername];
+      console.log(receiverSocketId);
       if (receiverSocketId) {
-        io.to(receiverSocketId).emit("newFriendRequestToUser", { senderUsername: senderUsername });
+        io.to(receiverSocketId).emit("newFriendRequest", { senderUsername: senderUsername });
       } else {
         console.log(`User ${receiverUsername} is not online`);
       }
@@ -81,8 +83,6 @@ app.prepare().then(() => {
     
       const receiverSocketId = userSockets[receiver]; // Receiver who accepted the request
       const senderSocketId = userSockets[sender]; // Sender who originally sent the request
-    
-      console.log(`Receiver Socket ID: ${receiverSocketId}, Sender Socket ID: ${senderSocketId}`);
     
       if (receiverSocketId) {
         console.log(`Emitting friendRequestAccepted to ${receiver}`);

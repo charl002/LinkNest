@@ -33,9 +33,9 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       console.log("Received privateMessage:", data); // Log received message
     });
 
-    socketInstance.on('newFriendRequest', (data) => {
-      console.log("Received newFriendRequest:", data);
-    });
+    // socketInstance.on('newFriendRequest', (data) => {
+    //   console.log("Received newFriendRequest:", data);
+    // });
 
     socketInstance.on('call', (data) => {
       console.log("Received Call:", data);
