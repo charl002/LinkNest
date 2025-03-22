@@ -32,27 +32,14 @@ app.prepare().then(() => {
       console.log(`User ${userId} connected with socket ID ${socket.id}`);
     });
 
-    // socket.on("sendFriendRequest", ({ senderId, receiverId }) => {
-    //   const receiverSocketId = userSockets[receiverId];
-    //   if (receiverSocketId) {
-    //     io.to(receiverSocketId).emit("friendRequestReceived", {
-    //       senderId,
-    //       message: `${senderId} sent you a friend request!`,
-    //     });
-    //   } else {
-    //     console.log(`User ${receiverId} not found or not connected`);
-    //   }
-    // });
-
     socket.on("privateMessage", ({ senderId, receiverId, message, msgId, isCallMsg }) => {
-      console.log('THE ID IS', receiverId)
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message, msgId, isCallMsg });
       }
     });
 
-    // Inside the socket connection
+    // For some reason this socket does not work on prod, but works on dev. Will look into it another time.
     socket.on("call", ({ senderId, receiverId }) => {
       const receiverSocketId = userSockets[receiverId];
       if (receiverSocketId) {
@@ -61,11 +48,10 @@ app.prepare().then(() => {
       }
     });
 
+    // Listens for new friend requests.
     socket.on("newFriendRequest", ({ senderUsername, receiverUsername }) => {
       console.log(`New friend request from ${senderUsername} to ${receiverUsername}`);
-      // console.log('THE ID ID IS', receiverUsername)
       const receiverSocketId = userSockets[receiverUsername];
-      console.log(receiverSocketId);
       if (receiverSocketId) {
         io.to(receiverSocketId).emit("newFriendRequest", { senderUsername: senderUsername });
       } else {

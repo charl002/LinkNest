@@ -14,7 +14,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    // Might break when on production
     const socketInstance: Socket = io(socketUrl, {
       transports: ["websocket", "polling"],
     });
@@ -32,18 +31,6 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     socketInstance.on("privateMessage", (data) => {
       console.log("Received privateMessage:", data); // Log received message
     });
-
-    // socketInstance.on('newFriendRequest', (data) => {
-    //   console.log("Received newFriendRequest:", data);
-    // });
-
-    // socketInstance.on('call', (data) => {
-    //   console.log("Received Call:", data);
-    // });
-
-    // socketInstance.on('callUser', (data) => {
-    //   console.log("Received Call User:", data);
-    // });
 
     return () => {
       socketInstance.disconnect();

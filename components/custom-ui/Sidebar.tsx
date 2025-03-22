@@ -76,15 +76,12 @@ export default function Sidebar() {
       console.log("Registering user to WebSocket:", senderUsername);
       socket.emit("register", senderUsername);
 
-      // const handleCall = (data: { senderId: string; message: string }) => {
-      //   console.log('CALL, INSIDE OF SIDEBAR!');
-      //   customToast({ message: data.message, type: "info", duration: 60000 });
-      // };
-
+      // Not Working, will fix later.
       socket.on("call", async ({ message }) => {
         customToast({ message: message, type: "info", duration: 60000 });
       });
 
+      //Listens to socket events of a new friend request
       socket.on("newFriendRequest", async ({ senderUsername }) => {
         console.log("Received new friend request:", senderUsername);
 
