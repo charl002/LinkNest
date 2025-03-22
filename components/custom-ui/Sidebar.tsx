@@ -325,7 +325,7 @@ export default function Sidebar() {
       <div className="flex-1 flex flex-col justify-center items-center pt-4">
         <Dialog>
           <DialogTrigger asChild>
-            <Button> Add A Friend! </Button>
+            <Button className="transition-transform duration-200 hover:scale-110 active:scale-90"> Add A Friend! </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -348,7 +348,7 @@ export default function Sidebar() {
                       className="p-2 hover:bg-gray-200 cursor-pointer flex justify-between items-center"
                       onClick={() => setFriendName(user.username)}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 transition-transform duration-200 hover:scale-110 active:scale-90">
                         <Image
                           src={user.image}
                           alt="User Profile"
@@ -359,7 +359,7 @@ export default function Sidebar() {
                         <span>{user.username}</span>
                       </div>
                       <Link key={user.id} href={`/profile/${encodeURIComponent(user.username)}`}>
-                        <div className="px-4 py-2 bg-black text-white text-sm rounded-md">
+                        <div className="px-4 py-2 bg-black text-white text-sm rounded-md transition-transform duration-200 hover:scale-110 active:scale-90">
                           Visit
                         </div>
                       </Link>

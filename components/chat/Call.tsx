@@ -18,6 +18,9 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useSocket } from "../provider/SocketProvider";
 import LoadingLogo from "../custom-ui/LoadingLogo";
+import { useEffect } from "react";
+
+
 
 function Call() {
   const client = useRTCClient(
@@ -27,8 +30,10 @@ function Call() {
   const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
   const searchParams = useSearchParams();
   const router = useRouter();
-  const friendUsername = searchParams.get("friend") ?? "Guest";
-  const currentUsername = searchParams.get("user") ?? "Guest";
+  const friend = searchParams.get("friend") ?? "Guest";
+  const friendUsername = decodeURIComponent(friend);
+  const current = searchParams.get("user") ?? "Guest";
+  const currentUsername = decodeURIComponent(current);
   const [first, second] = [currentUsername, friendUsername].sort();
   const channelName = `${first}_${second}`;
   const socket = useSocket();
@@ -56,7 +61,7 @@ function Call() {
 
   return (
     <AgoraRTCProvider client={client}>
-      <Videos currentUsername={currentUsername} friendUsername={friendUsername} channelName={channelName} AppID={appId} />
+      <Videos currentUsername={currentUsername} friendUsername={friendUsername} channelName={channelName} AppID={appId}/>
       <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4">
         <Link
           className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400"
@@ -69,12 +74,13 @@ function Call() {
   );
 }
 
-function Videos(props: {currentUsername: string; friendUsername: string; channelName: string; AppID: string }) {
-  const { currentUsername, friendUsername, AppID, channelName } = props;
+function Videos(props: {currentUsername: string; friendUsername: string; channelName: string; AppID: string;}) {
+  const { currentUsername, friendUsername, AppID, channelName} = props;
   const { isLoading: isLoadingMic, localMicrophoneTrack } = useLocalMicrophoneTrack();
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
   const remoteUsers = useRemoteUsers();
   const { audioTracks } = useRemoteAudioTracks(remoteUsers);
+  const router = useRouter();
 
   useJoin({
     appid: AppID,
@@ -84,6 +90,14 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   usePublish([localMicrophoneTrack, localCameraTrack]);
 
   audioTracks.map((track) => track.play());
+
+  useEffect(() => {
+    if (remoteUsers.length >= 2) {
+      alert("The call is full. You cannot join at this moment.");
+      router.push("/"); 
+    }
+  }, [remoteUsers, router]);
+
   const deviceLoading = isLoadingMic || isLoadingCam;
   if (deviceLoading)
     return (
@@ -110,11 +124,13 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
             </span>
           </div>
         </div>
-        {remoteUsers.length > 0 ? (
+        {remoteUsers.length > 0 && remoteUsers.length < 2 ? (
           remoteUsers.map((user) => (
             <div key={user.uid} className="relative w-full h-full">
               <RemoteUser
                 user={user}
+                playVideo={true}
+                playAudio={true}
                 className="w-full h-full border-4 border-gray-500 rounded-sm"
               />
               <div className="absolute top-4 left-1/2 transform -translate-x-1/2 mt-2">

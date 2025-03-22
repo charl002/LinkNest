@@ -235,8 +235,8 @@ export default function Chat() {
       ]);
 
       setInput(""); // Clear the input field
-
-      router.push(`/channel?friend=${friendUsername}&user=${currentUsername}`);
+  
+      router.push(`/channel?friend=${encodeURIComponent(friendUsername)}&user=${encodeURIComponent(currentUsername)}`);
     } catch (error) {
       console.error("Error starting the call:", error);
       toast.error("Error starting the call.");
@@ -511,13 +511,13 @@ export default function Chat() {
               // Also scroll to bottom after sending
               setTimeout(scrollToBottom, 100);
             }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
           >
             Send
           </button>
           <button
             onClick={handleRedirectToCall}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
           >
             <Video />
           </button>

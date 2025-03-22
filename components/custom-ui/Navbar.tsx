@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { House } from 'lucide-react';
+import { House, AlignJustify } from 'lucide-react';
 
 const Navbar = () => {
 
@@ -52,7 +52,7 @@ const Navbar = () => {
           <Link href="/" className="flex items-center">
             <span className="text-black">Link</span>
             <span className="text-blue-500">Nest</span> 
-            <span className="ml-2"><House/></span>
+            <span className="ml-2 transition-transform duration-200 hover:scale-110 active:scale-90"><House/></span>
           </Link>
         </h1>
         
@@ -75,9 +75,10 @@ const Navbar = () => {
                       <p className="text-gray-700 font-medium">{name}</p>
                       <p className="text-gray-500 text-sm">@{userName}</p>
                     </div>
+                    <AlignJustify className="mb-3 transition-transform duration-200 hover:scale-110 active:scale-90" />
                   </div>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
+                  <DropdownMenuContent className="w-56" align="end">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
