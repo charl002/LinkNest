@@ -20,6 +20,7 @@ import { useSocket } from "../provider/SocketProvider";
 import LoadingLogo from "../custom-ui/LoadingLogo";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { customToast } from "@/components/ui/customToast";
 
 
 
@@ -105,7 +106,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
         const fetchedUsername = sessionUser.data?.username || "Unknown";
 
         if (fetchedUsername !== currentUsername) {
-          alert("You cannot access this call!");
+          customToast({ message: "You cannot access this call!", type: "error" });
           router.push("/");
         } else {
           setIsValidUser(true);
@@ -119,7 +120,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
     validateUser();
 
     if (remoteUsers.length >= 2) {
-      alert("The call is full. You cannot join at this moment.");
+      customToast({ message: "This call is full, you cannot join at the moment", type: "error" });
       router.push("/");
     } 
 
