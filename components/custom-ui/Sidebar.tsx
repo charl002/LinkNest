@@ -380,11 +380,11 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="bg-white shadow-md p-4 rounded-md flex flex-col h-[calc(100vh-120px)] overflow-y-auto md:w-[300px] w-full md:relative fixed bottom-0 md:bottom-auto z-40">
+    <aside className="bg-white shadow-md p-4 rounded-md flex flex-col h-[calc(100vh-120px)] overflow-y-auto">
       <div className="flex-1 flex flex-col justify-center items-center pt-4">
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="transition-transform duration-200 hover:scale-110 active:scale-90 md:w-auto">
+            <Button className="transition-transform duration-200 hover:scale-110 active:scale-90">
               {" "}
               Add A Friend!{" "}
             </Button>
@@ -449,7 +449,7 @@ export default function Sidebar() {
               {pendingRequests.map((user) => (
                 <li
                   key={user.id}
-                  className="flex justify-between items-center p-2 border-b md:flex-row md:justify-between md:items-center"
+                  className="flex justify-between items-center p-2 border-b"
                 >
                   <Link
                     key={user.id}

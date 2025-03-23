@@ -307,21 +307,66 @@ export default function UserCheck() {
         <div className="relative h-screen w-full p-6">
           <div className="md:hidden flex justify-between mb-4">
             <button
-              onClick={() => setShowSidebar((prev) => !prev)}
-              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-md">
+              onClick={() => {
+                setShowSidebar(prev => !prev);
+                setShowChatList(false);
+              }}
+              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-md"
+            >
               <Menu />
               <span>Sidebar</span>
             </button>
             <button
-              onClick={() => setShowChatList((prev) => !prev)}
-              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-md">
+              onClick={() => {
+                setShowChatList(prev => !prev);
+                setShowSidebar(false);
+              }}
+              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-md"
+            >
               <MessageSquare />
               <span>Chat</span>
             </button>
           </div>
       
-          <div className="grid grid-cols-1 md:grid-cols-[300px_1fr_300px] gap-6 h-[calc(100vh-4rem)] overflow-hidden"> 
-            <div className={`${ showSidebar ? "block" : "hidden" } md:block w-full md:w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto`}>
+          <div className="md:hidden h-[calc(100vh-6rem)] overflow-y-auto">
+            {showSidebar && <Sidebar />}
+            {showChatList && <ChatList />}
+            {!showSidebar && !showChatList && (
+              <section className="space-y-6">
+                <div className="flex space-x-2 mb-6">
+                  {["user", "bluesky", "news"].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
+                        activeTab === tab
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200 hover:bg-gray-300"
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                {posts.map((post, index) => (
+                  <Post
+                    key={`${post.id}-${index}`}
+                    {...post}
+                    profilePicture={post.profilePicture || ""}
+                    documentId={post.id}
+                    postType={post.postType}
+                    sessionUsername={sessionUsername}
+                  />
+                ))}
+                <div ref={ref}>
+                  {hasMore && <div className="text-center py-4">Loading more posts...</div>}
+                </div>
+              </section>
+            )}
+          </div>
+      
+          <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 h-[calc(100vh-4rem)] overflow-hidden">
+            <div className="w-full md:w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
               <Sidebar />
             </div>
       
@@ -359,11 +404,7 @@ export default function UserCheck() {
               </div>
             </section>
       
-            <div
-              className={`${
-                showChatList ? "block" : "hidden"
-              } md:block w-full md:w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto`}
-            >
+            <div className="w-full md:w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
               <ChatList />
             </div>
           </div>
