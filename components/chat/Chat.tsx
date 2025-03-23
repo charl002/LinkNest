@@ -518,6 +518,38 @@ export default function Chat() {
                   );
                 })}
           </div>
+            <div className="p-4 bg-white shadow-md flex items-center space-x-2 mt-auto">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="flex-1 p-2 border rounded-lg w-full"
+                placeholder="Type a message..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    sendMessage();
+                    // Also scroll to bottom after sending
+                    setTimeout(scrollToBottom, 100);
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  sendMessage();
+                  // Also scroll to bottom after sending
+                  setTimeout(scrollToBottom, 100);
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+              >
+                Send
+              </button>
+              <button
+                onClick={handleRedirectToCall}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+              >
+                <Video />
+              </button>
+            </div>
             </section>
           )}
         </div>
