@@ -7,6 +7,7 @@ import Sidebar from "@/components/custom-ui/Sidebar";
 import Post from "@/components/post/Post";
 import { Toaster } from "sonner";
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
+import { Menu, MessageSquare} from "lucide-react"
 
 import { PostType } from "@/types/post";
 import { useInView } from 'react-intersection-observer';
@@ -30,6 +31,8 @@ export default function UserCheck() {
         rootMargin: '100px'
     });
     const scrollRef = useRef({ allPosts, currentPage, pageSize, hasMore, loadingPosts });
+    const [showSidebar, setShowSidebar] = useState(false);
+    const [showChatList, setShowChatList] = useState(false);
 
     useEffect(() => {
         if (!session?.user) return;
@@ -301,61 +304,71 @@ export default function UserCheck() {
     }
 
     return (
-        <div className="grid grid-cols-[300px_1fr_300px] gap-6 p-6 w-full h-screen">
-            <div className="w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto">
-                <Sidebar />
+        <div className="relative h-screen w-full p-6">
+          <div className="md:hidden flex justify-between mb-4">
+            <button
+              onClick={() => setShowSidebar((prev) => !prev)}
+              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-md">
+              <Menu />
+              <span>Sidebar</span>
+            </button>
+            <button
+              onClick={() => setShowChatList((prev) => !prev)}
+              className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-md">
+              <MessageSquare />
+              <span>Chat</span>
+            </button>
+          </div>
+      
+          <div className="grid grid-cols-1 md:grid-cols-[300px_1fr_300px] gap-6 h-[calc(100vh-4rem)] overflow-hidden"> 
+            <div className={`${ showSidebar ? "block" : "hidden" } md:block w-full md:w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto`}>
+              <Sidebar />
             </div>
-            <section className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
-                <div className="flex space-x-2 mb-6">
-                    <button
-                        onClick={() => setActiveTab('user')}
-                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
-                            activeTab === 'user' 
-                                ? 'bg-blue-500 text-white' 
-                                : 'bg-gray-200 hover:bg-gray-300'
-                        }`}
-                    >
-                        Posts
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('bluesky')}
-                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
-                            activeTab === 'bluesky' 
-                                ? 'bg-blue-500 text-white' 
-                                : 'bg-gray-200 hover:bg-gray-300'
-                        }`}
-                    >
-                        Bluesky
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('news')}
-                        className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
-                            activeTab === 'news' 
-                                ? 'bg-blue-500 text-white' 
-                                : 'bg-gray-200 hover:bg-gray-300'
-                        }`}
-                    >
-                        News
-                    </button>
+      
+            <section className="flex flex-col h-full overflow-hidden">
+              <div className="flex space-x-2 mb-6">
+                {["user", "bluesky", "news"].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
+                      activeTab === tab
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
+              </div>
+      
+              <div className="space-y-6 overflow-y-auto flex-1">
+                {posts.map((post, index) => (
+                  <Post
+                    key={`${post.id}-${index}`}
+                    {...post}
+                    profilePicture={post.profilePicture || ""}
+                    documentId={post.id}
+                    postType={post.postType}
+                    sessionUsername={sessionUsername}
+                  />
+                ))}
+                <div ref={ref}>
+                  {hasMore && <div className="text-center py-4">Loading more posts...</div>}
                 </div>
-                <div className="space-y-6 overflow-y-auto flex-1 h-[calc(100vh-120px)]">
-                    {posts.map((post, index) => (
-                        <Post 
-                            key={`${post.id}-${index}`} 
-                            {...post} 
-                            profilePicture={post.profilePicture || ""}
-                            documentId={post.id}
-                            postType={post.postType}
-                            sessionUsername={sessionUsername}
-                        />
-                    ))}
-                    <div ref={ref}>
-                        {hasMore && <div className="text-center py-4">Loading more posts...</div>}
-                    </div>
-                </div>
+              </div>
             </section>
-            <ChatList />
-            <Toaster position="bottom-center" richColors></Toaster>
+      
+            <div
+              className={`${
+                showChatList ? "block" : "hidden"
+              } md:block w-full md:w-[300px] max-h-[calc(100vh-3rem)] overflow-y-auto`}
+            >
+              <ChatList />
+            </div>
+          </div>
+      
+          <Toaster position="bottom-center" richColors />
         </div>
-    );
+      );
 }
