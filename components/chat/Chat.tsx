@@ -45,7 +45,7 @@ export default function Chat() {
   const [friendUser, setFriendUser] = useState<User | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const SECRET_KEY = "secret-key"; 
+  const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
 
   const decryptMessage = (encryptedMessage: string): string => {
     try {

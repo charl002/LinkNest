@@ -28,7 +28,7 @@ export default function ChatList() {
   const searchParams = useSearchParams();
   const activeChatFriend = searchParams.get("friend");
 
-  const SECRET_KEY = "secret-key"; 
+  const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!; 
   
   const decryptMessage = (encryptedMessage: string): string => {
     try {

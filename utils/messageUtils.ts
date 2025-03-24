@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 import CryptoJS from "crypto-js";
 
-const SECRET_KEY = "secret-key"; 
+const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
 
 const encryptMessage = (message: string): string => {
   return CryptoJS.AES.encrypt(message, SECRET_KEY).toString();
