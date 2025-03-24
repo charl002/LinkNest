@@ -117,3 +117,17 @@ We demo'ed our project in front of the class, and we limit tested our deployed a
 Also, as a team, we will implement the testings for our API routes.
 
 These tasks are expected to be due by Sunday, meaning March 16th. We are going to have check-ups when we have in class sessions.
+
+### 2025-03-24
+
+We are conflicted on what is more priority, either fixing the testing or implementing the group chats. As a group, we decided that testing is more important, so I will try to figure it out today, and let the team know if we need to change the testing strategy.
+
+**Ahmed**: He completed the reactions for messages and started the mobile CSS. The next thing he will do is finish up the Mobile CSS.
+
+**Adbullah**: He implemented browser and server caching for the whole application, and he will now optimize more the applicatin and start monitoring.
+
+**Mohammed**: He implemented encryption for the videocall aspect of the application, and fixed bugs related to the call. He will now add encryption for videocall and help Abdullah with monitoring.
+
+**Charles**: He added pagination of the posts, basically an 'infinite scrolling effect'. He also implemented the CRON job for the bluesky posts and news posts.  He will now do monitoring of the application and the report system.
+
+**Thiha**: I implemented 'yellow' message blocks that represent call messages in the Chat, I also added notifications for the calls and fixed websockets for when a friend request is sent. I also fixed the CSS for the app, making it non-scrollable. I will now focus on testing and groupchats.
