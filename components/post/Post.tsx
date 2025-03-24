@@ -61,7 +61,7 @@ export default function Post({ title, username, description, tags, comments, lik
           comments.map(async (comment) => {
               if (!comment.profilePicture || comment.profilePicture === "/defaultProfilePic.jpg") {
                   try {
-                      const response = await fetch(`/api/getuserbyusername?username=${comment.username}`);
+                      const response = await fetch(`/api/getsingleuser?username=${comment.username}`);
                       if (!response.ok) throw new Error("Failed to fetch profile picture");
 
                       const userData = await response.json();

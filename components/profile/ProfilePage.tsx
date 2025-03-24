@@ -53,7 +53,7 @@ export default function ProfilePage({ user }: { user: string }) {
 
   const fetchUser = useCallback(async () => {
     try {
-      const response = await fetch(`/api/getuserbyusername?username=${user}`);
+      const response = await fetch(`/api/getsingleuser?username=${user}`);
       const result = await response.json();
 
       if (!response.ok) {
@@ -85,7 +85,7 @@ export default function ProfilePage({ user }: { user: string }) {
 
       const friendsData = await Promise.all(
         result.friends.map(async (friendUsername: string) => {
-          const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+          const userResponse = await fetch(`/api/getsingleuser?username=${friendUsername}`);
           const userData = await userResponse.json();
 
           if (userResponse.ok) {

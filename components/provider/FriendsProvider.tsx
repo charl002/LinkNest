@@ -57,7 +57,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   
         const friendsData = await Promise.all(
           data.friends.map(async (friendUsername: string) => {
-            const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+            const userResponse = await fetch(`/api/getsingleuser?username=${friendUsername}`);
             const userData = await userResponse.json();
             return userResponse.ok ? { id: userData.id, ...userData.data } : null;
           })
