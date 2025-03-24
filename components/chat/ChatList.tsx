@@ -11,7 +11,7 @@ import { useFriends } from "../provider/FriendsProvider";
 import { Badge } from "@/components/ui/badge";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useSearchParams } from "next/navigation"; 
-
+import CryptoJS from "crypto-js";
 import { User } from "@/types/user";
 
 export default function ChatList() {
@@ -27,6 +27,19 @@ export default function ChatList() {
 
   const searchParams = useSearchParams();
   const activeChatFriend = searchParams.get("friend");
+
+  const SECRET_KEY = "secret-key"; 
+  
+  const decryptMessage = (encryptedMessage: string): string => {
+    try {
+      console.log("ENCRYPTED: " + encryptedMessage);
+      const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
+      return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+      console.error("Failed to decrypt message:", error);
+      return "[Decryption Error]";
+    }
+  };
 
   useEffect(() => {
     async function fetchUsersAndUnreadMessages() {
@@ -46,6 +59,10 @@ export default function ChatList() {
           const unreadData = await unreadResponse.json();
 
           if (unreadResponse.ok) {
+            Object.keys(unreadData.unreadCounts).forEach((sender) => {
+              unreadData.unreadCounts[sender].message = decryptMessage(unreadData.unreadCounts[sender].message);
+            });
+  
             setUnreadMessages(unreadData.unreadCounts);
           } else {
             console.error("Error fetching unread messages:", unreadData.message);
