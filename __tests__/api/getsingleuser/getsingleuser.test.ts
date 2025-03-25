@@ -41,19 +41,24 @@ describe("API Integration Tests", () => {
       done()
     }
   })
-  
-  // Test the hello world API route
-  describe("GET /api/helloworld", () => {
+
+  describe("GET /api/getsingleuser", () => {
     it("should return a 200 response with the expected data", async () => {
       try {
-        const response = await request(baseUrl).get("/api/helloworld")
+        const response = await request(baseUrl)
+          .get("/api/getsingleuser")
+          .query({ username: "mintthers" }); // passing the username as a query parameter
+  
+        expect(response.status).toBe(200);
+        // You can also test response.body here if needed
+        expect(response.body.data.username).toBe("mintthers");
+        expect(response.body.data.email).toBe("mintthiha@gmail.com");
 
-        expect(response.status).toBe(200)
-        expect(response.body).toEqual({ message: "Hello from API Route!" }) // Adjust based on your actual response
+  
       } catch (error) {
-        console.error("Test request failed:", error)
-        throw error
+        console.error("Test request failed:", error);
+        throw error;
       }
-    })
-  })
+    });
+  });  
 })
