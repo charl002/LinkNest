@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { House, AlignJustify } from 'lucide-react';
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
+import { customToast } from "@/components/ui/customToast";
 
 const Navbar = () => {
 
@@ -46,6 +47,29 @@ const Navbar = () => {
 
     fetchSession();
   }, [email]);
+
+  const handleDelete = async () => {
+      try {
+        const response = await fetch("/api/deleteaccount", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: userName }),
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to delete post");
+        }
+  
+        const data = await response.json();
+        console.log(data.message);
+        doLogout();
+        customToast({ message: `Post has been deleted`, type: "success" });
+        
+      } catch (error) {
+        console.error("Error deleting post:", error);
+        customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+      }
+    };
   
     return (
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
@@ -120,7 +144,7 @@ const Navbar = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction>Continue</AlertDialogAction>
+                              <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { SessionProvider } from "next-auth/react";
 import { SocketProvider } from "@/components/provider/SocketProvider";
 import { FriendsProvider } from "@/components/provider/FriendsProvider";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "LinkNest",
@@ -28,6 +29,7 @@ export default async function RootLayout({
           </FriendsProvider>
         </SocketProvider>
       </SessionProvider>
+      <Toaster position="bottom-center" richColors></Toaster>
       </body>
     </html>
   );
