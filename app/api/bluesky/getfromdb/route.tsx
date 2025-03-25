@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';
 import { Comment } from "@/types/comment";
 import cache from "@/lib/cache";
+import { collection, query, orderBy, limit, startAfter, getDocs, getFirestore } from "firebase/firestore";
+import firebase_app from "@/firebase/config";
+
+const db = getFirestore(firebase_app);
 
 interface BlueskyPost {
   text: string;
@@ -22,11 +25,15 @@ interface BlueskyPost {
   comments: Comment[];
 }
 
-export async function GET() {
-   // Check server-side cache
-   const cachedData = cache.get('bluesky-posts');
+export async function GET(request: Request) {
+   const { searchParams } = new URL(request.url);
+   const page = parseInt(searchParams.get('page') || '0');
+   const pageSize = parseInt(searchParams.get('limit') || '30');
+   const lastDoc = searchParams.get('lastDoc');
+
+   const cachedData = cache.get(`bluesky-posts-${page}-${pageSize}`);
    if (cachedData) {
-    console.log("[SERVER CACHE] Returning cached bluesky posts");
+    console.log(`[SERVER CACHE] Returning cached bluesky posts for page ${page}`);
      return new Response(JSON.stringify(cachedData), {
        status: 200,
        headers: {
@@ -36,97 +43,110 @@ export async function GET() {
      });
    }
 
-   console.log("[SERVER CACHE] Expired - Fetching new bluesky posts from Firestore...");
-  
-  try {
-    const { results, error } = await withRetry(
-      () => getAllDocuments('bluesky'),
-      {
-        maxAttempts: 3,
-        initialDelay: 1000,
-        maxDelay: 5000
-      }
+   try {
+    const baseQuery = query(
+        collection(db, "bluesky"),
+        orderBy("createdAt", "desc"),
+        limit(pageSize)
     );
 
-    if (error) {
-      throw new Error('Failed to fetch Bluesky posts');
-    }
+    const finalQuery = lastDoc 
+        ? query(baseQuery, startAfter(JSON.parse(lastDoc)))
+        : baseQuery;
 
-    if (!results) {
-      return new Response(JSON.stringify({ posts: [] }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=30, stale-while-revalidate=30'
+    const postsSnapshot = await withRetry(
+        async () => {
+            const snapshot = await getDocs(finalQuery);
+            if (!snapshot) throw new Error('No snapshot returned');
+            return snapshot;
         },
-      });
+        {
+            maxAttempts: 3,
+            initialDelay: 1000,
+            maxDelay: 5000
+        }
+    );
+
+    if (!postsSnapshot.docs) {
+        return NextResponse.json({ 
+            success: true,
+            posts: [],
+            hasMore: false
+        }, { status: 200 });
     }
 
-    const posts = await Promise.all(results.docs.map(async (doc) => {
-      const data = doc.data() as BlueskyPost;
-      
-      // Handle image loading with retries
-      let processedImages: Array<{url: string; alt: string; thumb: string} | null> = [];
-      if (data.images && data.images.length > 0) {
-        processedImages = await Promise.all(
-          data.images.map(async (image) => {
-            try {
-              // Verify image availability
-              await withRetry(async () => {
-                const response = await fetch(image.url, { method: 'HEAD' });
-                if (!response.ok) throw new Error('Image not available');
-              });
-              return image;
-            } catch (error) {
-              console.error(`Failed to verify image: ${image.url}`, error);
-              return null;
-            }
-          })
-        );
-        // Filter out failed images
-        processedImages = processedImages.filter(img => img !== null);
-      }
+    const posts = await Promise.all(postsSnapshot.docs.map(async (doc) => {
+        const data = doc.data() as BlueskyPost;
+        
+        // Handle image loading with retries
+        let processedImages: Array<{url: string; alt: string; thumb: string} | null> = [];
+        if (data.images && data.images.length > 0) {
+          processedImages = await Promise.all(
+            data.images.map(async (image) => {
+              try {
+                // Verify image availability
+                await withRetry(async () => {
+                  const response = await fetch(image.url, { method: 'HEAD' });
+                  if (!response.ok) throw new Error('Image not available');
+                });
+                return image;
+              } catch (error) {
+                console.error(`Failed to verify image: ${image.url}`, error);
+                return null;
+              }
+            })
+          );
+          // Filter out failed images
+          processedImages = processedImages.filter(img => img !== null);
+        }
 
-      return {
-        title: data.text.substring(0, 50) + (data.text.length > 50 ? '...' : ''),
-        username: data.author.displayName,
-        description: data.text,
-        tags: [],
-        comments: data.comments.map((comment) => ({
-          comment: comment.comment,
-          username: comment.username,
-          date: comment.date,
-          likes: comment.likes || 0,
-          likedBy: comment.likedBy || []
-        })),
-        likes: data.likes || 0,
-        images: processedImages,
-        createdAt: data.createdAt,
-        id: doc.id,
-        profilePicture: data.author.avatar,
-        postType: 'bluesky',
-        likedBy: data.likedBy
-      };
+        return {
+            title: data.text.substring(0, 50) + (data.text.length > 50 ? '...' : ''),
+            username: data.author.displayName,
+            description: data.text,
+            tags: [],
+            comments: data.comments.map((comment) => ({
+                comment: comment.comment,
+                username: comment.username,
+                date: comment.date,
+                likes: comment.likes || 0,
+                likedBy: comment.likedBy || []
+            })),
+            likes: data.likes || 0,
+            images: processedImages,
+            createdAt: data.createdAt,
+            id: doc.id,
+            profilePicture: data.author.avatar,
+            postType: 'bluesky',
+            likedBy: data.likedBy
+        };
     }));
 
+    const hasMore = posts.length === pageSize;
+    const lastVisible = posts.length > 0 ? {
+        id: postsSnapshot.docs[postsSnapshot.docs.length - 1].id,
+        data: postsSnapshot.docs[postsSnapshot.docs.length - 1].data()
+    } : null;
+
     const responseData = {
-      success: true, 
-      posts: posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        success: true,
+        posts,
+        hasMore,
+        lastDoc: lastVisible ? JSON.stringify(lastVisible) : null
     };
 
-    // Store in server cache
-     cache.set('bluesky-posts', responseData);
-     console.log("[CACHE UPDATE] Stored new bluesky posts in server cache.");
+    cache.set(`bluesky-posts-${page}-${pageSize}`, responseData);
+    console.log(`[CACHE UPDATE] Stored new bluesky posts for page ${page} in server cache.`);
 
-     return NextResponse.json(responseData, {
-       status: 200,
-       headers: {
-         'Content-Type': 'application/json',
-         'Cache-Control': 'public, max-age=30, stale-while-revalidate=30'
-       },
-     });
+    return NextResponse.json(responseData, {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=30, stale-while-revalidate=30'
+        },
+    });
 
-  } catch (error) {
+   } catch (error) {
     console.error('Error in GET /api/bluesky/getfromdb:', error);
     return NextResponse.json(
       { 

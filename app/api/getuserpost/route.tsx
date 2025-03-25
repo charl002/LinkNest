@@ -3,6 +3,9 @@ import { getAllDocuments } from "@/firebase/firestore/getData";
 import { Comment } from "@/types/comment";
 import { withRetry } from '@/utils/backoff';
 import cache from '@/lib/cache';
+import { collection, query, orderBy, limit, startAfter, getDocs } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
+import firebase_app from "@/firebase/config";
 
 interface Post {
     title: string;
@@ -25,11 +28,18 @@ interface Post {
     likedBy: string[];
     comments: Comment[];
 }
-export async function GET(){
-    // Check server cache first
-    const cachedPosts = cache.get('user-posts');
+
+const db = getFirestore(firebase_app)
+
+export async function GET(request: Request){
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '0');
+    const pageSize = parseInt(searchParams.get('limit') || '30');
+    const lastDoc = searchParams.get('lastDoc');
+
+    const cachedPosts = cache.get(`user-posts-${page}-${pageSize}`);
     if (cachedPosts) {
-        console.log("[SERVER CACHE] Returning cached user posts");
+        console.log(`[SERVER CACHE] Returning cached user posts for page ${page}`);
         return new Response(JSON.stringify(cachedPosts), {
             status: 200,
             headers: {
@@ -39,11 +49,23 @@ export async function GET(){
         });
     }
 
-    console.log("[SERVER CACHE] Expired - Fetching new user posts from Firestore...");
+    try {
+        const baseQuery = query(
+            collection(db, "posts"),
+            orderBy("createdAt", "desc"),
+            limit(pageSize)
+        );
 
-    try{
-        const { results: postsResults, error: postsError } = await withRetry(
-            () => getAllDocuments("posts"),
+        const finalQuery = lastDoc 
+            ? query(baseQuery, startAfter(JSON.parse(lastDoc)))
+            : baseQuery;
+
+        const postsSnapshot = await withRetry(
+            async () => {
+                const snapshot = await getDocs(finalQuery);
+                if (!snapshot) throw new Error('No snapshot returned');
+                return snapshot;
+            },
             {
                 maxAttempts: 3,
                 initialDelay: 500,
@@ -60,27 +82,13 @@ export async function GET(){
             }
         );
 
-        if (postsError || !postsResults) {
-            return NextResponse.json({ message: "Error fetching posts", error: postsError }, { status: 500 });
-        }
-
         if (usersError || !usersResults) {
             return NextResponse.json({ message: "Error fetching users", error: usersError }, { status: 500 });
         }
 
-        if (postsResults.empty || usersResults.empty) {
-            return new Response(JSON.stringify({ posts: [] }), {
-                status: 200,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'public, max-age=30, stale-while-revalidate=30'
-                },
-            });
-        }
-
         const usersMap = new Map(usersResults.docs.map(doc => [doc.data().username, doc.data()]));
 
-        const posts = postsResults.docs.map(doc => {
+        const posts = postsSnapshot.docs.map(doc => {
             const data = doc.data() as Post;
             const user = usersMap.get(data.username);
             return {
@@ -101,15 +109,25 @@ export async function GET(){
                 images: [{ url: data.fileUrl, alt: data.title, thumb: data.fileUrl }],
                 profilePicture: user ? user.image : '',
                 postType: 'posts',
-                createdAt:  data.createdAt ?? new Date(0).toISOString(),
+                createdAt: data.createdAt ?? new Date(0).toISOString(),
             };
         });
 
-        const responseData = { success: true, posts };
+        const hasMore = posts.length === pageSize;
+        const lastVisible = posts.length > 0 ? {
+            id: postsSnapshot.docs[postsSnapshot.docs.length - 1].id,
+            data: postsSnapshot.docs[postsSnapshot.docs.length - 1].data()
+        } : null;
 
-        // Store in server cache
-        cache.set('user-posts', responseData);
-        console.log("[CACHE UPDATE] Stored new user posts in server cache.");
+        const responseData = { 
+            success: true, 
+            posts,
+            hasMore,
+            lastDoc: lastVisible ? JSON.stringify(lastVisible) : null
+        };
+
+        cache.set(`user-posts-${page}-${pageSize}`, responseData);
+        console.log(`[CACHE UPDATE] Stored new user posts for page ${page} in server cache.`);
 
         return new Response(JSON.stringify(responseData), {
             status: 200,
@@ -124,6 +142,6 @@ export async function GET(){
         return NextResponse.json(
             { success: false, error: 'Failed to fetch posts' },
             { status: 500 }
-          );
+        );
     }
 }

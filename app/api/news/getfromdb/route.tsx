@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';
 import { Comment } from "@/types/comment";
 import cache from "@/lib/cache"; 
+import { collection, query, orderBy, limit, startAfter, getDocs, getFirestore } from "firebase/firestore";
+import firebase_app from "@/firebase/config";
 
 interface NewsPost {
   uuid: string;
@@ -18,11 +19,17 @@ interface NewsPost {
   comments: Comment[];
 }
 
-export async function GET() {
-  // Check server-side cache
-  const cachedData = cache.get('news-posts');
+const db = getFirestore(firebase_app);
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '0');
+  const pageSize = parseInt(searchParams.get('limit') || '30');
+  const lastDoc = searchParams.get('lastDoc');
+
+  const cachedData = cache.get(`news-posts-${page}-${pageSize}`);
   if (cachedData) {
-   console.log("[SERVER CACHE] Returning cached news posts");
+    console.log(`[SERVER CACHE] Returning cached news posts for page ${page}`);
     return new Response(JSON.stringify(cachedData), {
       status: 200,
       headers: {
@@ -31,12 +38,24 @@ export async function GET() {
       },
     });
   }
-
-  console.log("[SERVER CACHE] Expired - Fetching new news posts from Firestore...");
-
+  
   try {
-    const { results, error } = await withRetry(
-      () => getAllDocuments('news'),
+    const baseQuery = query(
+      collection(db, "news"),
+      orderBy("createdAt", "desc"),
+      limit(pageSize)
+    );
+
+    const finalQuery = lastDoc 
+        ? query(baseQuery, startAfter(JSON.parse(lastDoc)))
+        : baseQuery;
+
+    const postsSnapshot = await withRetry(
+      async () => {
+        const snapshot = await getDocs(finalQuery);
+        if (!snapshot) throw new Error('No snapshot returned');
+        return snapshot;
+      },
       {
         maxAttempts: 3,
         initialDelay: 1000,
@@ -44,21 +63,15 @@ export async function GET() {
       }
     );
 
-    if (error) {
-      throw new Error('Failed to fetch news posts');
+    if (!postsSnapshot.docs) {
+      return NextResponse.json({ 
+        success: true,
+        posts: [],
+        hasMore: false
+      }, { status: 200 });
     }
 
-    if (!results) {
-      return new Response(JSON.stringify({ posts: [] }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=30, stale-while-revalidate=30'
-        },
-      });
-    }
-
-    const posts = await Promise.all(results.docs.map(async (doc) => {
+    const posts = await Promise.all(postsSnapshot.docs.map(async (doc) => {
       const data = doc.data() as NewsPost;
       
       // Handle image verification with retries
@@ -101,14 +114,21 @@ export async function GET() {
       };
     }));
 
-    const responseData = {
-      success: true, 
-      posts: posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    };
+    const hasMore = posts.length === pageSize;
+    const lastVisible = posts.length > 0 ? {
+      id: postsSnapshot.docs[postsSnapshot.docs.length - 1].id,
+      data: postsSnapshot.docs[postsSnapshot.docs.length - 1].data()
+  } : null;
 
-    // Store in server cache
-    cache.set('news-posts', responseData);
-    console.log("[CACHE UPDATE] Stored new news posts in server cache.");
+  const responseData = {
+      success: true,
+      posts,
+      hasMore,
+      lastDoc: lastVisible ? JSON.stringify(lastVisible) : null
+  };
+
+    cache.set(`news-posts-${page}-${pageSize}`, responseData);
+    console.log(`[CACHE UPDATE] Stored new news posts for page ${page} in server cache.`);
 
     return NextResponse.json(responseData, {
       status: 200,
