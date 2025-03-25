@@ -7,7 +7,7 @@ import { describe, beforeAll, afterAll, it, expect } from "@jest/globals";
 import { setupServer } from "../../../servertest";
 
 // This is used to allow the server to setup, 30 seconds is a magic number.
-jest.setTimeout(30000)
+// jest.setTimeout(30000)
 
 // Name this however, I call it like this
 describe("Testing the GET single user API", () => {
@@ -84,5 +84,47 @@ describe("Testing the GET single user API", () => {
       expect(response.status).toBe(404);
       expect(response.body.message).toBe("User not found");
     });
+
+    // Test if the GET single user is case sensitive
+    it("should return the correct user regardless of case", async () => {
+      const response = await request(baseUrl)
+        .get("/api/getsingleuser")
+        .query({ username: "MintThers" }); // Case sensitive username
+    
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe("User not found");
+    });
+    
+    // This should return 400 since we are passing an invalid parameter
+    it("should return 400 if there are invalid query parameters", async () => {
+      const response = await request(baseUrl)
+        .get("/api/getsingleuser")
+        .query({ invalidParam: "value" });
+    
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("Either email or username parameter is required");
+    });
+    
+    // Check structure
+    it("should return the user with the expected structure", async () => {
+      const response = await request(baseUrl)
+        .get("/api/getsingleuser")
+        .query({ username: "mintthers" });
+    
+      expect(response.status).toBe(200);
+      expect(response.body.data).toHaveProperty("username");
+      expect(response.body.data).toHaveProperty("email");
+      expect(response.body.data).toHaveProperty("name");
+    });
+    
+    // Check if the username empty, should throw error.
+    it("should return 400 for an empty username", async () => {
+      const response = await request(baseUrl)
+        .get("/api/getsingleuser")
+        .query({ username: "" });
+    
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe("Either email or username parameter is required");
+    });
   });
-})
+});
