@@ -148,9 +148,7 @@ export default function Sidebar() {
         if (data?.pendingRequests?.length > 0) {
           const userRequests = await Promise.all(
             data.pendingRequests.map(async (username: string) => {
-              const userResponse = await fetch(
-                `/api/getuserbyusername?username=${username}`
-              );
+              const userResponse = await fetch(`/api/getsingleuser?username=${username}`);
               const userData = await userResponse.json();
               return userResponse.ok
                 ? { id: userData.id, ...userData.data }
@@ -333,10 +331,8 @@ export default function Sidebar() {
         prevRequests.filter((user) => user.username !== friendUsername)
       );
 
-      const userResponse = await fetch(
-        `/api/getuserbyusername?username=${friendUsername}`
-      );
-      const userData = await userResponse.json();
+      const userResponse = await fetch(`/api/getsingleuser?username=${friendUsername}`);
+        const userData = await userResponse.json();
 
       if (!userResponse.ok) {
         console.error(

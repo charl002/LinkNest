@@ -18,7 +18,9 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useSocket } from "../provider/SocketProvider";
 import LoadingLogo from "../custom-ui/LoadingLogo";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { customToast } from "@/components/ui/customToast";
 
 
 
@@ -81,6 +83,9 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   const remoteUsers = useRemoteUsers();
   const { audioTracks } = useRemoteAudioTracks(remoteUsers);
   const router = useRouter();
+  const { data: session } = useSession();
+  const email = session?.user?.email;
+  const [isValidUser, setIsValidUser] = useState(false);
 
   useJoin({
     appid: AppID,
@@ -92,11 +97,36 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   audioTracks.map((track) => track.play());
 
   useEffect(() => {
+    const validateUser = async () => {
+      try {
+        const userResponse = await fetch(`/api/getsingleuser?email=${email}`);
+        if (!userResponse.ok) throw new Error("Failed to fetch user");
+
+        const sessionUser = await userResponse.json();
+        const fetchedUsername = sessionUser.data?.username || "Unknown";
+
+        if (fetchedUsername !== currentUsername) {
+          customToast({ message: "You cannot access this call!", type: "error" });
+          router.push("/");
+        } else {
+          setIsValidUser(true);
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        router.push("/");
+      }
+    };
+
+    validateUser();
+
     if (remoteUsers.length >= 2) {
-      alert("The call is full. You cannot join at this moment.");
-      router.push("/"); 
-    }
-  }, [remoteUsers, router]);
+      customToast({ message: "This call is full, you cannot join at the moment", type: "error" });
+      router.push("/");
+    } 
+
+  }, [remoteUsers, router, email, currentUsername]);
+
+  if (!isValidUser) return <LoadingLogo />;
 
   const deviceLoading = isLoadingMic || isLoadingCam;
   if (deviceLoading)

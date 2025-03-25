@@ -37,36 +37,31 @@ export default function UserCheck() {
         const { email } = session.user;
 
         const fetchData = async () => {
+            if (!email) {
+                console.error("Email is required but was null or undefined.");
+                return;
+            }
+        
             try {
-                const response = await fetch('/api/getalluser', {
+                const response = await fetch(`/api/getsingleuser?email=${encodeURIComponent(email)}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 });
-
-                if (!response.ok) {
-                    console.error("Failed to fetch users from Firebase");
-                    return;
-                }
-
-                const data = await response.json();
-
-                // Check if the user's email already exists in the database
-                const userExists = data.users.some((user: { email: string; name: string; image: string }) => user.email === email);
-
-                if (!userExists) {
-                    // If the user doesn't exist, show the username form
+        
+                if (response.status === 404) {
                     setUsernameRequired(true);
-                } else {
+                } else if (response.ok) {
                     console.log("User already exists in the database");
+                } else {
+                    console.error("Failed to fetch user:", await response.json());
                 }
-
             } catch (err) {
-                console.error("Error checking or storing user data:", err);
+                console.error("Error checking user data:", err);
             }
         };
-
+         
         fetchData();
     }, [session]);
 
@@ -85,7 +80,7 @@ export default function UserCheck() {
 
     //           const friendsData = await Promise.all(
     //               data.friends.map(async (friendUsername: string) => {
-    //                   const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+    //                   const userResponse = await fetch(`/api/getsingleuser?username=${friendUsername}`);
     //                   const userData = await userResponse.json();
 
     //                   return userResponse.ok ? { id: userData.id, ...userData.data } : null;
@@ -112,9 +107,7 @@ export default function UserCheck() {
 
             if (response.ok) {
                 setSessionUsername(sessionUser.data.username)
-            } else {
-                console.error(sessionUser.message);
-            }
+            } 
 
             try {
                 const [response, newsResponse, customResponse] = await Promise.all([
@@ -197,24 +190,27 @@ export default function UserCheck() {
     }, [inView, filterPosts]);
 
     const checkUsernameAvailability = async (username: string) => {
+        if (!username) {
+            console.error("Username is required but was empty.");
+            return false;
+        }
+    
         try {
-            const response = await fetch('/api/getalluser', {
+            const response = await fetch(`/api/getsingleuser?username=${encodeURIComponent(username)}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
-
-            if (!response.ok) {
-                console.error("Failed to fetch users from Firebase");
+    
+            if (response.status === 404) {
+                return true;
+            } else if (response.ok) {
+                return false;
+            } else {
+                console.error("Failed to check username:", await response.json());
                 return false;
             }
-
-            const data = await response.json();
-
-            const usernameTaken = data.users.some((user: { username: string }) => user.username === username);
-
-            return !usernameTaken; 
         } catch (err) {
             console.error("Error checking username availability:", err);
             return false;
