@@ -42,6 +42,40 @@ export async function DELETE(req: Request) {
         const imagesQuery = query(imagesRef, where("imageName", "==", username));
         const imagesSnapshot = await getDocs(imagesQuery);
 
+        // Query Firestore for messages where the sender or receiver is the username
+        const messagesRef = collection(db, "messages");
+        const sentMessagesQuery = query(messagesRef, where("sender", "==", username));
+        const receivedMessagesQuery = query(messagesRef, where("receiver", "==", username));
+        const sentMessagesSnapshot = await getDocs(sentMessagesQuery);
+        const receivedMessagesSnapshot = await getDocs(receivedMessagesQuery);
+
+        // Query Firestore for friend requests where the sender or receiver is the username
+        const friendRequestsRef = collection(db, "friendRequests");
+        const sentRequestsQuery = query(friendRequestsRef, where("sender", "==", username));
+        const receivedRequestsQuery = query(friendRequestsRef, where("receiver", "==", username));
+        const sentRequestsSnapshot = await getDocs(sentRequestsQuery);
+        const receivedRequestsSnapshot = await getDocs(receivedRequestsQuery);
+
+        // Combine all friend request documents
+        const allFriendRequestDocs = [...sentRequestsSnapshot.docs, ...receivedRequestsSnapshot.docs];
+
+        // Delete all friend requests related to the username
+        const deleteFriendRequestPromises = allFriendRequestDocs.map(async (requestDoc) => {
+            await deleteDoc(doc(db, "friendRequests", requestDoc.id));
+        });
+
+        await Promise.all(deleteFriendRequestPromises);
+
+        // Combine all message documents
+        const allMessageDocs = [...sentMessagesSnapshot.docs, ...receivedMessagesSnapshot.docs];
+
+        // Delete all messages related to the username
+        const deleteMessagePromises = allMessageDocs.map(async (messageDoc) => {
+            await deleteDoc(doc(db, "messages", messageDoc.id));
+        });
+
+        await Promise.all(deleteMessagePromises);
+
         // Delete all images from Firestore and Azure Blob Storage
         const deleteImagePromises = imagesSnapshot.docs.map(async (imageDoc) => {
             const imageData = imageDoc.data();
@@ -76,7 +110,7 @@ export async function DELETE(req: Request) {
 
         await Promise.all(deleteUserPromises);
 
-        return NextResponse.json({ message: "User, associated posts, and images deleted successfully" }, { status: 200 });
+        return NextResponse.json({ message: "User, messages, friend requests, posts, and images deleted successfully" }, { status: 200 });
 
     } catch (err) {
         console.error("Error deleting account:", err);
