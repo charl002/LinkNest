@@ -32,7 +32,7 @@ export default function ChatList() {
     try {
         const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
         const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
-        return bytes.toString(CryptoJS.enc.Utf8) || "[Decryption Error]";
+        return bytes.toString(CryptoJS.enc.Utf8) || "";
     } catch (error) {
         console.error("Failed to decrypt message:", error);
         return "[Decryption Error]";
@@ -164,7 +164,7 @@ export default function ChatList() {
         <div className="flex flex-col space-y-2">
           {friends.length > 0 ? (
             friends.map((user, index) => (
-              <div key={`${index}`} className="bg-gray-100 mt-6">
+              <div key={`${index}`} className="bg-gray-100 mt-6 rounded-md shadow-md">
                 <div 
                   key={user.id || `${user.username}-${index}`}
                   className="relative flex items-center justify-between p-2 rounded-md"
