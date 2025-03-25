@@ -45,18 +45,17 @@ export default function Chat() {
   const [friendUser, setFriendUser] = useState<User | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
 
-  const decryptMessage = (encryptedMessage: string): string => {
+  function decryptMessage(encryptedMessage: string): string {
     try {
-      console.log("ENCRYPTED: " + encryptedMessage);
-      const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
-      return bytes.toString(CryptoJS.enc.Utf8);
+        const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
+        const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
+        return bytes.toString(CryptoJS.enc.Utf8) || "[Decryption Error]";
     } catch (error) {
-      console.error("Failed to decrypt message:", error);
-      return "[Decryption Error]";
+        console.error("Failed to decrypt message:", error);
+        return "[Decryption Error]";
     }
-  };
+  }
 
   // Function to scroll to bottom of messages
   const scrollToBottom = () => {

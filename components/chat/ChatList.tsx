@@ -27,19 +27,17 @@ export default function ChatList() {
 
   const searchParams = useSearchParams();
   const activeChatFriend = searchParams.get("friend");
-
-  const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!; 
   
-  const decryptMessage = (encryptedMessage: string): string => {
+  function decryptMessage(encryptedMessage: string): string {
     try {
-      console.log("ENCRYPTED: " + encryptedMessage);
-      const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
-      return bytes.toString(CryptoJS.enc.Utf8);
+        const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
+        const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
+        return bytes.toString(CryptoJS.enc.Utf8) || "[Decryption Error]";
     } catch (error) {
-      console.error("Failed to decrypt message:", error);
-      return "[Decryption Error]";
+        console.error("Failed to decrypt message:", error);
+        return "[Decryption Error]";
     }
-  };
+  }
 
   useEffect(() => {
     async function fetchUsersAndUnreadMessages() {
@@ -59,14 +57,21 @@ export default function ChatList() {
           const unreadData = await unreadResponse.json();
 
           if (unreadResponse.ok) {
-            Object.keys(unreadData.unreadCounts).forEach((sender) => {
-              unreadData.unreadCounts[sender].message = decryptMessage(unreadData.unreadCounts[sender].message);
-            });
-  
-            setUnreadMessages(unreadData.unreadCounts);
+          
+            if (unreadData?.unreadCounts && typeof unreadData.unreadCounts === 'object') {
+              Object.keys(unreadData.unreadCounts).forEach((sender) => {
+                unreadData.unreadCounts[sender].message = decryptMessage(unreadData.unreadCounts[sender].message);
+              });
+          
+              setUnreadMessages(unreadData.unreadCounts);
+            } else {
+              console.warn("unreadCounts is missing or not an object", unreadData);
+              setUnreadMessages({}); 
+            }
           } else {
-            console.error("Error fetching unread messages:", unreadData.message);
+            console.error("Error fetching unread messages:", unreadData?.message || "Unknown error");
           }
+          
         }
       } catch (error) {
         console.error("Error fetching users or unread messages:", error);

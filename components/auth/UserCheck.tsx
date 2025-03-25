@@ -107,9 +107,7 @@ export default function UserCheck() {
 
             if (response.ok) {
                 setSessionUsername(sessionUser.data.username)
-            } else {
-                console.error(sessionUser.message);
-            }
+            } 
 
             try {
                 const [response, newsResponse, customResponse] = await Promise.all([

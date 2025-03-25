@@ -31,9 +31,8 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
 
         if (response.ok && data?.data?.username) {
           setUsername(data.data.username);
-        } else {
-          console.error("Error fetching username:", data.message);
-        }
+        } 
+        
       } catch (error) {
         console.error("Error fetching username:", error);
       }
