@@ -32,6 +32,16 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ message: "User not found" }, { status: 404 });
         }
 
+        // Query Firestore for friendships
+        const friendsRef = collection(db, "friends");
+        const friendsQuery = query(friendsRef, where("user1", "==", username));
+        const friendsQuery2 = query(friendsRef, where("user2", "==", username));
+        const [friendsSnapshot1, friendsSnapshot2] = await Promise.all([
+            getDocs(friendsQuery),
+            getDocs(friendsQuery2)
+        ]);
+        const allFriendDocs = [...friendsSnapshot1.docs, ...friendsSnapshot2.docs];
+
         // Query Firestore for posts
         const postsRef = collection(db, "posts");
         const postsQuery = query(postsRef, where("username", "==", username));
@@ -46,38 +56,37 @@ export async function DELETE(req: Request) {
         const messagesRef = collection(db, "messages");
         const sentMessagesQuery = query(messagesRef, where("sender", "==", username));
         const receivedMessagesQuery = query(messagesRef, where("receiver", "==", username));
-        const sentMessagesSnapshot = await getDocs(sentMessagesQuery);
-        const receivedMessagesSnapshot = await getDocs(receivedMessagesQuery);
+        const [sentMessagesSnapshot, receivedMessagesSnapshot] = await Promise.all([
+            getDocs(sentMessagesQuery),
+            getDocs(receivedMessagesQuery)
+        ]);
 
         // Query Firestore for friend requests where the sender or receiver is the username
-        const friendRequestsRef = collection(db, "friendRequests");
-        const sentRequestsQuery = query(friendRequestsRef, where("sender", "==", username));
-        const receivedRequestsQuery = query(friendRequestsRef, where("receiver", "==", username));
-        const sentRequestsSnapshot = await getDocs(sentRequestsQuery);
-        const receivedRequestsSnapshot = await getDocs(receivedRequestsQuery);
+        const unreadMessagesRef = collection(db, "unreadmessages");
+        const sentRequestsQuery = query(unreadMessagesRef, where("sender", "==", username));
+        const receivedRequestsQuery = query(unreadMessagesRef, where("receiver", "==", username));
+        const [sentRequestsSnapshot, receivedRequestsSnapshot] = await Promise.all([
+            getDocs(sentRequestsQuery),
+            getDocs(receivedRequestsQuery)
+        ]);
 
-        // Combine all friend request documents
-        const allFriendRequestDocs = [...sentRequestsSnapshot.docs, ...receivedRequestsSnapshot.docs];
+        // Delete all friend requests
+        const deleteUnreadMessages = [...sentRequestsSnapshot.docs, ...receivedRequestsSnapshot.docs].map(
+            async (requestDoc) => deleteDoc(doc(db, "unreadmessages", requestDoc.id))
+        );
 
-        // Delete all friend requests related to the username
-        const deleteFriendRequestPromises = allFriendRequestDocs.map(async (requestDoc) => {
-            await deleteDoc(doc(db, "friendRequests", requestDoc.id));
-        });
+        // Delete all messages
+        const deleteMessages = [...sentMessagesSnapshot.docs, ...receivedMessagesSnapshot.docs].map(
+            async (messageDoc) => deleteDoc(doc(db, "messages", messageDoc.id))
+        );
 
-        await Promise.all(deleteFriendRequestPromises);
-
-        // Combine all message documents
-        const allMessageDocs = [...sentMessagesSnapshot.docs, ...receivedMessagesSnapshot.docs];
-
-        // Delete all messages related to the username
-        const deleteMessagePromises = allMessageDocs.map(async (messageDoc) => {
-            await deleteDoc(doc(db, "messages", messageDoc.id));
-        });
-
-        await Promise.all(deleteMessagePromises);
+        // Delete all friendships
+        const deleteFriendships = allFriendDocs.map(
+            async (friendDoc) => deleteDoc(doc(db, "friends", friendDoc.id))
+        );
 
         // Delete all images from Firestore and Azure Blob Storage
-        const deleteImagePromises = imagesSnapshot.docs.map(async (imageDoc) => {
+        const deleteImages = imagesSnapshot.docs.map(async (imageDoc) => {
             const imageData = imageDoc.data();
             const fileUrl = imageData.fileUrl;
 
@@ -94,23 +103,27 @@ export async function DELETE(req: Request) {
             await deleteDoc(doc(db, "images", imageDoc.id));
         });
 
-        await Promise.all(deleteImagePromises);
-
-        // Delete all posts associated with the username
-        const deletePostPromises = postsSnapshot.docs.map(async (postDoc) => {
-            await deleteDoc(doc(db, "posts", postDoc.id));
-        });
-
-        await Promise.all(deletePostPromises);
+        // Delete all posts
+        const deletePosts = postsSnapshot.docs.map(
+            async (postDoc) => deleteDoc(doc(db, "posts", postDoc.id))
+        );
 
         // Delete user account
-        const deleteUserPromises = userSnapshot.docs.map(async (userDoc) => {
-            await deleteDoc(doc(db, "users", userDoc.id));
-        });
+        const deleteUser = userSnapshot.docs.map(
+            async (userDoc) => deleteDoc(doc(db, "users", userDoc.id))
+        );
 
-        await Promise.all(deleteUserPromises);
+        // Execute all deletions in parallel
+        await Promise.all([
+            ...deleteUnreadMessages,
+            ...deleteMessages,
+            ...deleteFriendships,
+            ...deleteImages,
+            ...deletePosts,
+            ...deleteUser
+        ]);
 
-        return NextResponse.json({ message: "User, messages, friend requests, posts, and images deleted successfully" }, { status: 200 });
+        return NextResponse.json({ message: "User and all associated data deleted successfully" }, { status: 200 });
 
     } catch (err) {
         console.error("Error deleting account:", err);
