@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, updateDoc, arrayRemove } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { Comment } from "@/types/comment";
+//import { Comment } from "@/types/comment";
 
 const db = getFirestore(firebase_app);
 
@@ -24,7 +24,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ message: "Username is required" }, { status: 400 });
     }
 
-    const contentTypes = ["posts", "bluesky", "news"];
+    /*const contentTypes = ["posts", "bluesky", "news"];
 
     // Remove user likes from all content types
     const removeUserLikes = contentTypes.map(async (type) => {
@@ -69,7 +69,7 @@ export async function DELETE(req: Request) {
     });
 
     // Execute all deletions in parallel
-    await Promise.all([...removeUserLikes, ...removeUserComments]);
+    await Promise.all([...removeUserLikes, ...removeUserComments]);*/
 
 
     const usersRef = collection(db, "users");
