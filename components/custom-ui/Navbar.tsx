@@ -57,17 +57,19 @@ const Navbar = () => {
         });
   
         if (!response.ok) {
-          throw new Error("Failed to delete post");
+          throw new Error("Failed to delete account");
         }
-  
+        
         const data = await response.json();
         console.log(data.message);
-        doLogout();
-        customToast({ message: `Post has been deleted`, type: "success" });
+        customToast({ message: `Account has been deleted`, type: "success" });
         
       } catch (error) {
-        console.error("Error deleting post:", error);
+        console.error("Error deleting Account:", error);
         customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+      }
+      finally{
+        doLogout();
       }
     };
   
