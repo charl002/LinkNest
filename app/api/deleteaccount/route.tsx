@@ -24,6 +24,14 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ message: "Username is required" }, { status: 400 });
     }
 
+    const usersRef = collection(db, "users");
+    const userQuery = query(usersRef, where("username", "==", username));
+    const userSnapshot = await getDocs(userQuery);
+
+    if (userSnapshot.empty) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
     /*const contentTypes = ["posts", "bluesky", "news"];
 
     // Remove user likes from all content types
@@ -71,14 +79,31 @@ export async function DELETE(req: Request) {
     // Execute all deletions in parallel
     await Promise.all([...removeUserLikes, ...removeUserComments]);*/
 
+    // Query Firestore for user's posts
+    const postsRef = collection(db, "posts");
+    const postsQuery = query(postsRef, where("username", "==", username));
+    const postsSnapshot = await getDocs(postsQuery);
 
-    const usersRef = collection(db, "users");
-    const userQuery = query(usersRef, where("username", "==", username));
-    const userSnapshot = await getDocs(userQuery);
+    // Delete all posts and their associated files
+    const deletePosts = postsSnapshot.docs.map(async (postDoc) => {
+      const postData = postDoc.data();
+      const fileUrl = postData.fileUrl;
 
-    if (userSnapshot.empty) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
-    }
+      if (fileUrl) {
+        try {
+          const blobName = fileUrl.split("/").pop();
+          const blobClient = containerClient.getBlockBlobClient(blobName!);
+          await blobClient.deleteIfExists();
+        } catch (err) {
+          console.error("Failed to delete post image from Azure:", err);
+        }
+      }
+
+      await deleteDoc(doc(db, "posts", postDoc.id));
+    });
+
+    // Execute post deletions
+    await Promise.all(deletePosts);
 
     // Query Firestore for friendships
     const friendsRef = collection(db, "friends");
