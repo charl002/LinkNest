@@ -69,7 +69,7 @@ const Navbar = () => {
         customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
       }
       finally{
-        doLogout();
+        await doLogout();
       }
     };
   
