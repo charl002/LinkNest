@@ -14,6 +14,7 @@ import { Trash2 } from 'lucide-react';
 import { customToast } from "@/components/ui/customToast";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 import { useInView } from 'react-intersection-observer';
+import ReportDialog from "./ReportDialog";
 
 interface PostProps {
     title: string;
@@ -44,6 +45,7 @@ export default function Post({ title, username, description, tags, comments, lik
     const [isLoading, setIsLoading] = useState(false);
     const [isOverLimit, setIsOverLimit] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [showReportDialog, setShowReportDialog] = useState(false);
 
     useEffect(() => {
         const fetchSessionUsername = async () => {
@@ -517,6 +519,24 @@ export default function Post({ title, username, description, tags, comments, lik
               </div>
             </DialogContent>
           </Dialog>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+            {/* ... existing post content ... */}
+            <div className="mt-4 flex justify-end">
+                <button
+                    onClick={() => setShowReportDialog(true)}
+                    className="text-gray-500 hover:text-red-500"
+                >
+                    Report
+                </button>
+            </div>
+            {showReportDialog && (
+                <ReportDialog
+                    postId={documentId}
+                    username={sessionUsername}
+                    onClose={() => setShowReportDialog(false)}
+                />
+            )}
         </div>
       </div>
     );
