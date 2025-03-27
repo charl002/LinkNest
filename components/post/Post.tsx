@@ -521,7 +521,6 @@ export default function Post({ title, username, description, tags, comments, lik
           </Dialog>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-            {/* ... existing post content ... */}
             <div className="mt-4 flex justify-end">
                 <button
                     onClick={() => setShowReportDialog(true)}

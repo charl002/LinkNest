@@ -24,10 +24,39 @@ export default function ModerationPanel() {
     const { data: session } = useSession();
     const [reportedPosts, setReportedPosts] = useState<ReportedPost[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
-        fetchReportedPosts();
-    }, []);
+        const checkAdminAndFetchPosts = async () => {
+            if (!session?.user?.email) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                // Check admin status first
+                const adminResponse = await fetch(`/api/checkadmin?email=${encodeURIComponent(session.user.email)}`);
+                const adminData = await adminResponse.json();
+
+                if (!adminResponse.ok || !adminData.isAdmin) {
+                    setIsAdmin(false);
+                    setLoading(false);
+                    return;
+                }
+
+                setIsAdmin(true);
+                await fetchReportedPosts();
+            } catch (error) {
+                console.error("Error checking admin status:", error);
+                setIsAdmin(false);
+                toast.error("Error checking permissions");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkAdminAndFetchPosts();
+    }, [session]);
 
     const fetchReportedPosts = async () => {
         try {
@@ -41,8 +70,6 @@ export default function ModerationPanel() {
             }
         } catch (error) {
             toast.error("Error loading reported posts");
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -91,46 +118,75 @@ export default function ModerationPanel() {
     if (loading) return <LoadingLogo />;
 
     if (!session?.user?.email) {
-        return <div>Access denied. Please log in.</div>;
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="text-center p-6 bg-white rounded-lg shadow">
+                    <h2 className="text-xl font-semibold text-red-600">Access Denied</h2>
+                    <p className="mt-2">Please log in to access this page.</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAdmin) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <div className="text-center p-6 bg-white rounded-lg shadow">
+                    <h2 className="text-xl font-semibold text-red-600">Administrator Access Required</h2>
+                    <p className="mt-2">You do not have permission to view this page.</p>
+                </div>
+            </div>
+        );
     }
 
     return (
         <div className="space-y-6 p-6 bg-white rounded-lg shadow">
-            <h1 className="text-2xl font-bold mb-6">Content Moderation</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold">Content Moderation</h1>
+                <span className="text-sm text-gray-500">
+                    {reportedPosts.length} reported {reportedPosts.length === 1 ? 'post' : 'posts'}
+                </span>
+            </div>
+            
             {reportedPosts.length === 0 ? (
-                <p>No reported posts to review.</p>
+                <div className="text-center p-6 bg-gray-50 rounded-lg">
+                    <p className="text-gray-600">No reported posts to review.</p>
+                </div>
             ) : (
                 reportedPosts.map(post => (
-                    <div key={post.id} className="border p-4 rounded-lg space-y-4">
+                    <div key={post.id} className="border p-4 rounded-lg space-y-4 hover:shadow-md transition-shadow">
                         <div>
                             <h2 className="text-xl font-semibold">{post.title}</h2>
                             <p className="text-gray-600">Posted by: {post.username}</p>
                             <p className="mt-2">{post.description}</p>
+                            <span className="inline-block mt-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                                {post.postType}
+                            </span>
                         </div>
                         <div className="bg-gray-50 p-3 rounded">
                             <h3 className="font-semibold">Reports ({post.reports.length})</h3>
                             {post.reports.map((report, index) => (
-                                <div key={index} className="mt-2 text-sm">
-                                    <p>Reported by: {report.reportedBy}</p>
-                                    <p>Reason: {report.reason}</p>
-                                    <p className="text-gray-500">
+                                <div key={index} className="mt-2 text-sm border-b last:border-0 pb-2">
+                                    <p className="font-medium">Reported by: {report.reportedBy}</p>
+                                    <p className="text-gray-700 mt-1">Reason: {report.reason}</p>
+                                    <p className="text-gray-500 text-xs mt-1">
                                         {new Date(report.timestamp).toLocaleString()}
                                     </p>
                                 </div>
                             ))}
                         </div>
-                        <div className="flex space-x-4">
+                        <div className="flex space-x-4 pt-2">
                             <button
                                 onClick={() => handleDeletePost(post.id)}
-                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors flex-1"
                             >
                                 Delete Post
                             </button>
                             <button
                                 onClick={() => handleIgnoreReports(post.id)}
-                                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors flex-1"
                             >
-                                Ignore Reports
+                                Dismiss Reports
                             </button>
                         </div>
                     </div>
