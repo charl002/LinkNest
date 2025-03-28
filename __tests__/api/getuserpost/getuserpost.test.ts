@@ -62,5 +62,49 @@ describe("Testing the GET all user posts API", () => {
         throw error;
       }
     });
+
+    it("should return a 200 response and posts with expected structure", async () => {
+        const response = await request(baseUrl).get("/api/getuserpost");
+        expect(response.status).toBe(200);
+  
+        const { posts, success } = response.body;
+        expect(success).toBe(true);
+        expect(Array.isArray(posts)).toBe(true);
+  
+        if (posts.length > 0) {
+          const post = posts[0];
+  
+          // Basic structure checks
+          expect(post).toHaveProperty("id");
+          expect(post).toHaveProperty("title");
+          expect(post).toHaveProperty("username");
+          expect(post).toHaveProperty("description");
+          expect(post).toHaveProperty("tags");
+          expect(Array.isArray(post.tags)).toBe(true);
+          expect(post).toHaveProperty("likes");
+          expect(typeof post.likes).toBe("number");
+          expect(post).toHaveProperty("likedBy");
+          expect(Array.isArray(post.likedBy)).toBe(true);
+          expect(post).toHaveProperty("comments");
+          expect(Array.isArray(post.comments)).toBe(true);
+          expect(post).toHaveProperty("images");
+          expect(Array.isArray(post.images)).toBe(true);
+          expect(post).toHaveProperty("profilePicture");
+          expect(post).toHaveProperty("postType", "posts");
+          expect(post).toHaveProperty("createdAt");
+  
+          // Nested comment structure
+          if (post.comments.length > 0) {
+            const comment = post.comments[0];
+            expect(comment).toHaveProperty("comment");
+            expect(comment).toHaveProperty("username");
+            expect(comment).toHaveProperty("date");
+            expect(comment).toHaveProperty("likes");
+            expect(typeof comment.likes).toBe("number");
+            expect(comment).toHaveProperty("likedBy");
+            expect(Array.isArray(comment.likedBy)).toBe(true);
+          }
+        }
+    });
   });
 });
