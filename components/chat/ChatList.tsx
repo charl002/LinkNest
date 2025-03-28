@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useFriends } from "../provider/FriendsProvider";
 import { useSocket } from "@/components/provider/SocketProvider";
@@ -12,6 +11,7 @@ import CryptoJS from "crypto-js";
 import { User } from "@/types/user";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import FriendsList from "./FriendsList";
+import GroupChatsList from "./GroupChatsList";
 
 export default function ChatList() {
   const { data: session } = useSession();
@@ -224,9 +224,7 @@ export default function ChatList() {
         <TabsContent value="groupChats">
           <h2 className="text-lg font-semibold mb-4">Group Chats</h2>
           <ScrollArea className="w-full max-h-120 overflow-y-auto">
-            {/* Placeholder for group chats */}
-            <div className="text-gray-500 mb-4">No group chats yet.</div>
-            <Button>Create Group Chat</Button>
+            <GroupChatsList/>
           </ScrollArea>
           
         </TabsContent>
