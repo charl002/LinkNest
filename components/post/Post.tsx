@@ -519,25 +519,20 @@ export default function Post({ title, username, description, tags, comments, lik
               </div>
             </DialogContent>
           </Dialog>
+          <button
+            onClick={() => setShowReportDialog(true)}
+            className="text-gray-400 hover:text-red-500 text-sm transition-colors duration-200"
+          >
+            Report
+          </button>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-            <div className="mt-4 flex justify-end">
-                <button
-                    onClick={() => setShowReportDialog(true)}
-                    className="text-gray-500 hover:text-red-500"
-                >
-                    Report
-                </button>
-            </div>
-            {showReportDialog && (
-                <ReportDialog
-                    postId={documentId}
-                    username={sessionUsername}
-                    postType={postType}
-                    onClose={() => setShowReportDialog(false)}
-                />
-            )}
-        </div>
+        {showReportDialog && (
+          <ReportDialog
+              postId={documentId}
+              username={sessionUsername}
+              postType={postType}
+              onClose={() => setShowReportDialog(false)}
+          />
+      )}
       </div>
-    );
-}
+    );}
