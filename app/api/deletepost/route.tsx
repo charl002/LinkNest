@@ -17,16 +17,16 @@ const db = getFirestore(firebase_app);
 
 export async function DELETE(request: Request) {
   try {
-    const { postId } = await request.json();
-    if (!postId) {
+    const { postId, postType } = await request.json();
+    if (!postId || !postType) {
       return NextResponse.json(
-        { message: "Missing required field: postId" },
+        { message: "Missing required fields: postId and postType" },
         { status: 400 }
       );
     }
 
     // Retrieve post data to get file URL
-    const postRef = doc(db, "posts", postId);
+    const postRef = doc(db, postType, postId);
     const postSnap = await getDoc(postRef);
 
     if (!postSnap.exists()) {
@@ -38,8 +38,8 @@ export async function DELETE(request: Request) {
 
     const postData = postSnap.data();
 
-    // Delete file from Azure Blob Storage if it exists
-    if (postData.fileUrl) {
+    // Delete file from Azure Blob Storage if it exists (only for user posts)
+    if (postType === 'posts' && postData.fileUrl) {
       const fileName = decodeURIComponent(postData.fileUrl.split("/").pop());
       const blobClient = containerClient.getBlockBlobClient(fileName);
       
@@ -52,7 +52,7 @@ export async function DELETE(request: Request) {
 
     // Delete post from Firestore
     const { success, error } = await withRetry(
-      () => deleteData("posts", postId),
+      () => deleteData(postType, postId),
       {
         maxAttempts: 3,
         initialDelay: 500,
