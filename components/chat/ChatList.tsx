@@ -93,6 +93,9 @@ export default function ChatList() {
     socket.on("privateMessage", async (data: { senderId: string; receiverId: string, message: string }) => {
       if (data.receiverId !== currentUser) return; // Ignore messages not meant for the current user
 
+      // Decrypt the message if it exists (same logic as before)
+      const decryptedMessage = data.message ? decryptMessage(data.message) : "";
+
       // This will increment the unread msg count if you are not currently chatting with this person.
       setUnreadMessages((prev = {}) => {
         if (activeChatFriend === data.senderId) {
@@ -103,7 +106,7 @@ export default function ChatList() {
           ...prev,
           [data.senderId]: {
             count: (prev[data.senderId]?.count || 0) + 1,
-            message: data.message, // Store the latest message as a snippet
+            message: decryptedMessage, // Store the latest message as a snippet
           },
         };
       });
