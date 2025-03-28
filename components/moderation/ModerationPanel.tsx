@@ -68,6 +68,7 @@ export default function ModerationPanel() {
                 toast.error("Failed to fetch reported posts");
             }
         } catch (error) {
+            console.error("Error loading reported posts:", error);
             toast.error("Error loading reported posts");
         }
     };
@@ -89,6 +90,7 @@ export default function ModerationPanel() {
                 toast.error("Failed to delete post");
             }
         } catch (error) {
+            console.error("Error deleting post:", error);
             toast.error("Error deleting post");
         }
     };
@@ -110,6 +112,7 @@ export default function ModerationPanel() {
                 toast.error("Failed to clear reports");
             }
         } catch (error) {
+            console.error("Error clearing reports:", error);
             toast.error("Error clearing reports");
         }
     };

@@ -37,6 +37,7 @@ export default function ReportDialog({ postId, username, postType, onClose }: Re
                 toast.error(data.message || "Failed to report post");
             }
         } catch (error) {
+            console.error(error)
             toast.error("Error reporting post");
         }
     };

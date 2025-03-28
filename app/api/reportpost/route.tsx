@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 
+interface Report {
+    reportedBy: string;
+    reason: string;
+    timestamp: string;
+}
+
 const db = getFirestore(firebase_app);
 
 export async function POST(request: Request) {
@@ -15,7 +21,6 @@ export async function POST(request: Request) {
             );
         }
 
-        // Determine collection based on postType
         const collection = postType.toLowerCase();
         const postRef = doc(db, collection, postId);
         const postDoc = await getDoc(postRef);
@@ -28,17 +33,15 @@ export async function POST(request: Request) {
         }
 
         const currentData = postDoc.data();
-        const reports = currentData.reports || [];
+        const reports: Report[] = currentData.reports || [];
 
-        // Check if user already reported this post
-        if (reports.some((report: any) => report.reportedBy === reportedBy)) {
+        if (reports.some((report: Report) => report.reportedBy === reportedBy)) {
             return NextResponse.json(
                 { message: "You have already reported this post" },
                 { status: 400 }
             );
         }
 
-        // Add the report
         await updateDoc(postRef, {
             reports: [...reports, {
                 reportedBy,

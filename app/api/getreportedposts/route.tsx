@@ -2,32 +2,47 @@ import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 
+interface Report {
+    reportedBy: string;
+    reason: string;
+    timestamp: string;
+}
+
+interface ReportedPost {
+    id: string;
+    postType: string;
+    title: string;
+    description: string;
+    username: string;
+    reports: Report[];
+    [key: string]: string | Report[] | number;
+}
+
 const db = getFirestore(firebase_app);
 
 export async function GET() {
     try {
-        // Define collections to check
         const collections = ['posts', 'news', 'bluesky'];
-        let allReportedPosts = [];
+        let allReportedPosts: ReportedPost[] = [];
 
-        // Fetch reported posts from each collection
         for (const collectionName of collections) {
             const collectionRef = collection(db, collectionName);
             const q = query(collectionRef, where("reports", "!=", null));
             const querySnapshot = await getDocs(q);
 
-            const reportedPosts = querySnapshot.docs
+            const reportedPosts: ReportedPost[] = querySnapshot.docs
                 .map(doc => ({
                     id: doc.id,
-                    postType: collectionName, // Add collection name as postType
+                    postType: collectionName,
                     ...doc.data(),
-                }))
-                .filter(post => post.reports && post.reports.length > 0);
+                } as ReportedPost))
+                .filter((post): post is ReportedPost => 
+                    Array.isArray(post.reports) && post.reports.length > 0
+                );
 
             allReportedPosts = [...allReportedPosts, ...reportedPosts];
         }
 
-        // Sort all posts by most recent reports
         allReportedPosts.sort((a, b) => {
             const aLatest = Math.max(...a.reports.map(r => new Date(r.timestamp).getTime()));
             const bLatest = Math.max(...b.reports.map(r => new Date(r.timestamp).getTime()));
