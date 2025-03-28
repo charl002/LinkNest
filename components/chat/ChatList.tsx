@@ -31,6 +31,7 @@ export default function ChatList() {
   function decryptMessage(encryptedMessage: string): string {
     try {
         const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
+        console.log(encryptedMessage);
         const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
         return bytes.toString(CryptoJS.enc.Utf8) || "";
     } catch (error) {
@@ -59,10 +60,16 @@ export default function ChatList() {
           if (unreadResponse.ok) {
           
             if (unreadData?.unreadCounts && typeof unreadData.unreadCounts === 'object') {
+              
+              // Add a check to see if the message is undefined. React on strict mode calls the useEffect
+              // twice, so I made it pass an empty string when it gets an undefined value.
               Object.keys(unreadData.unreadCounts).forEach((sender) => {
-                unreadData.unreadCounts[sender].message = decryptMessage(unreadData.unreadCounts[sender].message);
+                const encryptedMsg = unreadData.unreadCounts[sender].message;
+                unreadData.unreadCounts[sender].message = encryptedMsg
+                  ? decryptMessage(encryptedMsg)
+                  : ""; // or leave it undefined/null if you prefer
               });
-          
+              
               setUnreadMessages(unreadData.unreadCounts);
             } else {
               console.warn("unreadCounts is missing or not an object", unreadData);
@@ -71,7 +78,6 @@ export default function ChatList() {
           } else {
             console.error("Error fetching unread messages:", unreadData?.message || "Unknown error");
           }
-          
         }
       } catch (error) {
         console.error("Error fetching users or unread messages:", error);
