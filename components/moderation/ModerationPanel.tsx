@@ -34,7 +34,6 @@ export default function ModerationPanel() {
             }
 
             try {
-                // Check admin status first
                 const adminResponse = await fetch(`/api/checkadmin?email=${encodeURIComponent(session.user.email)}`);
                 const adminData = await adminResponse.json();
 
@@ -73,14 +72,14 @@ export default function ModerationPanel() {
         }
     };
 
-    const handleDeletePost = async (postId: string) => {
+    const handleDeletePost = async (postId: string, postType: string) => {
         try {
             const response = await fetch("/api/deletepost", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ postId }),
+                body: JSON.stringify({ postId, postType }),
             });
 
             if (response.ok) {
@@ -94,14 +93,14 @@ export default function ModerationPanel() {
         }
     };
 
-    const handleIgnoreReports = async (postId: string) => {
+    const handleIgnoreReports = async (postId: string, postType: string) => {
         try {
             const response = await fetch("/api/clearreports", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ postId }),
+                body: JSON.stringify({ postId, postType }),
             });
 
             if (response.ok) {
@@ -177,13 +176,13 @@ export default function ModerationPanel() {
                         </div>
                         <div className="flex space-x-4 pt-2">
                             <button
-                                onClick={() => handleDeletePost(post.id)}
+                                onClick={() => handleDeletePost(post.id, post.postType)}
                                 className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors flex-1"
                             >
                                 Delete Post
                             </button>
                             <button
-                                onClick={() => handleIgnoreReports(post.id)}
+                                onClick={() => handleIgnoreReports(post.id, post.postType)}
                                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors flex-1"
                             >
                                 Dismiss Reports

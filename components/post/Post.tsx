@@ -271,7 +271,7 @@ export default function Post({ title, username, description, tags, comments, lik
       const response = await fetch("/api/deletepost", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId: documentId }),
+        body: JSON.stringify({ postId: documentId, postType: "posts" }),
       });
 
       if (!response.ok) {
@@ -533,6 +533,7 @@ export default function Post({ title, username, description, tags, comments, lik
                 <ReportDialog
                     postId={documentId}
                     username={sessionUsername}
+                    postType={postType}
                     onClose={() => setShowReportDialog(false)}
                 />
             )}

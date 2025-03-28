@@ -6,16 +6,16 @@ const db = getFirestore(firebase_app);
 
 export async function POST(request: Request) {
     try {
-        const { postId } = await request.json();
+        const { postId, postType } = await request.json();
 
-        if (!postId) {
+        if (!postId || !postType) {
             return NextResponse.json(
-                { message: "Post ID is required" },
+                { message: "Post ID and type are required" },
                 { status: 400 }
             );
         }
 
-        const postRef = doc(db, "posts", postId);
+        const postRef = doc(db, postType, postId);
         await updateDoc(postRef, {
             reports: []
         });

@@ -6,16 +6,18 @@ const db = getFirestore(firebase_app);
 
 export async function POST(request: Request) {
     try {
-        const { postId, reportedBy, reason } = await request.json();
+        const { postId, reportedBy, reason, postType } = await request.json();
 
-        if (!postId || !reportedBy || !reason) {
+        if (!postId || !reportedBy || !reason || !postType) {
             return NextResponse.json(
                 { message: "Missing required fields" },
                 { status: 400 }
             );
         }
 
-        const postRef = doc(db, "posts", postId);
+        // Determine collection based on postType
+        const collection = postType.toLowerCase();
+        const postRef = doc(db, collection, postId);
         const postDoc = await getDoc(postRef);
 
         if (!postDoc.exists()) {

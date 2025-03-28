@@ -6,10 +6,11 @@ import { toast } from "sonner";
 interface ReportDialogProps {
     postId: string;
     username: string;
+    postType: string;  // Add postType to props
     onClose: () => void;
 }
 
-export default function ReportDialog({ postId, username, onClose }: ReportDialogProps) {
+export default function ReportDialog({ postId, username, postType, onClose }: ReportDialogProps) {
     const [reason, setReason] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -24,6 +25,7 @@ export default function ReportDialog({ postId, username, onClose }: ReportDialog
                     postId,
                     reportedBy: username,
                     reason,
+                    postType,  // Include postType in the request body
                 }),
             });
 
