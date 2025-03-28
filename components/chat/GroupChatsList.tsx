@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { User } from '@/types/user';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 // interface GroupChatsListProps {
 //   Placeholder for now.
@@ -12,6 +13,7 @@ import { Input } from '../ui/input';
 const GroupChatsList = () => {
   const { friends } = useFriends();
   const [selectedFriends, setSelectedFriends] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState(''); // For search input
   const [groupName, setGroupName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -19,6 +21,8 @@ const GroupChatsList = () => {
     setSelectedFriends(prev => 
       prev.includes(friend) ? prev.filter(f => f !== friend) : [...prev, friend]
     );
+
+    setSearchTerm('');
   };
 
   const handleCreateGroup = () => {
@@ -29,7 +33,13 @@ const GroupChatsList = () => {
     console.log('Selected Friends:', selectedFriends);
 
     setIsDialogOpen(false);
+    setSelectedFriends([]);
   };
+
+  // Filter the friends based on the search query used.
+  const filteredFriends = friends.filter(friend =>
+    friend.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
@@ -52,19 +62,47 @@ const GroupChatsList = () => {
             className="mb-4"
           />
           
-          {/* Friends list with checkboxes */}
+          {/* Search Input for filtering friends */}
           <div className="space-y-2">
-            {friends.map((friend) => (
-              <div key={friend.id} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedFriends.includes(friend)}
-                  onChange={() => handleFriendSelect(friend)}
-                  className="mr-2"
-                />
-                <span>{friend.username}</span>
-              </div>
-            ))}
+            <Label htmlFor="friend-search">Search for a Friend</Label>
+            <Input
+              id="friend-search"
+              placeholder="Search by username"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-4"
+            />
+          </div>
+
+          {/* Filtered Friends List (Appears dynamically as you type) */}
+          {searchTerm && (
+            <div className="space-y-2 mb-4">
+              {filteredFriends.length > 0 ? (
+                filteredFriends.map((friend) => (
+                  <div
+                    key={friend.id}
+                    className={`flex items-center cursor-pointer p-2 hover:bg-gray-200 rounded-md ${selectedFriends.includes(friend) ? 'bg-gray-300' : ''}`}
+                    onClick={() => handleFriendSelect(friend)} // Select/deselect friend on click
+                  >
+                    <span>{friend.username}</span>
+                  </div>
+                ))
+              ) : (
+                <div>No friends found.</div> // Display when no friends match the search
+              )}
+            </div>
+          )}
+          
+          {/* Display Selected Friends */}
+          <div className="mt-4">
+            <h4 className="font-semibold">Selected Friends:</h4>
+            <div className="space-y-2">
+              {selectedFriends.map((friend) => (
+                <div key={friend.id} className="flex items-center">
+                  <span>{friend.username}</span>
+                </div>
+              ))}
+            </div>
           </div>
           
           {/* Create Group Button */}
@@ -74,5 +112,6 @@ const GroupChatsList = () => {
     </div>
   );
 };
+
 
 export default GroupChatsList;
