@@ -7,11 +7,11 @@ import { useRouter } from "next/navigation";
 import { useFriends } from "../provider/FriendsProvider";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useSearchParams } from "next/navigation"; 
-import CryptoJS from "crypto-js";
 import { User } from "@/types/user";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import FriendsList from "./FriendsList";
 import GroupChatsList from "./GroupChatsList";
+import { decryptMessage } from "@/utils/decrypt";
 
 export default function ChatList() {
   const { data: session } = useSession();
@@ -26,18 +26,7 @@ export default function ChatList() {
 
   const searchParams = useSearchParams();
   const activeChatFriend = searchParams.get("friend");
-  
-  function decryptMessage(encryptedMessage: string): string {
-    try {
-        const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
-        console.log(encryptedMessage);
-        const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
-        return bytes.toString(CryptoJS.enc.Utf8) || "";
-    } catch (error) {
-        console.error("Failed to decrypt message:", error);
-        return "[Decryption Error]";
-    }
-  }
+
 
   useEffect(() => {
     async function fetchUsersAndUnreadMessages() {
