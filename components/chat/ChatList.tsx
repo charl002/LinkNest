@@ -2,13 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useFriends } from "../provider/FriendsProvider";
-import { Badge } from "@/components/ui/badge";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useSearchParams } from "next/navigation"; 
 import CryptoJS from "crypto-js";
@@ -136,35 +133,6 @@ export default function ChatList() {
     };
   }, [currentUser, socket, activeChatFriend]);
 
-  const openChat = async (friendUsername: string, currentUsername: string | null) => {
-    if (!currentUsername) return;
-  
-    // Reset unread messages immediately
-    setUnreadMessages((prev) => ({
-      ...prev,
-      [friendUsername]: { count: 0, message: "" }, // Reset message snippet when chat is opened
-    }));
-  
-    // Perform the fetch request asynchronously but navigate immediately
-    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  
-    // Use async function for the fetch to run in parallel
-    try {
-      await fetch("/api/postunreadmessage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender: friendUsername,
-          receiver: currentUsername,
-          count: 0,
-          message: "",
-        }),
-      });
-    } catch (error) {
-      console.error("Error resetting unread count:", error);
-    }
-  };  
-
   // return (
   //   <aside className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)] overflow-y-auto">
   //     <h2 className="text-lg font-semibold mb-4">Friends</h2>
@@ -229,7 +197,7 @@ export default function ChatList() {
   //   </aside>
   // );
   return (
-    <div className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)]">
+    <aside className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)] overflow-y-auto">
       <Tabs defaultValue="friends">
         <TabsList className="flex gap-4">
           <TabsTrigger value="friends">Friends</TabsTrigger>
@@ -238,22 +206,28 @@ export default function ChatList() {
 
         <TabsContent value="friends">
           <h2 className="text-lg font-semibold mb-4">Friends</h2>
-          <FriendsList 
-            unreadMessages={unreadMessages}
-            setUnreadMessages={setUnreadMessages}
-            currentUser={currentUser}
-            router={router}
-            friends={friends}
-          />
+          <ScrollArea className="w-full max-h-120 overflow-y-auto">
+            <FriendsList 
+              unreadMessages={unreadMessages}
+              setUnreadMessages={setUnreadMessages}
+              currentUser={currentUser}
+              router={router}
+              friends={friends}
+            />
+          </ScrollArea>
+          
         </TabsContent>
 
         <TabsContent value="groupChats">
           <h2 className="text-lg font-semibold mb-4">Group Chats</h2>
-          {/* Placeholder for group chats */}
-          <div className="text-gray-500 mb-4">No group chats yet.</div>
-          <Button>Create Group Chat</Button>
+          <ScrollArea className="w-full max-h-120 overflow-y-auto">
+            {/* Placeholder for group chats */}
+            <div className="text-gray-500 mb-4">No group chats yet.</div>
+            <Button>Create Group Chat</Button>
+          </ScrollArea>
+          
         </TabsContent>
       </Tabs>
-    </div>
+    </aside>
   );
 }
