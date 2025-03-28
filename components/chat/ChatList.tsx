@@ -13,6 +13,8 @@ import { useSocket } from "@/components/provider/SocketProvider";
 import { useSearchParams } from "next/navigation"; 
 import CryptoJS from "crypto-js";
 import { User } from "@/types/user";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import FriendsList from "./FriendsList";
 
 export default function ChatList() {
   const { data: session } = useSession();
@@ -163,67 +165,95 @@ export default function ChatList() {
     }
   };  
 
+  // return (
+  //   <aside className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)] overflow-y-auto">
+  //     <h2 className="text-lg font-semibold mb-4">Friends</h2>
+  //     <ScrollArea className="w-full max-h-120 overflow-y-auto">
+  //       <div className="flex flex-col space-y-2">
+  //         {friends.length > 0 ? (
+  //           friends.map((user, index) => (
+  //             <div key={`${index}`} className="bg-gray-100 mt-6 rounded-md shadow-md">
+  //               <div 
+  //                 key={user.id || `${user.username}-${index}`}
+  //                 className="relative flex items-center justify-between p-2 rounded-md"
+  //               >
+  //                 {/* Only render Badge if unread count is greater than 0 */}
+  //                 {unreadMessages != undefined && unreadMessages[user.username]?.count > 0 && (
+  //                   <Badge variant="destructive" className="absolute top-0 right-0 -mr-0 ">
+  //                     {unreadMessages[user.username].count}
+  //                   </Badge>
+  //                 )}
+
+  //                 <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
+  //                   <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-105 active:scale-95">
+  //                     <Image 
+  //                       src={user.image} 
+  //                       alt={user.username} 
+  //                       width={40} 
+  //                       height={40} 
+  //                       className="rounded-full border"
+  //                     />
+  //                     <p className="text-sm font-medium">{user.username}</p>
+  //                   </div>
+  //                 </Link>
+
+  //                 <div className="flex items-center gap-2">
+  //                   <Button className="transition-transform duration-200 hover:scale-105 active:scale-95" onClick={() => openChat(user.username, currentUser)}>
+  //                     Chat
+  //                   </Button>
+  //                 </div>
+  //               </div>
+
+  //               <div className="flex-1 ml-6 pb-2">
+  //                 {/* Ensure unreadMessages is defined and check for the message */}
+  //                 {unreadMessages != undefined && unreadMessages?.[user.username]?.message ? (
+  //                   <span
+  //                     className="text-xs text-gray-500"
+  //                     onClick={() => openChat(user.username, currentUser)}
+  //                   >
+  //                     {unreadMessages[user.username].message.length > 30
+  //                       ? unreadMessages[user.username].message.substring(0, 30) + "..."
+  //                       : unreadMessages[user.username].message}
+  //                   </span>
+  //                 ) : (
+  //                   <span className="text-xs text-black-800">Chat with this person!</span> // Default text when no unread message
+  //                 )}
+  //               </div>
+  //             </div>
+  //           ))
+  //         ) : (
+  //           <p className="text-gray-500">No friends found</p>
+  //         )}
+  //       </div>
+  //     </ScrollArea>
+  //   </aside>
+  // );
   return (
-    <aside className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)] overflow-y-auto">
-      <h2 className="text-lg font-semibold mb-4">Friends</h2>
-      <ScrollArea className="w-full max-h-120 overflow-y-auto">
-        <div className="flex flex-col space-y-2">
-          {friends.length > 0 ? (
-            friends.map((user, index) => (
-              <div key={`${index}`} className="bg-gray-100 mt-6 rounded-md shadow-md">
-                <div 
-                  key={user.id || `${user.username}-${index}`}
-                  className="relative flex items-center justify-between p-2 rounded-md"
-                >
-                  {/* Only render Badge if unread count is greater than 0 */}
-                  {unreadMessages != undefined && unreadMessages[user.username]?.count > 0 && (
-                    <Badge variant="destructive" className="absolute top-0 right-0 -mr-0 ">
-                      {unreadMessages[user.username].count}
-                    </Badge>
-                  )}
+    <div className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)]">
+      <Tabs defaultValue="friends">
+        <TabsList className="flex gap-4">
+          <TabsTrigger value="friends">Friends</TabsTrigger>
+          <TabsTrigger value="groupChats">Group Chats</TabsTrigger>
+        </TabsList>
 
-                  <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
-                    <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-105 active:scale-95">
-                      <Image 
-                        src={user.image} 
-                        alt={user.username} 
-                        width={40} 
-                        height={40} 
-                        className="rounded-full border"
-                      />
-                      <p className="text-sm font-medium">{user.username}</p>
-                    </div>
-                  </Link>
+        <TabsContent value="friends">
+          <h2 className="text-lg font-semibold mb-4">Friends</h2>
+          <FriendsList 
+            unreadMessages={unreadMessages}
+            setUnreadMessages={setUnreadMessages}
+            currentUser={currentUser}
+            router={router}
+            friends={friends}
+          />
+        </TabsContent>
 
-                  <div className="flex items-center gap-2">
-                    <Button className="transition-transform duration-200 hover:scale-105 active:scale-95" onClick={() => openChat(user.username, currentUser)}>
-                      Chat
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex-1 ml-6 pb-2">
-                  {/* Ensure unreadMessages is defined and check for the message */}
-                  {unreadMessages != undefined && unreadMessages?.[user.username]?.message ? (
-                    <span
-                      className="text-xs text-gray-500"
-                      onClick={() => openChat(user.username, currentUser)}
-                    >
-                      {unreadMessages[user.username].message.length > 30
-                        ? unreadMessages[user.username].message.substring(0, 30) + "..."
-                        : unreadMessages[user.username].message}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-black-800">Chat with this person!</span> // Default text when no unread message
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No friends found</p>
-          )}
-        </div>
-      </ScrollArea>
-    </aside>
+        <TabsContent value="groupChats">
+          <h2 className="text-lg font-semibold mb-4">Group Chats</h2>
+          {/* Placeholder for group chats */}
+          <div className="text-gray-500 mb-4">No group chats yet.</div>
+          <Button>Create Group Chat</Button>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
