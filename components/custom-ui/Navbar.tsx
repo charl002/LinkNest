@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { House, AlignJustify } from 'lucide-react';
+import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
+import { customToast } from "@/components/ui/customToast";
 
 const Navbar = () => {
 
@@ -45,6 +47,31 @@ const Navbar = () => {
 
     fetchSession();
   }, [email]);
+
+  const handleDelete = async () => {
+      try {
+        const response = await fetch("/api/deleteaccount", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: userName }),
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to delete account");
+        }
+        
+        const data = await response.json();
+        console.log(data.message);
+        customToast({ message: `Account has been deleted`, type: "success" });
+        
+      } catch (error) {
+        console.error("Error deleting Account:", error);
+        customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+      }
+      finally{
+        await doLogout();
+      }
+    };
   
     return (
       <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
@@ -99,6 +126,31 @@ const Navbar = () => {
                         <button type="submit" className="w-full text-left">
                           Log out
                         </button>
+                      </DropdownMenuItem>
+                    </form>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator />
+                    <form>
+                      <DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button onClick={(e) => e.stopPropagation()} className="w-full text-center bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
+                              Delete Account
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete your account and all its content from our servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuItem>
                     </form>
                   </DropdownMenuContent>

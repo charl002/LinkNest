@@ -31,9 +31,8 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
 
         if (response.ok && data?.data?.username) {
           setUsername(data.data.username);
-        } else {
-          console.error("Error fetching username:", data.message);
-        }
+        } 
+        
       } catch (error) {
         console.error("Error fetching username:", error);
       }
@@ -57,7 +56,7 @@ export function FriendsProvider({ children }: { children: ReactNode }) {
   
         const friendsData = await Promise.all(
           data.friends.map(async (friendUsername: string) => {
-            const userResponse = await fetch(`/api/getuserbyusername?username=${friendUsername}`);
+            const userResponse = await fetch(`/api/getsingleuser?username=${friendUsername}`);
             const userData = await userResponse.json();
             return userResponse.ok ? { id: userData.id, ...userData.data } : null;
           })

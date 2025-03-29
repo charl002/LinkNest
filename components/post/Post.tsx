@@ -14,6 +14,7 @@ import { Trash2 } from 'lucide-react';
 import { customToast } from "@/components/ui/customToast";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 import { useInView } from 'react-intersection-observer';
+import ReportDialog from "./ReportDialog";
 
 interface PostProps {
     title: string;
@@ -44,6 +45,7 @@ export default function Post({ title, username, description, tags, comments, lik
     const [isLoading, setIsLoading] = useState(false);
     const [isOverLimit, setIsOverLimit] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [showReportDialog, setShowReportDialog] = useState(false);
 
     useEffect(() => {
         const fetchSessionUsername = async () => {
@@ -61,7 +63,7 @@ export default function Post({ title, username, description, tags, comments, lik
           comments.map(async (comment) => {
               if (!comment.profilePicture || comment.profilePicture === "/defaultProfilePic.jpg") {
                   try {
-                      const response = await fetch(`/api/getuserbyusername?username=${comment.username}`);
+                      const response = await fetch(`/api/getsingleuser?username=${comment.username}`);
                       if (!response.ok) throw new Error("Failed to fetch profile picture");
 
                       const userData = await response.json();
@@ -269,7 +271,7 @@ export default function Post({ title, username, description, tags, comments, lik
       const response = await fetch("/api/deletepost", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId: documentId }),
+        body: JSON.stringify({ postId: documentId, postType: "posts" }),
       });
 
       if (!response.ok) {
@@ -517,7 +519,20 @@ export default function Post({ title, username, description, tags, comments, lik
               </div>
             </DialogContent>
           </Dialog>
+          <button
+            onClick={() => setShowReportDialog(true)}
+            className="text-gray-400 hover:text-red-500 text-sm transition-colors duration-200"
+          >
+            Report
+          </button>
         </div>
+        {showReportDialog && (
+          <ReportDialog
+              postId={documentId}
+              username={sessionUsername}
+              postType={postType}
+              onClose={() => setShowReportDialog(false)}
+          />
+      )}
       </div>
-    );
-}
+    );}

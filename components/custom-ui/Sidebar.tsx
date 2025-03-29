@@ -25,6 +25,7 @@ import { User } from "@/types/user";
 
 export default function Sidebar() {
   const socket = useSocket();
+  const [isAdmin, setIsAdmin] = useState(false);
   const { data: session } = useSession();
   const [friendName, setFriendName] = useState("");
   const [users, setUsers] = useState<User[]>([]);
@@ -36,6 +37,22 @@ export default function Sidebar() {
   const senderUsername = currentUser?.username || null;
 
   const { setFriends } = useFriends();
+
+  useEffect(() => {
+      const checkAdminStatus = async () => {
+          if (!session?.user?.email) return;
+          
+          try {
+              const response = await fetch(`/api/checkadmin?email=${encodeURIComponent(session.user.email)}`);
+              const data = await response.json();
+              setIsAdmin(data.isAdmin);
+          } catch (error) {
+              console.error("Error checking admin status:", error);
+          }
+      };
+
+      checkAdminStatus();
+  }, [session]);
 
   useEffect(() => {
     async function fetchUsers() {
@@ -148,9 +165,7 @@ export default function Sidebar() {
         if (data?.pendingRequests?.length > 0) {
           const userRequests = await Promise.all(
             data.pendingRequests.map(async (username: string) => {
-              const userResponse = await fetch(
-                `/api/getuserbyusername?username=${username}`
-              );
+              const userResponse = await fetch(`/api/getsingleuser?username=${username}`);
               const userData = await userResponse.json();
               return userResponse.ok
                 ? { id: userData.id, ...userData.data }
@@ -333,10 +348,8 @@ export default function Sidebar() {
         prevRequests.filter((user) => user.username !== friendUsername)
       );
 
-      const userResponse = await fetch(
-        `/api/getuserbyusername?username=${friendUsername}`
-      );
-      const userData = await userResponse.json();
+      const userResponse = await fetch(`/api/getsingleuser?username=${friendUsername}`);
+        const userData = await userResponse.json();
 
       if (!userResponse.ok) {
         console.error(
@@ -490,6 +503,28 @@ export default function Sidebar() {
         ) : (
           <p className="text-gray-500">No pending requests</p>
         )}
+        {isAdmin && (
+                <Link
+                    href="/moderation"
+                    className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        />
+                    </svg>
+                    <span>Moderation</span>
+                </Link>
+            )}
       </div>
     </aside>
   );
