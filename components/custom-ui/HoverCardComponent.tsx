@@ -58,7 +58,9 @@ const HoverCardComponent = ({
         </HoverCardContent>
       </HoverCard>
 
-      {/* X button positioned outside of HoverCard component */}
+      {/* X button positioned outside of HoverCard component
+        We will probably need a condition to conditionally render the X
+      */}
       <button
         onClick={(e) => {
           e.stopPropagation()

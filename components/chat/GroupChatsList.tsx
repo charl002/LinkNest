@@ -24,6 +24,8 @@ const GroupChatsList = () => {
   const [searchTerm, setSearchTerm] = useState(""); // For search input
   const [groupName, setGroupName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [warningMessage, setWarningMessage] = useState<string>("");
+
 
   const handleFriendSelect = (friend: User) => {
     setSelectedFriends((prev) =>
@@ -36,6 +38,11 @@ const GroupChatsList = () => {
   };
 
   const handleCreateGroup = () => {
+    if (selectedFriends.length < 2) {
+      setWarningMessage("You need to select at least 2 friends to create a group chat.");
+      return; // Prevent group creation if less than 2 friends are selected
+    }
+
     // For now, the function just logs the group name and selected friends.
     const finalGroupName =
       groupName || selectedFriends.map((friend) => friend.name).join(", "); // If no group name is given, just name the group with the usernames
@@ -46,6 +53,7 @@ const GroupChatsList = () => {
     setIsDialogOpen(false);
     setSelectedFriends([]);
     setGroupName("");
+    setWarningMessage("");
   };
 
   // Filter the friends based on the search query used.
@@ -77,7 +85,7 @@ const GroupChatsList = () => {
           <Input
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
-            placeholder="Enter group name"
+            placeholder="Enter group name (Optional) "
             className="mb-4"
           />
 
@@ -140,6 +148,11 @@ const GroupChatsList = () => {
               ))}
             </div>
           </div>
+          
+          {/* Warning Message */}
+          {warningMessage && (
+            <div className="text-red-500 text-sm mt-2">{warningMessage}</div>
+          )}
 
           {/* Create Group Button */}
           <Button onClick={handleCreateGroup} className="mt-4">
