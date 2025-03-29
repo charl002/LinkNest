@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { getFirestore, doc, getDoc, updateDoc, arrayRemove } from "firebase/firestore";
+import { getFirestore, doc, getDoc, updateDoc, arrayRemove, DocumentReference, DocumentData } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 import { Comment } from "@/types/comment";
 
 const db = getFirestore(firebase_app);
+const collections = ["posts", "bluesky", "news"];
 
 export async function POST(request: Request) {
   try {
@@ -16,17 +17,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const postRef = doc(db, "posts", postId);
-    const postDoc = await getDoc(postRef);
+    let postRef: DocumentReference<DocumentData> | undefined;
+    let postDoc: DocumentData | undefined;
 
-    if (!postDoc.exists()) {
+    // Iterate through collections to find the post
+    for (const collection of collections) {
+      const ref = doc(db, collection, postId);
+      const docSnap = await getDoc(ref);
+
+      if (docSnap.exists()) {
+        postRef = ref;
+        postDoc = docSnap.data(); // Extract document data
+        break; // Exit loop once found
+      }
+    }
+
+    if (!postRef || !postDoc) {
       return NextResponse.json(
-        { message: "Post not found" },
+        { message: "Post not found in any collection" },
         { status: 404 }
       );
     }
 
-    const comments = postDoc.data().comments;
+    const comments = postDoc.comments ?? [];
     const commentToDelete = comments.find((c: Comment) =>
       c.username === username &&
       c.comment === comment &&
