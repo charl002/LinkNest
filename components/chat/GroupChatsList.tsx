@@ -15,9 +15,11 @@ import Image from "next/image";
 import HoverCardComponent from "../custom-ui/HoverCardComponent";
 import { Skeleton } from "../ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useRouter } from 'next/navigation';
 
 interface GroupChatsListProps {
   currentUser: string | null;
+  router: ReturnType<typeof useRouter>;
 }
 
 interface GroupChat {
@@ -27,7 +29,7 @@ interface GroupChat {
   image: string;
 }
 
-const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
+const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   const [groupChats, setGroupChats] = useState<GroupChat[]>([]);
   const { friends } = useFriends();
   const [selectedFriends, setSelectedFriends] = useState<User[]>([]);
@@ -190,6 +192,8 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
     console.log(`Navigating to group chat with ID: ${groupId}`);
     // In a real implementation, you would navigate to the group chat page like:
     // router.push(`/group-chat/${groupId}`);
+
+    router.push(`/chat/?group=${groupId}`);
   };
 
   // Temporary put a skeleton for loading.
