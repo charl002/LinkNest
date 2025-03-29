@@ -14,6 +14,7 @@ import { Label } from "../ui/label";
 import Image from "next/image";
 import HoverCardComponent from "../custom-ui/HoverCardComponent";
 import { Skeleton } from "../ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 interface GroupChatsListProps {
   currentUser: string | null;
@@ -35,7 +36,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-  const [groupImage, setGroupImage] = useState<File | null>(null)
+  const [groupImage, setGroupImage] = useState<File | null>(null);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -90,7 +91,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
     if (groupImage) {
       const formData = new FormData();
       formData.append("file", groupImage);
-      formData.append("imageName", groupName);
+      formData.append("username", groupName);
 
       const response = await fetch("/api/postimage", {
         method: "POST",
@@ -106,7 +107,10 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
     }
 
     const finalGroupName =
-      groupName || [currentUser, ...selectedFriends.map((friend) => friend.username)].join(", "); 
+      groupName ||
+      [currentUser, ...selectedFriends.map((friend) => friend.username)].join(
+        ", "
+      );
     // If no group name is given, use currentUser's username + the selected friend's usernames
     console.log("Group Name:", finalGroupName);
     console.log("Selected Friends:", selectedFriends);
@@ -186,19 +190,16 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
     // router.push(`/group-chat/${groupId}`);
   };
 
-
   // Temporary put a skeleton for loading.
   if (isLoading) {
     return (
       <>
-        <Skeleton className="w-10 h-10 rounded-full" />{" "}
-        {/* Avatar Skeleton */}
+        <Skeleton className="w-10 h-10 rounded-full" /> {/* Avatar Skeleton */}
         <Skeleton className="h-4 w-24 rounded-md" />{" "}
         {/* Username & Time Skeleton */}
-        <Skeleton className="h-12 w-40 rounded-md" />{" "}
-        {/* Message Skeleton */}
+        <Skeleton className="h-12 w-40 rounded-md" /> {/* Message Skeleton */}
       </>
-    )
+    );
   }
 
   return (
@@ -313,14 +314,14 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
 
           {/* Buttons */}
           <div className="flex gap-4 mt-4">
-            <Button onClick={handleCreateGroup} className="flex-1">
-              Create Group
-            </Button>
             <Button
               onClick={handleNevermind}
               className="flex-1 bg-gray-300 text-black rounded-md hover:bg-gray-400 transition-all duration-200"
             >
               Nevermind
+            </Button>
+            <Button onClick={handleCreateGroup} className="flex-1">
+              Create Group
             </Button>
           </div>
         </DialogContent>
@@ -332,9 +333,17 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
         <div className="flex flex-col space-y-4">
           {groupChats.length > 0 ? (
             groupChats.map((group) => (
-              <div key={group.id} className="bg-gray-100 mt-6 rounded-md shadow-md">
+              <div
+                key={group.id}
+                className="bg-gray-100 mt-6 rounded-md shadow-md"
+              >
                 <div className="relative flex items-center justify-between p-2 rounded-md">
                   <div className="flex items-center space-x-2">
+                    <Avatar className="w-10 h-10 bg-gray-800"> {/* Set custom background color */}
+                      <AvatarImage src={group.image || "/default-avatar.png"} alt={`Group chat image for ${group.name}`} />
+                      <AvatarFallback>{group.name.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    {/* Group name */}
                     <p className="text-sm font-medium">{group.name}</p>
                   </div>
                   <Button
