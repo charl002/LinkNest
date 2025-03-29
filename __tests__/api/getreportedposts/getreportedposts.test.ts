@@ -10,7 +10,7 @@ import { setupServer } from "../../../servertest";
 // jest.setTimeout(30000)
 
 // Name this however, I call it like this
-describe("Testing the GET posts by username API", () => {
+describe("Testing the GET reported posts API", () => {
   let server: Server
   let baseUrl: string
 
@@ -51,42 +51,37 @@ describe("Testing the GET posts by username API", () => {
    * it if you wish.
    */
 
-  describe("GET /api/getpostbyusername", () => {
-    it("should return 200 and posts for username 'Xpert'", async () => {
-      const response = await request(baseUrl)
-        .get("/api/getpostbyusername")
-        .query({ username: "Xpert" });
+  describe("GET /api/getreportedposts", () => {
+    it("should return 200 and a list of reported posts", async () => {
+      const response = await request(baseUrl).get("/api/getreportedposts");
 
       expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
       expect(Array.isArray(response.body.posts)).toBe(true);
-      expect(response.body.posts.length).toBeGreaterThan(0);
 
-      const post = response.body.posts[0];
-      console.log("[POST RETURNED]:", post);
+      console.log("[REPORTED POSTS]:", response.body.posts);
 
-      expect(post).toHaveProperty("id");
-      expect(post).toHaveProperty("username", "Xpert");
-      expect(post).toHaveProperty("title");
-      expect(post).toHaveProperty("description");
-      expect(post).toHaveProperty("comments");
+      if (response.body.posts.length > 0) {
+        const post = response.body.posts[0];
+        expect(post).toHaveProperty("id");
+        expect(post).toHaveProperty("title");
+        expect(post).toHaveProperty("text");
+        expect(post).toHaveProperty("createdAt");
+        expect(post).toHaveProperty("username");
+        expect(post).toHaveProperty("postType");
+        expect(Array.isArray(post.reports)).toBe(true);
+
+        const report = post.reports[0];
+        expect(report).toHaveProperty("reportedBy");
+        expect(report).toHaveProperty("reason");
+        expect(report).toHaveProperty("timestamp");
+      }
     });
 
-    it("should return 200 and an empty posts array for an existing user with no posts", async () => {
-      const response = await request(baseUrl)
-        .get("/api/getpostbyusername")
-        .query({ username: "BalkaSingh" });
+    it("should return an empty array if there are no reported posts", async () => {
+      const response = await request(baseUrl).get("/api/getreportedposts");
 
       expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.posts).toEqual([]);
-    });
-
-    it("should return 400 when username is missing", async () => {
-      const response = await request(baseUrl).get("/api/getpostbyusername");
-
-      expect(response.status).toBe(400);
-      expect(response.body.message).toBe("Username parameter is required");
+      expect(Array.isArray(response.body.posts)).toBe(true);
     });
   });
 });
