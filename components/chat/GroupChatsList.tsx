@@ -53,6 +53,11 @@ const GroupChatsList = () => {
     friend.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Function to remove a friend
+  const handleRemoveFriend = (friendId: string) => {
+    setSelectedFriends(prev => prev.filter(friend => friend.id !== friendId));
+  };
+
   return (
     <div>
       <div className="text-gray-500 mb-4">No group chats yet.</div>
@@ -95,14 +100,14 @@ const GroupChatsList = () => {
                 filteredFriends.map((friend) => (
                   <li
                     key={friend.id}
-                    className="p-2 hover:bg-gray-200 cursor-pointer flex justify-between items-center"
+                    className={`p-2 hover:bg-gray-200 cursor-pointer flex justify-between items-center 
+                      ${selectedFriends.includes(friend) ? "bg-gray-300" : ""}`
+                    }
                     onClick={() => handleFriendSelect(friend)} // Select/deselect friend on click
                   >
                     <div
                       key={friend.id}
-                      className={`flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-200 transition-transform duration-200 hover:scale-105 active:scale-90 rounded-md ${
-                        selectedFriends.includes(friend) ? "bg-gray-300" : ""
-                      }`}
+                      className={`flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-200 transition-transform duration-200 hover:scale-105 active:scale-90 rounded-md `}
                     >
                       <Image
                         src={friend.image}
@@ -130,6 +135,7 @@ const GroupChatsList = () => {
                   image={friend.image || '/default-avatar.png'}
                   username={friend.username}
                   description={friend.description || 'This user seems to not have a description!'}
+                  onRemove={() => handleRemoveFriend(friend.id)}
                 />
               ))}
             </div>
