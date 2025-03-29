@@ -129,11 +129,12 @@ const Navbar = () => {
                       </DropdownMenuItem>
                     </form>
                     <DropdownMenuSeparator />
+                    <DropdownMenuSeparator />
                     <form>
                       <DropdownMenuItem>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <button onClick={(e) => e.stopPropagation()} className="w-full text-left bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
+                            <button onClick={(e) => e.stopPropagation()} className="w-full text-center bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
                               Delete Account
                             </button>
                           </AlertDialogTrigger>
