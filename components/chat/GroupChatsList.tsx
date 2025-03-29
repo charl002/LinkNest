@@ -44,6 +44,7 @@ const GroupChatsList = () => {
 
     setIsDialogOpen(false);
     setSelectedFriends([]);
+    setGroupName("");
   };
 
   // Filter the friends based on the search query used.
@@ -112,17 +113,6 @@ const GroupChatsList = () => {
                       <span>{friend.username}</span>
                     </div>
                   </li>
-
-                  // <div className="flex items-center gap-3 transition-transform duration-200 hover:scale-110 active:scale-90">
-                  //   <Image
-                  //     src={user.image}
-                  //     alt="User Profile"
-                  //     width={40}
-                  //     height={40}
-                  //     className="rounded-full"
-                  //   />
-                  //   <span>{user.username}</span>
-                  // </div>
                 ))
               ) : (
                 <div>No friends found.</div> // Display when no friends match the search
@@ -132,11 +122,20 @@ const GroupChatsList = () => {
 
           {/* Display Selected Friends */}
           <div className="mt-4">
-            <h4 className="font-semibold">Selected Friends:</h4>
-            <div className="space-y-2">
+            <h4 className="font-semibold pb-5">Selected Friends:</h4>
+            <div className="flex flex-wrap justify-center gap-4">
               {selectedFriends.map((friend) => (
-                <div key={friend.id} className="flex items-center">
-                  <span>{friend.username}</span>
+                <div
+                  key={friend.id}
+                  className="flex items-center justify-center w-16 h-16 rounded-full overflow-hidden bg-gray-200"
+                >
+                  <Image
+                    src={friend.image || '/default-avatar.png'} // Default image if no image is provided
+                    alt={friend.username}
+                    width={60}
+                    height={60}
+                    className="rounded-full border"
+                  />
                 </div>
               ))}
             </div>
