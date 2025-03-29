@@ -14,6 +14,8 @@ import { Plus } from 'lucide-react';
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
 import { PostType } from "@/types/post";
 import { User } from "@/types/user";
+import ChatList from "../chat/ChatList";
+import Sidebar from "../custom-ui/Sidebar";
 
 interface UserData {
   id: string;
@@ -50,6 +52,8 @@ export default function ProfilePage({ user }: { user: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isFriendLoading, setIsFriendLoading] = useState(true);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showChatList, setShowChatList] = useState(false);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -304,14 +308,9 @@ export default function ProfilePage({ user }: { user: string }) {
     }
   };
   
-
-  return (
-    <div className="bg-white min-h-screen w-full text-gray-800">
-      {loading && <LoadingLogo/>}
-      {error && <p className="text-red-500 text-center py-6">{error}</p>}
-
-      {userData && (
-        <div className="w-full h-full mx-auto border border-gray-300 shadow-sm rounded-lg overflow-hidden">
+  let profileContent = null;
+  if (userData) profileContent = (
+    <div className="w-full h-full mx-auto bg-white border border-gray-300 shadow-sm rounded-lg overflow-hidden">
       
           <div className="w-full h-32 bg-gray-300 relative">
             <Image
@@ -520,6 +519,55 @@ export default function ProfilePage({ user }: { user: string }) {
           )}
           </div>
         </div>
+  );
+
+  return (
+    <div className="bg-gray-100 min-h-screen w-full text-gray-800">
+      {loading && <LoadingLogo/>}
+      {error && <p className="text-red-500 text-center py-6">{error}</p>}
+
+      {userData && (
+        <>
+        {/* Mobile View Toggle Buttons */}
+        <div className="md:hidden flex justify-between p-4 gap-4">
+          <button
+            onClick={() => {
+              setShowSidebar(prev => !prev);
+              setShowChatList(false);
+            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+          >
+            {showSidebar ? "Close Sidebar" : "Sidebar"}
+          </button>
+          <button
+            onClick={() => {
+              setShowChatList(prev => !prev);
+              setShowSidebar(false);
+            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+          >
+            {showChatList ? "Close Friends" : "Friends"}
+          </button>
+        </div>
+
+        {/* Mobile View Content */}
+        <div className="md:hidden min-h-screen overflow-y-auto px-4">
+          {showSidebar && <Sidebar />}
+          {showChatList && <ChatList />}
+          {!showSidebar && !showChatList && profileContent}
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 p-6 h-[calc(100vh-4rem)] overflow-hidden">
+          <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
+            <Sidebar />
+          </div>
+          <div className="h-full overflow-y-auto">{profileContent}</div>
+          <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
+            <ChatList />
+          </div>
+        </div>
+      </>
       )}
     </div>
   );
