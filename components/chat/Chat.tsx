@@ -367,11 +367,11 @@ export default function Chat() {
           </button>
         </div>
 
-        <div className="md:hidden h-[calc(100vh-7rem)] overflow-y-auto">
+        <div className="md:hidden min-h-screen overflow-y-auto">
           {showSidebar && <Sidebar />}
           {showChatList && <ChatList />}
           {!showSidebar && !showChatList && (
-            <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
+            <section className="h-full relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
               <h1 className="text-lg font-semibold p-4">
                 Chat with {friendUsername}
               </h1>
@@ -562,7 +562,7 @@ export default function Chat() {
           </h1>
           <div
             ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
+            className="flex-1 overflow-y-auto w-full space-y-5 pr-2 p-4 rounded-lg"
             style={{ scrollbarWidth: "thin" }}
           >
             {isLoading

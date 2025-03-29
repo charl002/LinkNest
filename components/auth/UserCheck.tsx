@@ -328,7 +328,7 @@ export default function UserCheck() {
             </button>
           </div>
       
-          <div className="md:hidden h-[calc(100vh-6rem)] overflow-y-auto">
+          <div className="md:hidden min-h-screen overflow-y-auto">
             {showSidebar && <Sidebar />}
             {showChatList && <ChatList />}
             {!showSidebar && !showChatList && (

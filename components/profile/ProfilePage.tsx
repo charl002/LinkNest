@@ -306,7 +306,7 @@ export default function ProfilePage({ user }: { user: string }) {
   
 
   return (
-    <div className="bg-white h-[calc(100vh-120px)] w-full text-gray-800">
+    <div className="bg-white min-h-screen w-full text-gray-800">
       {loading && <LoadingLogo/>}
       {error && <p className="text-red-500 text-center py-6">{error}</p>}
 
@@ -364,7 +364,7 @@ export default function ProfilePage({ user }: { user: string }) {
                   <p className="text-lg font-bold">{userData.data.name}</p>
                   {userData.data.email === email && (
                     <Link href="/createpost">
-                      <div className="px-4 py-0 bg-blue-500 text-white text-sm rounded-full ml-4 transition-transform duration-200 hover:scale-110 active:scale-90">
+                      <div className="px-4 py-0 bg-blue-500 text-white text-sm rounded-full ml-4">
                         <Plus />
                       </div>
                     </Link>
@@ -377,7 +377,7 @@ export default function ProfilePage({ user }: { user: string }) {
               {userData.data.email === email ? (
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90">
+                  <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
                     Profile settings
                   </button>
                 </DialogTrigger>
@@ -438,7 +438,7 @@ export default function ProfilePage({ user }: { user: string }) {
                   </button>
                 ) : (
                   <button
-                    className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
+                    className={`px-4 py-2 text-white text-sm rounded-full ${
                       isFriend ? "bg-red-500" : "bg-blue-500"
                     }`}
                     onClick={isFriend ? handleRemoveFriend : handleAddFriend}
@@ -457,7 +457,7 @@ export default function ProfilePage({ user }: { user: string }) {
                 {postsCount === 1 || postsCount == 0 ? " Post" : " Posts"}
               </p>
               <p 
-                className="cursor-pointer hover:underline transition-transform duration-200 hover:scale-105 active:scale-95"
+                className="cursor-pointer hover:underline"
                 onClick={() => setIsFriendsDialogOpen(true)}
               >
                 <span className="font-bold text-black">{friendsCount}</span>
@@ -505,7 +505,7 @@ export default function ProfilePage({ user }: { user: string }) {
             </div>
           </div>
 
-          <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-500px)]">
+          <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-320px)]">
             {postsCount > 0 ? (posts.map((post, index) => 
               <Post 
                   key={`${post.id}-${index}`} 
