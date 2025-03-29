@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useFriends } from "../provider/FriendsProvider";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "@/types/user";
 import {
   Dialog,
@@ -13,6 +13,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import Image from "next/image";
 import HoverCardComponent from "../custom-ui/HoverCardComponent";
+import { Skeleton } from "../ui/skeleton";
 
 interface GroupChatsListProps {
   currentUser: string | null;
@@ -32,6 +33,30 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
   const [groupName, setGroupName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const fetchGroupChats = async () => {
+      try {
+        const response = await fetch(`/api/getgroupchats?user=${currentUser}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          setGroupChats(data.groupChats || []);
+        } else {
+          console.error("Error fetching group chats:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching group chats:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGroupChats();
+  }, [currentUser]);
 
   const handleFriendSelect = (friend: User) => {
     setSelectedFriends((prev) =>
@@ -51,10 +76,9 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
       return; // Prevent group creation if less than 2 friends are selected
     }
 
-    // For now, the function just logs the group name and selected friends.
     const finalGroupName =
-      groupName || selectedFriends.map((friend) => friend.username).join(", "); // If no group name is given, just name the group with the usernames
-    // Need to add the current user's username as well later
+      groupName || [currentUser, ...selectedFriends.map((friend) => friend.username)].join(", "); 
+    // If no group name is given, use currentUser's username + the selected friend's usernames
     console.log("Group Name:", finalGroupName);
     console.log("Selected Friends:", selectedFriends);
 
@@ -128,6 +152,21 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
     // In a real implementation, you would navigate to the group chat page like:
     // router.push(`/group-chat/${groupId}`);
   };
+
+
+  // Temporary put a skeleton for loading.
+  if (isLoading) {
+    return (
+      <>
+        <Skeleton className="w-10 h-10 rounded-full" />{" "}
+        {/* Avatar Skeleton */}
+        <Skeleton className="h-4 w-24 rounded-md" />{" "}
+        {/* Username & Time Skeleton */}
+        <Skeleton className="h-12 w-40 rounded-md" />{" "}
+        {/* Message Skeleton */}
+      </>
+    )
+  }
 
   return (
     <div>
