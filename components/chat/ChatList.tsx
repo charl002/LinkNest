@@ -27,7 +27,6 @@ export default function ChatList() {
   const searchParams = useSearchParams();
   const activeChatFriend = searchParams.get("friend");
 
-
   useEffect(() => {
     async function fetchUsersAndUnreadMessages() {
       try {
@@ -213,7 +212,9 @@ export default function ChatList() {
         <TabsContent value="groupChats">
           <h2 className="text-lg font-semibold mb-4">Group Chats</h2>
           <ScrollArea className="w-full max-h-120 overflow-y-auto">
-            <GroupChatsList/>
+            <GroupChatsList 
+              currentUser={currentUser}
+            />
           </ScrollArea>
           
         </TabsContent>

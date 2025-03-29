@@ -14,18 +14,24 @@ import { Label } from "../ui/label";
 import Image from "next/image";
 import HoverCardComponent from "../custom-ui/HoverCardComponent";
 
-// interface GroupChatsListProps {
-//   Placeholder for now.
-// }
+interface GroupChatsListProps {
+  currentUser: string | null;
+}
 
-const GroupChatsList = () => {
+interface GroupChat {
+  id: string;
+  name: string;
+  members: (string | null)[];
+}
+
+const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
+  const [groupChats, setGroupChats] = useState<GroupChat[]>([]);
   const { friends } = useFriends();
   const [selectedFriends, setSelectedFriends] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState(""); // For search input
   const [groupName, setGroupName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string>("");
-
 
   const handleFriendSelect = (friend: User) => {
     setSelectedFriends((prev) =>
@@ -37,23 +43,64 @@ const GroupChatsList = () => {
     setSearchTerm("");
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     if (selectedFriends.length < 2) {
-      setWarningMessage("You need to select at least 2 friends to create a group chat.");
+      setWarningMessage(
+        "You need to select at least 2 friends to create a group chat."
+      );
       return; // Prevent group creation if less than 2 friends are selected
     }
 
     // For now, the function just logs the group name and selected friends.
     const finalGroupName =
-      groupName || selectedFriends.map((friend) => friend.name).join(", "); // If no group name is given, just name the group with the usernames
+      groupName || selectedFriends.map((friend) => friend.username).join(", "); // If no group name is given, just name the group with the usernames
     // Need to add the current user's username as well later
     console.log("Group Name:", finalGroupName);
     console.log("Selected Friends:", selectedFriends);
 
-    setIsDialogOpen(false);
-    setSelectedFriends([]);
-    setGroupName("");
-    setWarningMessage("");
+    const groupMembers = [
+      currentUser,
+      ...selectedFriends.map((friend) => friend.username),
+    ];
+
+    try {
+      const response = await fetch("/api/postgroupchat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          groupName: finalGroupName,
+          members: groupMembers,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const { docId } = data; // Get docId from the response
+
+        // Create the new group chat object with the returned docId
+        const newGroupChat: GroupChat = {
+          id: docId, // Use the Firestore docId here
+          name: finalGroupName,
+          members: groupMembers,
+        };
+
+        // Update the UI with the new group chat
+        setGroupChats((prevChats) => [...prevChats, newGroupChat]);
+
+        setIsDialogOpen(false);
+        setSelectedFriends([]);
+        setGroupName("");
+        setWarningMessage("");
+      } else {
+        setWarningMessage(data.message || "Failed to create the group chat.");
+      }
+    } catch (error) {
+      setWarningMessage("An error occurred while creating the group chat.");
+      console.error("Error creating group chat:", error);
+    }
   };
 
   // Filter the friends based on the search query used.
@@ -63,7 +110,9 @@ const GroupChatsList = () => {
 
   // Function to remove a friend
   const handleRemoveFriend = (friendId: string) => {
-    setSelectedFriends(prev => prev.filter(friend => friend.id !== friendId));
+    setSelectedFriends((prev) =>
+      prev.filter((friend) => friend.id !== friendId)
+    );
   };
 
   const handleNevermind = () => {
@@ -73,10 +122,15 @@ const GroupChatsList = () => {
     setIsDialogOpen(false);
   };
 
+  const handleGroupChatSelect = (groupId: string) => {
+    // Navigate to the group chat page
+    console.log(`Navigating to group chat with ID: ${groupId}`);
+    // In a real implementation, you would navigate to the group chat page like:
+    // router.push(`/group-chat/${groupId}`);
+  };
+
   return (
     <div>
-      <div className="text-gray-500 mb-4">No group chats yet.</div>
-
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
           <Button>Create Group Chat</Button>
@@ -116,8 +170,7 @@ const GroupChatsList = () => {
                   <li
                     key={friend.id}
                     className={`p-2 hover:bg-gray-200 cursor-pointer flex justify-between items-center 
-                      ${selectedFriends.includes(friend) ? "bg-gray-300" : ""}`
-                    }
+                      ${selectedFriends.includes(friend) ? "bg-gray-300" : ""}`}
                     onClick={() => handleFriendSelect(friend)} // Select/deselect friend on click
                   >
                     <div
@@ -147,15 +200,18 @@ const GroupChatsList = () => {
               {selectedFriends.map((friend) => (
                 <HoverCardComponent
                   key={friend.id}
-                  image={friend.image || '/default-avatar.png'}
+                  image={friend.image || "/default-avatar.png"}
                   username={friend.username}
-                  description={friend.description || 'This user seems to not have a description!'}
+                  description={
+                    friend.description ||
+                    "This user seems to not have a description!"
+                  }
                   onRemove={() => handleRemoveFriend(friend.id)}
                 />
               ))}
             </div>
           </div>
-          
+
           {/* Warning Message */}
           {warningMessage && (
             <div className="text-red-500 text-sm mt-2">{warningMessage}</div>
@@ -175,6 +231,32 @@ const GroupChatsList = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Group Chats List */}
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold mb-4">Your Group Chats:</h2>
+        <div className="flex flex-col space-y-4">
+          {groupChats.length > 0 ? (
+            groupChats.map((group) => (
+              <div key={group.id} className="bg-gray-100 mt-6 rounded-md shadow-md">
+                <div className="relative flex items-center justify-between p-2 rounded-md">
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm font-medium">{group.name}</p>
+                  </div>
+                  <Button
+                    className="transition-transform duration-200 hover:scale-105 active:scale-95"
+                    onClick={() => handleGroupChatSelect(group.id)}
+                  >
+                    Chat
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No group chats available</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
