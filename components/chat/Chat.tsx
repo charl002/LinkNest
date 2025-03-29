@@ -27,7 +27,7 @@ import type { Message } from "@/types/message";
 import type { User } from "@/types/user";
 import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 import { decryptMessage } from "@/utils/decrypt";
-import { GroupChat } from "@/types/group";
+// import { GroupChat } from "@/types/group";
 
 export default function Chat() {
   const socket = useSocket();
@@ -36,7 +36,7 @@ export default function Chat() {
   const friendUsername = searchParams.get("friend");
   const currentUsername = searchParams.get("user");
   const groupchatId = searchParams.get("group");
-  const [group, setGroup] = useState<GroupChat | null>(null);
+  // const [group, setGroup] = useState<GroupChat | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -110,20 +110,20 @@ export default function Chat() {
 
   useEffect(() => {
     if (groupchatId) {
-      setErrorMessage("This is currently in the workings...");
+      setErrorMessage("Hang on tight, this is still being built!");
       return;
 
       // Fetch group details based on the groupId
-      async function fetchGroup() {
-        const response = await fetch(`/api/getgroup?groupId=${groupchatId}`);
-        const data = await response.json();
-        // console.log(data);
-        setGroup(data);
-      }
+      // async function fetchGroup() {
+      //   const response = await fetch(`/api/getgroup?groupId=${groupchatId}`);
+      //   const data = await response.json();
+      //   // console.log(data);
+      //   setGroup(data);
+      // }
       
       // console.log(group);
 
-      fetchGroup();
+      // fetchGroup();
     }
   }, [groupchatId]);
 
