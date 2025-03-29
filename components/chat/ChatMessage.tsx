@@ -20,7 +20,7 @@ export default function ChatMessage({ message, isCurrentUser, user }: ChatMessag
         <div className="flex items-start space-x-4 bg-gray-100 rounded-lg p-2 max-w-[800px] shadow-md">
           <Link key={message.sender} href={`/profile/${encodeURIComponent(message.sender)}`}>
             <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.image || "/default-avatar.png"} alt="User Avatar" />
+              <AvatarImage src={user?.image || "/defaultProfilePic.png"} alt="User Avatar" />
               <AvatarFallback>{message.sender.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
           </Link>
@@ -42,7 +42,7 @@ export default function ChatMessage({ message, isCurrentUser, user }: ChatMessag
         <div className="flex items-start space-x-4 bg-yellow-100 rounded-lg p-2 max-w-full shadow-md">
           <Link key={message.sender} href={`/profile/${encodeURIComponent(message.sender)}`}>
             <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.image || "/default-avatar.png"} alt="User Avatar" />
+              <AvatarImage src={user?.image || "/defaultProfilePic.png"} alt="User Avatar" />
               <AvatarFallback>{message.sender.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
           </Link>
@@ -67,7 +67,7 @@ export default function ChatMessage({ message, isCurrentUser, user }: ChatMessag
               <span className="text-xs text-gray-500">{message.date}</span>
               <span className="text-black font-semibold">{message.sender}</span>
               <Avatar className="w-10 h-10">
-                <AvatarImage src={user?.image || "/default-avatar.png"} alt="User Avatar" />
+                <AvatarImage src={user?.image || "/defaultProfilePic.png"} alt="User Avatar" />
                 <AvatarFallback>{message.sender.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
             </div>
@@ -81,7 +81,7 @@ export default function ChatMessage({ message, isCurrentUser, user }: ChatMessag
         <div className="flex items-start space-x-4 bg-yellow-100 rounded-lg p-2 max-w-full shadow-md ml-auto">
           <Link key={message.sender} href={`/profile/${encodeURIComponent(message.sender)}`}>
             <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.image || "/default-avatar.png"} alt="User Avatar" />
+              <AvatarImage src={user?.image || "/defaultProfilePic.png"} alt="User Avatar" />
               <AvatarFallback>{message.sender.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
           </Link>

@@ -26,7 +26,8 @@ import {
 import type { Message } from "@/types/message";
 import type { User } from "@/types/user";
 import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
-import CryptoJS from "crypto-js";
+import { decryptMessage } from "@/utils/decrypt";
+// import { GroupChat } from "@/types/group";
 
 export default function Chat() {
   const socket = useSocket();
@@ -34,6 +35,8 @@ export default function Chat() {
   const router = useRouter();
   const friendUsername = searchParams.get("friend");
   const currentUsername = searchParams.get("user");
+  const groupchatId = searchParams.get("group");
+  // const [group, setGroup] = useState<GroupChat | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -45,17 +48,6 @@ export default function Chat() {
   const [friendUser, setFriendUser] = useState<User | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-
-  function decryptMessage(encryptedMessage: string): string {
-    try {
-        const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY!;
-        const bytes = CryptoJS.AES.decrypt(encryptedMessage, SECRET_KEY);
-        return bytes.toString(CryptoJS.enc.Utf8) || "[Decryption Error]";
-    } catch (error) {
-        console.error("Failed to decrypt message:", error);
-        return "[Decryption Error]";
-    }
-  }
 
   // Function to scroll to bottom of messages
   const scrollToBottom = () => {
@@ -116,6 +108,25 @@ export default function Chat() {
     fetchPreviousMessages();
   }, [currentUsername, friendUsername, router]);
 
+  useEffect(() => {
+    if (groupchatId) {
+      setErrorMessage("Hang on tight, this is still being built!");
+      return;
+
+      // Fetch group details based on the groupId
+      // async function fetchGroup() {
+      //   const response = await fetch(`/api/getgroup?groupId=${groupchatId}`);
+      //   const data = await response.json();
+      //   // console.log(data);
+      //   setGroup(data);
+      // }
+      
+      // console.log(group);
+
+      // fetchGroup();
+    }
+  }, [groupchatId]);
+
   // This useEffect listens for messages on the Socket IO
   useEffect(() => {
     if (!socket || !friendUsername) return;
@@ -129,7 +140,7 @@ export default function Chat() {
           {
             id: msgId,
             sender: senderId,
-            message,
+            message: decryptMessage(message),
             date: formatTimestamp(new Date().toISOString()),
             isCallMsg: isCallMsg,
             reactions: [],
