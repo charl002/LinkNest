@@ -23,6 +23,7 @@ interface GroupChat {
   id: string;
   name: string;
   members: (string | null)[];
+  image: string;
 }
 
 const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
@@ -34,6 +35,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [groupImage, setGroupImage] = useState<File | null>(null)
 
   useEffect(() => {
     if (!currentUser) return;
@@ -68,12 +70,39 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
     setSearchTerm("");
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setGroupImage(file); // Store the selected file
+    }
+  };
+
   const handleCreateGroup = async () => {
     if (selectedFriends.length < 2) {
       setWarningMessage(
         "You need to select at least 2 friends to create a group chat."
       );
       return; // Prevent group creation if less than 2 friends are selected
+    }
+
+    let imageUrl = "";
+
+    if (groupImage) {
+      const formData = new FormData();
+      formData.append("file", groupImage);
+      formData.append("imageName", groupName);
+
+      const response = await fetch("/api/postimage", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        imageUrl = result.fileUrl; // Set the image URL from the response
+      } else {
+        console.error("Failed to upload group image:", result.message);
+      }
     }
 
     const finalGroupName =
@@ -96,6 +125,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
         body: JSON.stringify({
           groupName: finalGroupName,
           members: groupMembers,
+          image: imageUrl,
         }),
       });
 
@@ -109,6 +139,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
           id: docId, // Use the Firestore docId here
           name: finalGroupName,
           members: groupMembers,
+          image: imageUrl,
         };
 
         // Update the UI with the new group chat
@@ -117,6 +148,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
         setIsDialogOpen(false);
         setSelectedFriends([]);
         setGroupName("");
+        setGroupImage(null);
         setWarningMessage("");
       } else {
         setWarningMessage(data.message || "Failed to create the group chat.");
@@ -143,6 +175,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
     setSelectedFriends([]);
     setGroupName("");
     setWarningMessage("");
+    setGroupImage(null);
     setIsDialogOpen(false);
   };
 
@@ -188,6 +221,28 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
             placeholder="Enter group name (Optional) "
             className="mb-4"
           />
+
+          <DialogDescription>
+            Choose an image for your group (Optional).
+          </DialogDescription>
+          {/* Image Upload */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="mb-4"
+          />
+          {groupImage && (
+            <div className="mb-4">
+              <Image
+                src={URL.createObjectURL(groupImage)}
+                alt="Group Image"
+                width={100}
+                height={100}
+                className="rounded-md"
+              />
+            </div>
+          )}
 
           {/* Search Input for filtering friends */}
           <div className="space-y-2">

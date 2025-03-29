@@ -4,7 +4,7 @@ import { withRetry } from "@/utils/backoff";
 
 export async function POST(req: Request) {
   try {
-    const { groupName, members } = await req.json();
+    const { groupName, members, image } = await req.json();
 
     if (!groupName || !members || members.length < 2) {
       return NextResponse.json(
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     const data = {
       name: groupName,
       members: members,
+      image,
       createdAt: new Date().toISOString(), // Add the creation timestamp
     };
 
