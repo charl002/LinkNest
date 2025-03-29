@@ -38,6 +38,8 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [groupImage, setGroupImage] = useState<File | null>(null);
 
+  // For now everytime you go switch the tab from Friends to -> Group Chats, this is fetched, so 
+  // We might need to move this to the parent component if it becomes problematic (ChatList).
   useEffect(() => {
     if (!currentUser) return;
 
@@ -295,7 +297,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
               {selectedFriends.map((friend) => (
                 <HoverCardComponent
                   key={friend.id}
-                  image={friend.image || "/default-avatar.png"}
+                  image={friend.image || "/public/defaultProfilePic.png"}
                   username={friend.username}
                   description={
                     friend.description ||
@@ -340,7 +342,7 @@ const GroupChatsList = ({ currentUser }: GroupChatsListProps) => {
                 <div className="relative flex items-center justify-between p-2 rounded-md">
                   <div className="flex items-center space-x-2">
                     <Avatar className="w-10 h-10 bg-gray-800"> {/* Set custom background color */}
-                      <AvatarImage src={group.image || "/default-avatar.png"} alt={`Group chat image for ${group.name}`} />
+                      <AvatarImage src={group.image || "/defaultGroupPic.png"} alt={`Group chat image for ${group.name}`} />
                       <AvatarFallback>{group.name.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     {/* Group name */}

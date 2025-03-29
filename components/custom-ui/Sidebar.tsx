@@ -127,7 +127,7 @@ export default function Sidebar() {
               {
                 id: userData.id,
                 username: senderUsername,
-                image: userData.data.image || "/default-avatar.png",
+                image: userData.data.image || "/defaultProfilePic.png",
                 email: userData.data.email || "",
                 name: userData.data.name || "",
                 background: userData.data.background || "", // Provide default
@@ -364,7 +364,7 @@ export default function Sidebar() {
         {
           id: userData.id,
           username: userData.data.username,
-          image: userData.data.image || "/default-avatar.png",
+          image: userData.data.image || "/defaultProfilePic.png",
           email: userData.data.email || "",
           name: userData.data.name || "",
           background: userData.data.background || "", // Provide default value

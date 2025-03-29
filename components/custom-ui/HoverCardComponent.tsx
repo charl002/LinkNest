@@ -28,7 +28,7 @@ const HoverCardComponent = ({
           <div className="relative inline-block">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 cursor-pointer relative">
               <Image
-                src={image || "/default-avatar.png"}
+                src={image || "/defaultProfilePic.png"}
                 alt={username}
                 width={60}
                 height={60}
@@ -41,7 +41,7 @@ const HoverCardComponent = ({
         <HoverCardContent className="w-64 p-4 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="flex items-center space-x-3">
             <Image
-              src={image || "/default-avatar.png"}
+              src={image || "/defaultProfilePic.png"}
               alt={username}
               width={40}
               height={40}
