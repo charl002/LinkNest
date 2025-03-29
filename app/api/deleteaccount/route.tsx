@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, arrayRemove, updateDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 import { BlobServiceClient } from "@azure/storage-blob";
-//import { Comment } from "@/types/comment";
+import { Comment } from "@/types/comment";
 
 const db = getFirestore(firebase_app);
 
@@ -32,7 +32,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    /*const contentTypes = ["posts", "bluesky", "news"];
+    const contentTypes = ["posts", "bluesky", "news"];
 
     // Remove user likes from all content types
     const removeUserLikes = contentTypes.map(async (type) => {
@@ -41,13 +41,14 @@ export async function DELETE(req: Request) {
 
     const updateLikes = contentSnapshot.docs.map(async (docSnap) => {
         const contentData = docSnap.data();
-        const currentLikes = contentData.likes || [];
+        const currentLikes = contentData.likedBy || [];
 
         // Remove likes by the user
         const userLikes = currentLikes.filter((like: string) => like === username);
         if (userLikes.length > 0) {
         await updateDoc(doc(db, type, docSnap.id), {
-            likes: arrayRemove(...userLikes),
+            likedBy: arrayRemove(...userLikes),
+            likes: currentLikes.length - userLikes.length
         });
         }
     });
@@ -77,7 +78,7 @@ export async function DELETE(req: Request) {
     });
 
     // Execute all deletions in parallel
-    await Promise.all([...removeUserLikes, ...removeUserComments]);*/
+    await Promise.all([...removeUserLikes, ...removeUserComments]);
 
     // Query Firestore for user's posts
     const postsRef = collection(db, "posts");
