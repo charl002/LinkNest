@@ -66,6 +66,13 @@ const GroupChatsList = () => {
     setSelectedFriends(prev => prev.filter(friend => friend.id !== friendId));
   };
 
+  const handleNevermind = () => {
+    setSelectedFriends([]);
+    setGroupName("");
+    setWarningMessage("");
+    setIsDialogOpen(false);
+  };
+
   return (
     <div>
       <div className="text-gray-500 mb-4">No group chats yet.</div>
@@ -154,10 +161,18 @@ const GroupChatsList = () => {
             <div className="text-red-500 text-sm mt-2">{warningMessage}</div>
           )}
 
-          {/* Create Group Button */}
-          <Button onClick={handleCreateGroup} className="mt-4">
-            Create Group
-          </Button>
+          {/* Buttons */}
+          <div className="flex gap-4 mt-4">
+            <Button onClick={handleCreateGroup} className="flex-1">
+              Create Group
+            </Button>
+            <Button
+              onClick={handleNevermind}
+              className="flex-1 bg-gray-300 text-black rounded-md hover:bg-gray-400 transition-all duration-200"
+            >
+              Nevermind
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
