@@ -30,6 +30,7 @@ import { decryptMessage } from "@/utils/decrypt";
 import { GroupChat } from "@/types/group";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { AvatarFallback } from "../ui/avatar";
+import { useGroupChats } from "../provider/GroupChatsProvider";
 
 export default function Chat() {
   const socket = useSocket();
@@ -38,8 +39,9 @@ export default function Chat() {
   const friendUsername = searchParams.get("friend");
   const currentUsername = searchParams.get("user");
   const groupchatId = searchParams.get("group");
-  const [group, setGroup] = useState<GroupChat | null>(null);
+  const { groupChats } = useGroupChats();
 
+  const [group, setGroup] = useState<GroupChat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export default function Chat() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [friendUser, setFriendUser] = useState<User | null>(null);
+  const [otherUsers, setOtherUsers] = useState<User[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -95,7 +97,7 @@ export default function Chat() {
         const friendData = await friendResponse.json();
     
         setCurrentUser(senderData.data);
-        setFriendUser(friendData.data);
+        setOtherUsers([friendData.data]);
       } catch (error: unknown) {
         if (error instanceof Error) {
           setErrorMessage(error.message);
@@ -117,11 +119,19 @@ export default function Chat() {
       if (!groupchatId) return;
   
       try {
+        setIsLoading(true);
+
+        const groupData = groupChats.find((group) => group.id === groupchatId);
+        if (!groupData) {
+          throw new Error("Group not found");
+        }
+        setGroup(groupData);
+        
+
         const response = await fetch(`/api/getmessages?groupId=${groupchatId}&sender=${currentUsername}`);
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Failed to fetch messages");
         
-        console.log("group msgs", data);
+        if (!response.ok) throw new Error(data.message || "Failed to fetch messages");
 
         setMessages(
           data.messages.map((msg: Message) => ({
@@ -134,6 +144,29 @@ export default function Chat() {
             groupId: msg.groupId
           }))
         );
+
+        const fetchUsers = async () => {
+          const members = groupData.members.filter(
+            (member): member is string => member !== currentUsername && member !== null,
+          )
+
+          const senderResponse = await fetch(`/api/getsingleuser?username=${currentUsername}`);
+          const senderData = await senderResponse.json();
+          setCurrentUser(senderData.data);
+    
+          const fetchedUsers = await Promise.all(
+            members.map(async (value) => {
+              const userResponse = await fetch(`/api/getsingleuser?username=${value}`)
+              const userData = await userResponse.json()
+              return userData.data as User
+            }),
+          )
+    
+          setOtherUsers(fetchedUsers)
+        }
+    
+        fetchUsers()
+
       } catch (error: unknown) {
         if (error instanceof Error) {
           setErrorMessage(error.message);
@@ -146,32 +179,7 @@ export default function Chat() {
     };
 
     fetchGroupMessages();
-  }, [currentUsername, groupchatId])
-
-  useEffect(() => {
-    // if (groupchatId) {
-    //   setErrorMessage("Hang on tight, this is still being built!");
-    //   return;
-    // }
-
-    // Fetch group details based on the groupId
-    // Might need to remove this, since the groups are already fetched.
-    async function fetchGroup() {
-      const response = await fetch(`/api/getgroup?groupId=${groupchatId}`);
-      const data = await response.json();
-      if (data.group && groupchatId) {
-        setGroup({
-          id: groupchatId,
-          name: data.group.name,
-          members: data.group.members,
-          image: data.group.image || "",  // Default to an empty string if no image
-        });
-      }
-    }      
-    fetchGroup();
-    setMessages([]);
-    setIsLoading(false);
-  }, [groupchatId]);
+  }, [currentUsername, groupChats, groupchatId])
 
   // This useEffect listens for messages on the Socket IO
   useEffect(() => {
@@ -205,8 +213,6 @@ export default function Chat() {
       try {
         // If there's a single friend, send a private message
         if (friendUsername) {
-          console.log(friendUsername);
-
           const postMessageData = await postMessageAndUnread(
             currentUsername,
             input,
@@ -216,8 +222,6 @@ export default function Chat() {
             undefined           // No receivers for private messages
           );
 
-          console.log(postMessageData);
-  
           emitPrivateMessage(
             socket,
             currentUsername,
@@ -468,7 +472,7 @@ export default function Chat() {
           <div className="flex items-center gap-2">
             <Avatar className="w-10 h-10 rounded-full">
               <AvatarImage 
-                src={group?.image || "/default-avatar.png"} // Fallback to default if no image
+                src={group?.image || "/defaultGroupPic.png"}
                 alt={group?.name || "Group Chat"}
                 className="w-full h-full object-cover rounded-full"
               />
@@ -515,7 +519,14 @@ export default function Chat() {
               ))
             : messages.map((msg, index) => {
                 const isCurrentUser = msg.sender === currentUsername;
-                const user = isCurrentUser ? currentUser : friendUser;
+                console.log(isCurrentUser);
+                let user;
+                if(isCurrentUser){
+                  user = currentUser;
+                  console.log(user);
+                } else {
+                  user = otherUsers.find((user) => user.username === msg.sender) || null;
+                }
 
                 return (
                   <div
