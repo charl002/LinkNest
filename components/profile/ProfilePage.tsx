@@ -28,6 +28,7 @@ interface UserData {
     background: string;
     isAdmin: boolean;
     isBanned: boolean;
+    isBlocked: boolean;
   };
 }
 
@@ -57,6 +58,7 @@ export default function ProfilePage({ user }: { user: string }) {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showChatList, setShowChatList] = useState(false);
   const [isSessionUserAdmin, setIsSessionUserAdmin] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -142,6 +144,21 @@ export default function ProfilePage({ user }: { user: string }) {
     }
   }, [user, email]);
 
+  const checkBlockStatus = useCallback(async () => {
+    if (!sessionUsername || !user) return;
+    
+    try {
+      const response = await fetch(`/api/getsingleuser?username=${sessionUsername}`);
+      const userData = await response.json();
+      
+      if (response.ok && userData.data.blockedUsers) {
+        setIsBlocked(userData.data.blockedUsers.includes(user));
+      }
+    } catch (err) {
+      console.error("Error checking block status:", err);
+    }
+  }, [sessionUsername, user]);
+
   useEffect(() => {
     let isMounted = true;
     const abortController = new AbortController();
@@ -151,6 +168,7 @@ export default function ProfilePage({ user }: { user: string }) {
         await fetchPosts();
         await fetchUser();
         await fetchFriends();
+        await checkBlockStatus();
       }
     };
 
@@ -160,7 +178,7 @@ export default function ProfilePage({ user }: { user: string }) {
       isMounted = false;
       abortController.abort();
     };
-  }, [fetchPosts, fetchUser, fetchFriends]);
+  }, [fetchPosts, fetchUser, fetchFriends, checkBlockStatus]);
 
   const handleAddFriend = async () => {
     if (!session?.user?.name || !user) {
@@ -357,6 +375,42 @@ export default function ProfilePage({ user }: { user: string }) {
     }
   };
 
+  const handleBlockUser = async () => {
+    if (!userData || !sessionUsername) return;
+  
+    try {
+      const response = await fetch("/api/blockuser", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: sessionUsername,
+          blockedUserId: userData.data.username
+        }),
+      });
+  
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to update block status");
+      }
+
+      setIsBlocked(prev => !prev);
+  
+      customToast({ 
+        message: result.message,
+        type: "success" 
+      });
+  
+    } catch (err) {
+      customToast({ 
+        message: "Error updating block status: " + (err as Error).message, 
+        type: "error" 
+      });
+    }
+  };
+
   let profileContent = null;
   if (userData) profileContent = (
     <div className="w-full h-full mx-auto bg-white border border-gray-300 shadow-sm rounded-lg overflow-auto custom-scrollbar">
@@ -493,6 +547,14 @@ export default function ProfilePage({ user }: { user: string }) {
                   >
                     {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
                   </button>
+                  {userData.data.email !== email && (
+                    <button
+                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90"
+                      onClick={handleBlockUser}
+                    >
+                      {isBlocked ? "Unblock User" : "Block User"}
+                    </button>
+                  )}
                   {isSessionUserAdmin && userData.data.email !== email && (
                     <button
                       className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
