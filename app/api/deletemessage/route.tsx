@@ -51,8 +51,7 @@ const db = getFirestore(firebase_app);
 export async function POST(request: Request) {
   try {
     const { messageId, username } = await request.json();
-
-    if (!messageId || !username) {
+    if (!messageId || !username || typeof messageId !== "string") {
       return NextResponse.json(
         { message: "Missing required fields: messageId or username" },
         { status: 400 }

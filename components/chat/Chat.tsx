@@ -272,6 +272,32 @@ export default function Chat() {
     }
   };
 
+  const handleDeleteMessage = async (message: Message) => {
+    const messageId = typeof message.id === "string" ? message.id : String(message.id);
+    const username = currentUsername;
+    try {
+      const response = await fetch("/api/deletemessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messageId, username
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        toast.error(data.message || "Failed to delete message");
+        return;
+      }
+  
+      setMessages((prev) => prev.filter((msg) => msg.id !== message.id));
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      toast.error("An error occurred while deleting the message");
+    }
+  };
+
   // Formating the timestamp so its human readable
   const handleAddReaction = async (message: Message, reaction: string) => {
     try {
@@ -309,7 +335,6 @@ export default function Chat() {
         )
       );
 
-      toast.success("Reaction updated!");
     } catch (error) {
       console.error("Error updating reaction:", error);
       toast.error("An error occurred.");
@@ -506,7 +531,9 @@ export default function Chat() {
                           </HoverCardContent>
                         </HoverCard>
 
-                        <button className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">
+                        <button 
+                          className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
+                          onClick={() => handleDeleteMessage(msg)}>
                           Delete
                         </button>
                       </div>
