@@ -466,6 +466,15 @@ export default function Chat() {
                       </HoverCardContent>
                     </HoverCard>
                   )}
+                  {msg.isCallMsg ? (
+                    <div className="relative">
+                      <ChatMessage
+                        message={msg}
+                        isCurrentUser={isCurrentUser}
+                        user={user}
+                      />
+                    </div>
+                  ) : (
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <div className="relative">
@@ -530,15 +539,16 @@ export default function Chat() {
                             </div>
                           </HoverCardContent>
                         </HoverCard>
-
+                        {isCurrentUser && (
                         <button 
                           className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
                           onClick={() => handleDeleteMessage(msg)}>
                           Delete
                         </button>
+                        )}
                       </div>
                     </HoverCardContent>
-                  </HoverCard>
+                  </HoverCard>)}
                 </div>
               </div>
             );
