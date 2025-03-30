@@ -162,12 +162,12 @@ export default function Chat() {
   }, [socket, currentUsername, friendUsername]);
 
   const sendMessage = async () => {
-    console.log("hello!");
-    console.log(currentUsername);
     if (socket && input.trim() && currentUsername) {
       try {
         // If there's a single friend, send a private message
         if (friendUsername) {
+          console.log(friendUsername);
+
           const postMessageData = await postMessageAndUnread(
             currentUsername,
             input,
@@ -176,6 +176,8 @@ export default function Chat() {
             undefined,          // No groupId for private messages
             undefined           // No receivers for private messages
           );
+
+          console.log(postMessageData);
   
           emitPrivateMessage(
             socket,
@@ -200,8 +202,6 @@ export default function Chat() {
         } 
         // If it's a group chat, send a message to all group members
         else if (groupchatId && group?.members) {
-          console.log(groupchatId)
-
           const validMembers = group.members.filter((member) => member !== null) as string[]; // Filter out nulls
 
           const postMessageData = await postMessageAndUnread(
