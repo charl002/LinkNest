@@ -27,7 +27,9 @@ import type { Message } from "@/types/message";
 import type { User } from "@/types/user";
 import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 import { decryptMessage } from "@/utils/decrypt";
-// import { GroupChat } from "@/types/group";
+import { GroupChat } from "@/types/group";
+import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
+import { AvatarFallback } from "../ui/avatar";
 
 export default function Chat() {
   const socket = useSocket();
@@ -36,7 +38,7 @@ export default function Chat() {
   const friendUsername = searchParams.get("friend");
   const currentUsername = searchParams.get("user");
   const groupchatId = searchParams.get("group");
-  // const [group, setGroup] = useState<GroupChat | null>(null);
+  const [group, setGroup] = useState<GroupChat | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -109,22 +111,26 @@ export default function Chat() {
   }, [currentUsername, friendUsername, router]);
 
   useEffect(() => {
-    if (groupchatId) {
-      setErrorMessage("Hang on tight, this is still being built!");
-      return;
-
-      // Fetch group details based on the groupId
-      // async function fetchGroup() {
-      //   const response = await fetch(`/api/getgroup?groupId=${groupchatId}`);
-      //   const data = await response.json();
-      //   // console.log(data);
-      //   setGroup(data);
-      // }
+    // if (groupchatId) {
+    //   setErrorMessage("Hang on tight, this is still being built!");
+    //   return;
+    // }
       
-      // console.log(group);
 
-      // fetchGroup();
-    }
+    // Fetch group details based on the groupId
+    async function fetchGroup() {
+      const response = await fetch(`/api/getgroup?groupId=${groupchatId}`);
+      const data = await response.json();
+      if (data.group && groupchatId) {
+        setGroup({
+          id: groupchatId,
+          name: data.group.name,
+          members: data.group.members,
+          image: data.group.image || "",  // Default to an empty string if no image
+        });
+      }
+    }      
+    fetchGroup();
   }, [groupchatId]);
 
   // This useEffect listens for messages on the Socket IO
@@ -369,9 +375,33 @@ export default function Chat() {
     <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-[calc(100vh-40px)] overflow-hidden">
       <Sidebar />
       <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
-        <h1 className="text-lg font-semibold p-4">
-          Chat with {friendUsername}
-        </h1>
+      <h1 className="text-lg font-semibold p-4">
+        {groupchatId && group ? (
+          <div className="flex items-center gap-2">
+            <Avatar className="w-10 h-10 rounded-full">
+              <AvatarImage 
+                src={group?.image || "/default-avatar.png"} // Fallback to default if no image
+                alt={group?.name || "Group Chat"}
+                className="w-full h-full object-cover rounded-full"
+              />
+              <AvatarFallback className="flex items-center justify-center w-full h-full bg-gray-300 text-white rounded-full">
+                {group?.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {/* Show skeleton if group name is loading */}
+            {group ? (
+              <span>{group.name}</span>
+            ) : (
+              <Skeleton className="h-4 w-32 rounded-md" />
+            )}
+          </div>
+        ) : friendUsername ? (
+          `Chat with ${friendUsername}`
+        ) : (
+          <Skeleton className="h-4 w-32 rounded-md" />
+        )}
+      </h1>
+
         <div
           ref={messagesContainerRef}
           className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
