@@ -2,6 +2,37 @@ import { NextResponse } from "next/server";
 import { withRetry } from '@/utils/backoff';
 import { getData } from "@/firebase/firestore/getData";
 
+/**
+ * @swagger
+ * /api/getusergroupchats:
+ *   get:
+ *     summary: Get group chats for a user
+ *     description: Retrieves all group chats where the specified user is a member.
+ *     parameters:
+ *       - in: query
+ *         name: user
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Username of the user
+ *     responses:
+ *       200:
+ *         description: Group chats fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 groupChats:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     additionalProperties: true
+ *       400:
+ *         description: Missing user query parameter
+ *       500:
+ *         description: Server error or unexpected failure
+ */
 export async function GET(req: Request) {
   try {
     // Get the current user's username from the query parameters
