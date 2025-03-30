@@ -193,7 +193,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
     // In a real implementation, you would navigate to the group chat page like:
     // router.push(`/group-chat/${groupId}`);
 
-    router.push(`/chat/?group=${groupId}`);
+    router.push(`/chat/?group=${groupId}&user=${currentUser}`);
   };
 
   // Temporary put a skeleton for loading.

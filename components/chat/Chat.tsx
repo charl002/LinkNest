@@ -115,7 +115,6 @@ export default function Chat() {
     //   setErrorMessage("Hang on tight, this is still being built!");
     //   return;
     // }
-      
 
     // Fetch group details based on the groupId
     async function fetchGroup() {
@@ -131,6 +130,8 @@ export default function Chat() {
       }
     }      
     fetchGroup();
+    setMessages([]);
+    setIsLoading(false);
   }, [groupchatId]);
 
   // This useEffect listens for messages on the Socket IO
@@ -161,42 +162,90 @@ export default function Chat() {
   }, [socket, currentUsername, friendUsername]);
 
   const sendMessage = async () => {
-    if (socket && input.trim() && friendUsername && currentUsername) {
+    console.log("hello!");
+    console.log(currentUsername);
+    if (socket && input.trim() && currentUsername) {
       try {
-        const postMessageData = await postMessageAndUnread(
-          currentUsername,
-          friendUsername,
-          input,
-          false
-        );
+        // If there's a single friend, send a private message
+        if (friendUsername) {
+          const postMessageData = await postMessageAndUnread(
+            currentUsername,
+            input,
+            false,
+            friendUsername,    // Send to a single friend
+            undefined,          // No groupId for private messages
+            undefined           // No receivers for private messages
+          );
+  
+          emitPrivateMessage(
+            socket,
+            currentUsername,
+            friendUsername,
+            input,
+            postMessageData.docId,
+            false // Not a call message
+          );
 
-        emitPrivateMessage(
-          socket,
-          currentUsername,
-          friendUsername,
-          input,
-          postMessageData.docId,
-          false
-        );
+          // Update the UI with the new message
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: postMessageData.docId,
+              sender: currentUsername,
+              message: input,
+              date: formatTimestamp(new Date().toISOString()),
+              isCallMsg: false,
+            },
+          ]);
+        } 
+        // If it's a group chat, send a message to all group members
+        else if (groupchatId && group?.members) {
+          console.log(groupchatId)
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: postMessageData,
-            sender: currentUsername,
-            message: input,
-            date: formatTimestamp(new Date().toISOString()),
-            isCallMsg: false,
-          },
-        ]);
+          const validMembers = group.members.filter((member) => member !== null) as string[]; // Filter out nulls
+
+          const postMessageData = await postMessageAndUnread(
+            currentUsername,
+            input,
+            false,
+            undefined,          // No single receiver for group chat
+            groupchatId,        // Group ID
+            validMembers      // Send to all group members
+          );
+  
+          // Emit the message to all receivers in the group
+          // group.members.forEach((member) => {
+          //   emitPrivateMessage(
+          //     socket,
+          //     currentUsername,
+          //     member,
+          //     input,
+          //     postMessageData.docId,
+          //     false // Not a call message
+          //   );
+          // });
+
+          // Update the UI with the new message
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: postMessageData.docId,
+              sender: currentUsername,
+              message: input,
+              date: formatTimestamp(new Date().toISOString()),
+              isCallMsg: false,
+            },
+          ]);
+        }
       } catch (error) {
         toast.error("Error storing message.");
         console.error("Error storing message:", error);
       }
-
+  
+      // Clear the input field after sending the message
       setInput("");
     }
-  };
+  };  
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -234,8 +283,8 @@ export default function Chat() {
       const postMessageData = await postMessageAndUnread(
         currentUsername,
         friendUsername,
+        true,
         callMessage,
-        true
       );
 
       if(socket){

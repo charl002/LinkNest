@@ -9,38 +9,83 @@ const encryptMessage = (message: string): string => {
 
 export const postMessageAndUnread = async (
   sender: string,
-  receiver: string,
   message: string,
-  isCallMsg: boolean
+  isCallMsg: boolean,
+  receiver?: string,
+  groupId?: string,
+  receivers?: string[]    
 ) => {
   try {
     const encryptedMessage = encryptMessage(message);
 
-    const postMessageResponse = await fetch("/api/postmessage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        senderUsername: sender,
-        receiverUsername: receiver,
-        message: encryptedMessage,
-        isCallMsg: isCallMsg,
-      }),
-    });
+    // Case 1: If there's a single receiver (private message)
+    if (receiver) {
+      const postMessageResponse = await fetch("/api/postmessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: sender,
+          receiverUsername: receiver,
+          message: encryptedMessage,
+          isCallMsg: isCallMsg,
+          groupId: null,       // Group ID is not needed for private messages
+          receiversUsernames: null, // Receivers are null for private messages
+        }),
+      });
 
-    const postMessageData = await postMessageResponse.json();
+      const postMessageData = await postMessageResponse.json();
 
-    await fetch("/api/postunreadmessage", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sender: sender,
-        receiver: receiver,
-        count: 1,
-        message: encryptedMessage
-      }),
-    });
+      await fetch("/api/postunreadmessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: sender,
+          receiver: receiver,
+          receivers: null,     // No receivers for private message
+          count: 1,
+          message: encryptedMessage,
+        }),
+      });
 
-    return postMessageData;
+      return postMessageData;
+    }
+
+    // Case 2: If it's a group message
+    if (groupId && receivers && receivers.length > 0) {
+      const postMessageResponse = await fetch("/api/postmessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          senderUsername: sender,
+          receiverUsername: null,    // No single receiver for group
+          message: encryptedMessage,
+          isCallMsg: isCallMsg,
+          groupId: groupId,          // Pass the group ID
+          receiversUsernames: receivers, // List of group receivers
+        }),
+      });
+
+      const postMessageData = await postMessageResponse.json();
+
+      // Send the unread message data for all receivers in the group
+      for (const receiver of receivers) {
+        await fetch("/api/postunreadmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: sender,
+            receiver: receiver,
+            receivers: receivers,
+            count: 1,
+            message: encryptedMessage,
+          }),
+        });
+      }
+
+      return postMessageData;
+    }
+
+    throw new Error("Receiver or group details are missing.");
   } catch (error) {
     console.error("Error storing message or unread message:", error);
   }
