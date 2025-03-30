@@ -28,7 +28,6 @@ install-dependencies:
   stage: dependencies
   script:
     - npm install --legacy-peer-deps
-    - npm ci
   artifacts:
     expire_in: 1 day
     paths:
