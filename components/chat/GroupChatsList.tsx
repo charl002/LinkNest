@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useFriends } from "../provider/FriendsProvider";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { User } from "@/types/user";
 import {
   Dialog,
@@ -13,57 +13,53 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import Image from "next/image";
 import HoverCardComponent from "../custom-ui/HoverCardComponent";
-import { Skeleton } from "../ui/skeleton";
+// import { Skeleton } from "../ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useRouter } from 'next/navigation';
+import { GroupChat } from "@/types/group";
+import { useGroupChats } from "../provider/GroupChatsProvider";
 
 interface GroupChatsListProps {
   currentUser: string | null;
   router: ReturnType<typeof useRouter>;
 }
 
-interface GroupChat {
-  id: string;
-  name: string;
-  members: (string | null)[];
-  image: string;
-}
-
 const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
-  const [groupChats, setGroupChats] = useState<GroupChat[]>([]);
+  const { groupChats } = useGroupChats();
+  const { setGroupChats } = useGroupChats();
   const { friends } = useFriends();
   const [selectedFriends, setSelectedFriends] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState(""); // For search input
   const [groupName, setGroupName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const [groupImage, setGroupImage] = useState<File | null>(null);
 
   // For now everytime you go switch the tab from Friends to -> Group Chats, this is fetched, so 
   // We might need to move this to the parent component if it becomes problematic (ChatList).
-  useEffect(() => {
-    if (!currentUser) return;
+  // useEffect(() => {
+  //   if (!currentUser) return;
 
-    const fetchGroupChats = async () => {
-      try {
-        const response = await fetch(`/api/getgroupchats?user=${currentUser}`);
-        const data = await response.json();
+  //   const fetchGroupChats = async () => {
+  //     try {
+  //       const response = await fetch(`/api/getgroupchats?user=${currentUser}`);
+  //       const data = await response.json();
 
-        if (response.ok) {
-          setGroupChats(data.groupChats || []);
-        } else {
-          console.error("Error fetching group chats:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching group chats:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //       if (response.ok) {
+  //         setGroupChats(data.groupChats || []);
+  //       } else {
+  //         console.error("Error fetching group chats:", data.message);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching group chats:", error);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchGroupChats();
-  }, [currentUser]);
+  //   fetchGroupChats();
+  // }, [currentUser]);
 
   const handleFriendSelect = (friend: User) => {
     setSelectedFriends((prev) =>
@@ -197,16 +193,16 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   };
 
   // Temporary put a skeleton for loading.
-  if (isLoading) {
-    return (
-      <>
-        <Skeleton className="w-10 h-10 rounded-full" /> {/* Avatar Skeleton */}
-        <Skeleton className="h-4 w-24 rounded-md" />{" "}
-        {/* Username & Time Skeleton */}
-        <Skeleton className="h-12 w-40 rounded-md" /> {/* Message Skeleton */}
-      </>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <>
+  //       <Skeleton className="w-10 h-10 rounded-full" /> {/* Avatar Skeleton */}
+  //       <Skeleton className="h-4 w-24 rounded-md" />{" "}
+  //       {/* Username & Time Skeleton */}
+  //       <Skeleton className="h-12 w-40 rounded-md" /> {/* Message Skeleton */}
+  //     </>
+  //   );
+  // }
 
   return (
     <div>
@@ -337,7 +333,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
       <div className="mt-6">
         <h2 className="text-lg font-semibold mb-4">Your Group Chats:</h2>
         <div className="flex flex-col space-y-4">
-          {groupChats.length > 0 ? (
+          {groupChats.length > 0 && groupChats ? (
             groupChats.map((group) => (
               <div
                 key={group.id}

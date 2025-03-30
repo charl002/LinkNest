@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import { SocketProvider } from "@/components/provider/SocketProvider";
 import { FriendsProvider } from "@/components/provider/FriendsProvider";
 import { Toaster } from "sonner";
+import { GroupChatsProvider } from "@/components/provider/GroupChatsProvider";
 
 export const metadata: Metadata = {
   title: "LinkNest",
@@ -24,8 +25,10 @@ export default async function RootLayout({
       <SessionProvider session={session}>
         <SocketProvider>
           <FriendsProvider>
-            <Navbar />
-            <main className="flex min-h-screen">{children}</main>
+            <GroupChatsProvider>
+              <Navbar />
+              <main className="flex min-h-screen">{children}</main>
+            </GroupChatsProvider>
           </FriendsProvider>
         </SocketProvider>
       </SessionProvider>
