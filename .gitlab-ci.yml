@@ -28,6 +28,7 @@ install-dependencies:
   stage: dependencies
   script:
     - npm install
+    - npm install swagger-ui-react --legacy-peer-deps
     - npm ci
   artifacts:
     expire_in: 1 day
