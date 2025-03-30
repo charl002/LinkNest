@@ -1,6 +1,38 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 
+/**
+ * @swagger
+ * /api/getfriends:
+ *   get:
+ *     summary: Get a user's friends
+ *     description: Returns a list of usernames who are friends with the specified user.
+ *     parameters:
+ *       - in: query
+ *         name: username
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The username of the user to find friends for
+ *     responses:
+ *       200:
+ *         description: A list of friend usernames
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 friends:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       400:
+ *         description: Username query parameter is missing
+ *       404:
+ *         description: No friends found
+ *       500:
+ *         description: Server error
+ */
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
