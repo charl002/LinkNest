@@ -18,6 +18,7 @@ export async function GET(req: Request) {
         const { searchParams } = new URL(req.url);
         const sender = searchParams.get("sender");
         const receiver = searchParams.get("receiver");
+        const groupId = searchParams.get("groupId"); //For group messages.
         const session = await auth();
 
         if (!session || !session.user) {
@@ -45,10 +46,10 @@ export async function GET(req: Request) {
         }
 
         if (sender !== sessionUser.data().username) {
-          return NextResponse.json({ message: "You are not allowed to see these messages!" }, { status: 403 });
+          return NextResponse.json({ message: `You are not allowed to see these messages ${sender} n ${sessionUser.data().username}` }, { status: 403 });
         }
 
-        if (!sender || !receiver) {
+        if (!sender || (!receiver && !groupId)) {
           return NextResponse.json({ message: "Sender and receiver usernames are required" }, { status: 400 });
         }
 
@@ -85,12 +86,15 @@ export async function GET(req: Request) {
                     date: new Date(data.date),
                     isCallMsg: isCall,
                     reactions: data.reactions,
+                    groupId: data.groupId || null
                 };
             })
-            .filter(msg =>
-                (msg.sender === sender && msg.receiver === receiver) ||
-                (msg.sender === receiver && msg.receiver === sender)
-            )
+            .filter(msg => {
+              // Filter messages based on sender, receiver or groupId
+              const isPrivateMessage = (msg.sender === sender && msg.receiver === receiver) || (msg.sender === receiver && msg.receiver === sender);
+              const isGroupMessage = groupId && msg.groupId === groupId;
+              return isPrivateMessage || isGroupMessage;
+            })
             .sort((a, b) => a.date.getTime() - b.date.getTime());
 
         return NextResponse.json({ messages }, { status: 200 });

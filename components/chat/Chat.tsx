@@ -111,12 +111,51 @@ export default function Chat() {
   }, [currentUsername, friendUsername, router]);
 
   useEffect(() => {
+    if(!groupchatId || !currentUsername) return;
+
+    async function fetchGroupMessages() {
+      if (!groupchatId) return;
+  
+      try {
+        const response = await fetch(`/api/getmessages?groupId=${groupchatId}&sender=${currentUsername}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Failed to fetch messages");
+        
+        console.log("group msgs", data);
+
+        setMessages(
+          data.messages.map((msg: Message) => ({
+            id: msg.id,
+            sender: msg.sender,
+            message: decryptMessage(msg.message),
+            date: formatTimestamp(msg.date),
+            isCallMsg: msg.isCallMsg,
+            reactions: msg.reactions || [],
+            groupId: msg.groupId
+          }))
+        );
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage("An unexpected error occurred. Please try again.");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGroupMessages();
+  }, [currentUsername, groupchatId])
+
+  useEffect(() => {
     // if (groupchatId) {
     //   setErrorMessage("Hang on tight, this is still being built!");
     //   return;
     // }
 
     // Fetch group details based on the groupId
+    // Might need to remove this, since the groups are already fetched.
     async function fetchGroup() {
       const response = await fetch(`/api/getgroup?groupId=${groupchatId}`);
       const data = await response.json();
