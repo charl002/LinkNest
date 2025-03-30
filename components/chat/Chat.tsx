@@ -49,6 +49,10 @@ export default function Chat() {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showChatList, setShowChatList] = useState(false);
+
+
   // Function to scroll to bottom of messages
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
@@ -365,190 +369,232 @@ export default function Chat() {
     });
   }
 
-  return (
-    <div className="grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-[calc(100vh-40px)] overflow-hidden">
-      <Sidebar />
-      <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
-        <h1 className="text-lg font-semibold p-4">
-          Chat with {friendUsername}
-        </h1>
-        <div
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
-          style={{ scrollbarWidth: "thin" }}
-        >
-          {isLoading
-            ? [...Array(8)].map((_, index) => (
-                <div
-                  key={index}
-                  className={`flex items-start space-x-4 ${
-                    index % 2 === 0 ? "justify-start" : "justify-end"
-                  }`}
-                >
-                  <Skeleton className="w-10 h-10 rounded-full" />{" "}
-                  {/* Avatar Skeleton */}
-                  <div className="flex flex-col space-y-2">
-                    <Skeleton className="h-4 w-24 rounded-md" />{" "}
-                    {/* Username & Time Skeleton */}
-                    <Skeleton className="h-12 w-40 rounded-md" />{" "}
-                    {/* Message Skeleton */}
-                  </div>
-                </div>
-              ))
-            : messages.map((msg, index) => {
-                const isCurrentUser = msg.sender === currentUsername;
-                const user = isCurrentUser ? currentUser : friendUser;
+  const chatMainContent = (
+  <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
+    <h1 className="text-lg font-semibold p-4">
+      Chat with {friendUsername}
+    </h1>
+    <div
+      ref={messagesContainerRef}
+      className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
+      style={{ scrollbarWidth: "thin" }}
+    >
+      {isLoading
+        ? [...Array(8)].map((_, index) => (
+            <div
+              key={index}
+              className={`flex items-start space-x-4 ${
+                index % 2 === 0 ? "justify-start" : "justify-end"
+              }`}
+            >
+              <Skeleton className="w-10 h-10 rounded-full" />{" "}
+              {/* Avatar Skeleton */}
+              <div className="flex flex-col space-y-2">
+                <Skeleton className="h-4 w-24 rounded-md" />{" "}
+                {/* Username & Time Skeleton */}
+                <Skeleton className="h-12 w-40 rounded-md" />{" "}
+                {/* Message Skeleton */}
+              </div>
+            </div>
+          ))
+        : messages.map((msg, index) => {
+            const isCurrentUser = msg.sender === currentUsername;
+            const user = isCurrentUser ? currentUser : friendUser;
 
-                return (
-                  <div
-                    key={index}
-                    className={`relative flex ${
-                      isCurrentUser ? "justify-end" : "justify-start"
-                    } p-2`}
-                  >
-                    <div className="relative flex flex-col">
-                      {msg.reactions && msg.reactions.length > 0 && (
+            return (
+              <div
+                key={index}
+                className={`relative flex ${
+                  isCurrentUser ? "justify-end" : "justify-start"
+                } p-2`}
+              >
+                <div className="relative flex flex-col">
+                  {msg.reactions && msg.reactions.length > 0 && (
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <div
+                          className={`absolute -top-8 ${
+                            isCurrentUser ? "left+25" : "right-0"
+                          } flex space-x-1 bg-white shadow-md rounded-full px-2 py-1 cursor-pointer border border-gray-300`}
+                        >
+                          {msg.reactions.map((reaction, idx) => (
+                            <span key={idx} className="text-sm">
+                              {reaction.reaction}
+                            </span>
+                          ))}
+                        </div>
+                      </HoverCardTrigger>
+                      <HoverCardContent
+                        side="top"
+                        align="center"
+                        sideOffset={5}
+                        className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
+                      >
+                        <div className="flex flex-col space-y-1">
+                          {msg.reactions.map((reaction, idx) => (
+                            <p key={idx} className="text-xs text-gray-600">
+                              {reaction.user} reacted with{" "}
+                              {reaction.reaction}
+                            </p>
+                          ))}
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  )}
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <div className="relative">
+                        <ChatMessage
+                          message={msg}
+                          isCurrentUser={isCurrentUser}
+                          user={user}
+                        />
+                      </div>
+                    </HoverCardTrigger>
+                    <HoverCardContent
+                      side="top"
+                      align="center"
+                      sideOffset={5}
+                      className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
+                    >
+                      <div className="flex flex-col space-y-2">
+                        <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
+                          Reply
+                        </button>
+                        <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
+                          Copy
+                        </button>
+
                         <HoverCard>
                           <HoverCardTrigger asChild>
-                            <div
-                              className={`absolute -top-8 ${
-                                isCurrentUser ? "left+25" : "right-0"
-                              } flex space-x-1 bg-white shadow-md rounded-full px-2 py-1 cursor-pointer border border-gray-300`}
-                            >
-                              {msg.reactions.map((reaction, idx) => (
-                                <span key={idx} className="text-sm">
-                                  {reaction.reaction}
-                                </span>
-                              ))}
-                            </div>
+                            <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
+                              React
+                            </button>
                           </HoverCardTrigger>
                           <HoverCardContent
-                            side="top"
+                            side="right"
                             align="center"
                             sideOffset={5}
                             className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
                           >
-                            <div className="flex flex-col space-y-1">
-                              {msg.reactions.map((reaction, idx) => (
-                                <p key={idx} className="text-xs text-gray-600">
-                                  {reaction.user} reacted with{" "}
-                                  {reaction.reaction}
-                                </p>
-                              ))}
+                            <div className="flex space-x-2">
+                              {["👍", "❤️", "😂", "👎", "😭"].map(
+                                (emoji) => (
+                                  <button
+                                    key={emoji}
+                                    className="text-lg hover:scale-125"
+                                    onClick={() =>
+                                      handleAddReaction(msg, emoji)
+                                    }
+                                  >
+                                    {emoji}
+                                  </button>
+                                )
+                              )}
+                              {(msg.reactions ?? []).some(
+                                (reaction) =>
+                                  reaction.user === currentUsername
+                              ) && (
+                                <button
+                                  className="text-lg text-red-500 hover:scale-125"
+                                  onClick={() => handleRemoveReaction(msg)}
+                                >
+                                  ❌
+                                </button>
+                              )}
                             </div>
                           </HoverCardContent>
                         </HoverCard>
-                      )}
-                      <HoverCard>
-                        <HoverCardTrigger asChild>
-                          <div className="relative">
-                            <ChatMessage
-                              message={msg}
-                              isCurrentUser={isCurrentUser}
-                              user={user}
-                            />
-                          </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent
-                          side="top"
-                          align="center"
-                          sideOffset={5}
-                          className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
-                        >
-                          <div className="flex flex-col space-y-2">
-                            <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
-                              Reply
-                            </button>
-                            <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
-                              Copy
-                            </button>
 
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
-                                  React
-                                </button>
-                              </HoverCardTrigger>
-                              <HoverCardContent
-                                side="right"
-                                align="center"
-                                sideOffset={5}
-                                className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
-                              >
-                                <div className="flex space-x-2">
-                                  {["👍", "❤️", "😂", "👎", "😭"].map(
-                                    (emoji) => (
-                                      <button
-                                        key={emoji}
-                                        className="text-lg hover:scale-125"
-                                        onClick={() =>
-                                          handleAddReaction(msg, emoji)
-                                        }
-                                      >
-                                        {emoji}
-                                      </button>
-                                    )
-                                  )}
-                                  {(msg.reactions ?? []).some(
-                                    (reaction) =>
-                                      reaction.user === currentUsername
-                                  ) && (
-                                    <button
-                                      className="text-lg text-red-500 hover:scale-125"
-                                      onClick={() => handleRemoveReaction(msg)}
-                                    >
-                                      ❌
-                                    </button>
-                                  )}
-                                </div>
-                              </HoverCardContent>
-                            </HoverCard>
+                        <button className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">
+                          Delete
+                        </button>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                </div>
+              </div>
+            );
+          })}
+    </div>
+    <div className="p-4 bg-white shadow-md flex items-center space-x-2 mt-auto">
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        className="flex-1 p-2 border rounded-lg w-full"
+        placeholder="Type a message..."
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            sendMessage();
+            // Also scroll to bottom after sending
+            setTimeout(scrollToBottom, 100);
+          }
+        }}
+      />
+      <button
+        onClick={() => {
+          sendMessage();
+          // Also scroll to bottom after sending
+          setTimeout(scrollToBottom, 100);
+        }}
+        className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+      >
+        Send
+      </button>
+      <button
+        onClick={handleRedirectToCall}
+        className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+      >
+        <Video />
+      </button>
+    </div>
+  </section>
+);
 
-                            <button className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">
-                              Delete
-                            </button>
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                    </div>
-                  </div>
-                );
-              })}
+  return (
+    <div className="bg-grey-100 min-h-screen w-full text-gray-800">
+      {/* Mobile Toggle Buttons */}
+      <div className="md:hidden flex justify-between p-4 gap-4">
+        <button
+          onClick={() => {
+            setShowSidebar((prev) => !prev);
+            setShowChatList(false);
+          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+        >
+          {showSidebar ? "Close Sidebar" : "Sidebar"}
+        </button>
+        <button
+          onClick={() => {
+            setShowChatList((prev) => !prev);
+            setShowSidebar(false);
+          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+        >
+          {showChatList ? "Close Friends" : "Friends"}
+        </button>
+      </div>
+
+      {/* Mobile View Content */}
+      <div className="md:hidden min-h-screen overflow-y-auto px-4">
+        {showSidebar && <Sidebar />}
+        {showChatList && <ChatList />}
+        {!showSidebar && !showChatList && chatMainContent}
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden md:grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-[calc(100vh-40px)] overflow-hidden">
+        <div className="h-full overflow-y-auto">
+          <Sidebar />
         </div>
-        <div className="p-4 bg-white shadow-md flex items-center space-x-2 mt-auto">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="flex-1 p-2 border rounded-lg w-full"
-            placeholder="Type a message..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                sendMessage();
-                // Also scroll to bottom after sending
-                setTimeout(scrollToBottom, 100);
-              }
-            }}
-          />
-          <button
-            onClick={() => {
-              sendMessage();
-              // Also scroll to bottom after sending
-              setTimeout(scrollToBottom, 100);
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
-          >
-            Send
-          </button>
-          <button
-            onClick={handleRedirectToCall}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
-          >
-            <Video />
-          </button>
+        <div className="h-full overflow-y-auto">
+          {chatMainContent}
         </div>
-      </section>
-      <ChatList />
+        <div className="h-full overflow-y-auto">
+          <ChatList />
+        </div>
+      </div>
 
       {errorMessage && (
         <Dialog open={true}>

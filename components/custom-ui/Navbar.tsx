@@ -83,7 +83,7 @@ const Navbar = () => {
           </Link>
         </h1>
         
-        <div className="flex items-center space-x-3">
+        <div className="mt-4 sm:mt-0 flex items-center space-x-3">
           {session?.user ? (
             // If user is logged in, show profile image, username & logout button
             <>

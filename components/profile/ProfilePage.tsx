@@ -14,6 +14,8 @@ import { Plus } from 'lucide-react';
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
 import { PostType } from "@/types/post";
 import { User } from "@/types/user";
+import ChatList from "../chat/ChatList";
+import Sidebar from "../custom-ui/Sidebar";
 
 interface UserData {
   id: string;
@@ -52,6 +54,9 @@ export default function ProfilePage({ user }: { user: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isFriendLoading, setIsFriendLoading] = useState(true);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showChatList, setShowChatList] = useState(false);
+  const [isSessionUserAdmin, setIsSessionUserAdmin] = useState(false);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -108,32 +113,28 @@ export default function ProfilePage({ user }: { user: string }) {
     }
   }, [user, sessionUsername]);
 
-  // Add this with other state declarations
-  const [isSessionUserAdmin, setIsSessionUserAdmin] = useState(false);
-  
-  // Modify fetchPosts to also check if logged-in user is admin
   const fetchPosts = useCallback(async () => {
     try {
       const [userResponse, postsResponse] = await Promise.all([
         fetch(`/api/getsingleuser?email=${email}`),
         fetch(`/api/getpostbyusername?username=${user}`)
       ]);
-  
+
       if (!userResponse.ok) {
         throw new Error("Failed to fetch user");
       }
-  
+
       const sessionUser = await userResponse.json();
       setSessionUsername(sessionUser.data?.username || "Unknown");
-      setIsSessionUserAdmin(sessionUser.data?.isAdmin || false);  // Add this line
-  
+      setIsSessionUserAdmin(sessionUser.data?.isAdmin || false);
+
       if (!postsResponse.ok) {
         throw new Error("Failed to fetch posts");
       }
-  
+
       const result = await postsResponse.json();
       const posts = result.posts || [];
-  
+
       setPostsCount(posts.length);
       setPosts(posts);
     } catch (err) {
@@ -161,8 +162,7 @@ export default function ProfilePage({ user }: { user: string }) {
     };
   }, [fetchPosts, fetchUser, fetchFriends]);
 
-
-   const handleAddFriend = async () => {
+  const handleAddFriend = async () => {
     if (!session?.user?.name || !user) {
       customToast({ message: "Error! Missing username", type: "error" });
       return;
@@ -240,47 +240,47 @@ export default function ProfilePage({ user }: { user: string }) {
 
   const handleSaveChanges = async () => {
     if (!userData) return;
-  
+
     try {
-      let profilePictureUrl = userData.data.image; 
+      let profilePictureUrl = userData.data.image;
       let backgroundPictureUrl = userData.data.background;
-  
+
       if (profilePicture) {
         const formData = new FormData();
         formData.append("file", profilePicture);
         formData.append("username", sessionUsername);
-  
+
         const response = await fetch("/api/postimage", {
           method: "POST",
           body: formData,
         });
-  
+
         const result = await response.json();
         if (!response.ok) {
           throw new Error(result.message || "Failed to upload profile picture");
         }
-  
-        profilePictureUrl = result.fileUrl; 
+
+        profilePictureUrl = result.fileUrl;
       }
 
       if (background) {
         const formData = new FormData();
         formData.append("file", background);
         formData.append("username", sessionUsername);
-  
+
         const response = await fetch("/api/postimage", {
           method: "POST",
           body: formData,
         });
-  
+
         const result = await response.json();
         if (!response.ok) {
           throw new Error(result.message || "Failed to upload background picture");
         }
-  
-        backgroundPictureUrl = result.fileUrl; 
+
+        backgroundPictureUrl = result.fileUrl;
       }
-  
+
       const updateResponse = await fetch("/api/updateuser", {
         method: "PATCH",
         headers: {
@@ -290,31 +290,30 @@ export default function ProfilePage({ user }: { user: string }) {
           id: userData.id,
           username,
           description,
-          image: profilePictureUrl, 
+          image: profilePictureUrl,
           background: backgroundPictureUrl
         }),
       });
-  
+
       const updateResult = await updateResponse.json();
       if (!updateResponse.ok) {
         throw new Error(updateResult.message || "Failed to update profile");
       }
-  
+
       setUserData((prev) =>
         prev ? { ...prev, data: { ...prev.data, username, description, image: profilePictureUrl } } : null
       );
-  
+
       customToast({ message: "Profile updated successfully!", type: "success" });
       setIsDialogOpen(false);
     } catch (err) {
       customToast({ message: "Error updating profile: " + (err as Error).message, type: "error" });
     }
   };
-  
 
   const handleBanUser = async () => {
     if (!userData) return;
-  
+
     try {
       const response = await fetch("/api/banuser", {
         method: "POST",
@@ -326,13 +325,13 @@ export default function ProfilePage({ user }: { user: string }) {
           isBanned: !userData.data.isBanned
         }),
       });
-  
+
       const result = await response.json();
       
       if (!response.ok) {
         throw new Error(result.message || "Failed to update ban status");
       }
-  
+
       setUserData(prev => 
         prev ? {
           ...prev,
@@ -342,14 +341,14 @@ export default function ProfilePage({ user }: { user: string }) {
           }
         } : null
       );
-  
+
       customToast({ 
         message: userData.data.isBanned ? 
           `${userData.data.username} has been unbanned.` : 
           `${userData.data.username} has been banned.`, 
         type: "success" 
       });
-  
+
     } catch (err) {
       customToast({ 
         message: "Error updating ban status: " + (err as Error).message, 
@@ -357,251 +356,281 @@ export default function ProfilePage({ user }: { user: string }) {
       });
     }
   };
-  
+
+  let profileContent = null;
+  if (userData) profileContent = (
+    <div className="w-full h-full mx-auto bg-white border border-gray-300 shadow-sm rounded-lg overflow-hidden">
+      <div className="w-full h-32 bg-gray-300 relative">
+        <Image
+          src={userData.data.background || userData.data.image}
+          alt="User Profile"
+          layout="fill"
+          objectFit="cover"
+        />
+      </div>
+
+      <div className="p-4 relative">
+        <button onClick={() => setIsZoomed(true)} className="absolute -top-12 left-4">
+          <Image
+            src={userData.data.image}
+            alt="User Profile"
+            width={80}
+            height={80}
+            className="rounded-full border-4 border-white shadow-md"
+          />
+        </button>
+
+        <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
+          <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 flex items-center justify-center bg-transparent shadow-none border-none">
+            <button
+              onClick={() => setIsZoomed(false)}
+              className="absolute top-4 right-4 z-50 p-2 bg-white rounded-full hover:bg-gray-200"
+            >
+              X
+            </button>
+            <DialogHeader>
+              <DialogTitle className="sr-only">Media Preview</DialogTitle>
+            </DialogHeader>
+            <div className="relative w-[40vw] h-[90vh] flex items-center justify-center">
+              <Image 
+                src={userData.data.image}
+                alt="User Profile"
+                fill
+                priority
+                className="rounded-full border-4 border-white shadow-md"
+                sizes="100vw"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <div className="mt-8 flex justify-between items-center">
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="text-lg font-bold">{userData.data.name}</p>
+              {userData.data.email === email && (
+                <Link href="/createpost">
+                  <div className="px-4 py-0 bg-blue-500 text-white text-sm rounded-full ml-4">
+                    <Plus />
+                  </div>
+                </Link>
+              )}
+            </div>
+            <p className="text-gray-500">@{userData.data.username}</p>
+            <br />
+            <p className="text-gray-700">{userData.data.description}</p>
+          </div>
+          {userData.data.email === email ? (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full">
+                  Profile settings
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Edit profile</DialogTitle>
+                  <DialogDescription>
+                    Make changes to your profile here. Click save when you are done.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="username" className="text-right">
+                      Photo
+                    </Label>
+                    <Input
+                      type="file"
+                      ref={fileInputRef1}
+                      onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="username" className="text-right">
+                      Background
+                    </Label>
+                    <Input
+                      type="file"
+                      ref={fileInputRef2}
+                      onChange={(e) => setBackground(e.target.files?.[0] || null)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="description" className="text-right">
+                      Description
+                    </Label>
+                    <Input
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" onClick={handleSaveChanges}>
+                    Save changes
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <>
+              {isFriendLoading ? (
+                <button className="px-4 py-2 bg-gray-300 text-white text-sm rounded-full" disabled>
+                  Loading...
+                </button>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <button
+                    className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
+                      isFriend ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
+                    }`}
+                    onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
+                  </button>
+                  {isSessionUserAdmin && userData.data.email !== email && (
+                    <button
+                      className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
+                        userData.data.isBanned 
+                          ? "bg-emerald-500 hover:bg-emerald-600" 
+                          : "bg-rose-500 hover:bg-rose-600"
+                      }`}
+                      onClick={handleBanUser}
+                    >
+                      {userData.data.isBanned ? "Unban User" : "Ban User"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="mt-3 flex space-x-6 text-gray-500 text-sm">
+          <p>
+            <span className="font-bold text-black">{postsCount}</span>
+            {postsCount === 1 || postsCount === 0 ? " Post" : " Posts"}
+          </p>
+          <p 
+            className="cursor-pointer hover:underline"
+            onClick={() => setIsFriendsDialogOpen(true)}
+          >
+            <span className="font-bold text-black">{friendsCount}</span>
+            {friendsCount === 1 || friendsCount === 0 ? " Friend" : " Friends"}
+          </p>
+
+          <Dialog open={isFriendsDialogOpen} onOpenChange={setIsFriendsDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Friends List</DialogTitle>
+              </DialogHeader>
+              <div className="max-h-60 overflow-y-auto">
+                {friends.length > 0 ? (
+                  <ul className="space-y-2">
+                    {friends.map((friend, index) => (
+                      <Link key={index} href={`/profile/${encodeURIComponent(friend.username)}`}>
+                        <li className="p-2 border-b text-gray-700 hover:bg-gray-200 cursor-pointer flex items-center">
+                          <Image 
+                            src={friend.image} 
+                            alt={friend.username} 
+                            width={40} 
+                            height={40} 
+                            className="rounded-full border"
+                          />
+                          <p className="text-sm font-medium ml-4">{friend.username}</p> 
+                        </li>
+                      </Link>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500">No friends yet.</p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setIsFriendsDialogOpen(false)}>Close</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="mt-4 flex border-b text-sm">
+          <p className="text-blue-500 font-semibold border-b-2 border-blue-500 pb-2 px-4">
+            Posts
+          </p>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-320px)]">
+        {postsCount > 0 ? (
+          posts.map((post, index) => (
+            <Post 
+              key={`${post.id}-${index}`} 
+              {...post} 
+              profilePicture={userData.data.image || ""}
+              documentId={post.id}
+              postType={post.postType}
+              sessionUsername={sessionUsername}
+            />
+          ))
+        ) : (
+          <p className="text-gray-600">No posts available.</p>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="bg-white h-[calc(100vh-120px)] w-full text-gray-800">
+    <div className="bg-gray-100 min-h-screen w-full text-gray-800">
       {loading && <LoadingLogo/>}
       {error && <p className="text-red-500 text-center py-6">{error}</p>}
 
       {userData && (
-        <div className="w-full h-full mx-auto border border-gray-300 shadow-sm rounded-lg overflow-hidden">
-      
-          <div className="w-full h-32 bg-gray-300 relative">
-            <Image
-              src={userData.data.background || userData.data.image}
-              alt="User Profile"
-              layout="fill"
-              objectFit="cover"
-            />
-          </div>
-
-          <div className="p-4 relative">
-            <button onClick={() => setIsZoomed(true)} className="absolute -top-12 left-4">
-              <Image
-                src={userData.data.image}
-                alt="User Profile"
-                width={80}
-                height={80}
-                className="rounded-full border-4 border-white shadow-md"
-              />
+        <>
+          {/* Mobile View Toggle Buttons */}
+          <div className="md:hidden flex justify-between p-4 gap-4">
+            <button
+              onClick={() => {
+                setShowSidebar(prev => !prev);
+                setShowChatList(false);
+              }}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+            >
+              {showSidebar ? "Close Sidebar" : "Sidebar"}
             </button>
-
-            <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
-              <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 flex items-center justify-center bg-transparent shadow-none border-none">
-                <button
-                  onClick={() => setIsZoomed(false)}
-                  className="absolute top-4 right-4 z-50 p-2 bg-white rounded-full hover:bg-gray-200"
-                >
-                  X
-                </button>
-                <DialogHeader>
-                  <DialogTitle className="sr-only">Media Preview</DialogTitle>
-                </DialogHeader>
-                <div className="relative w-[40vw] h-[90vh] flex items-center justify-center">
-                  <Image 
-                    src={userData.data.image}
-                    alt="User Profile"
-                    fill
-                    priority
-                    className="rounded-full border-4 border-white shadow-md"
-                    sizes="100vw"
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
-
-
-            <div className="mt-8 flex justify-between items-center">
-              <div>
-                <div className="flex items-center justify-between">
-                  <p className="text-lg font-bold">{userData.data.name}</p>
-                  {userData.data.email === email && (
-                    <Link href="/createpost">
-                      <div className="px-4 py-0 bg-blue-500 text-white text-sm rounded-full ml-4 transition-transform duration-200 hover:scale-110 active:scale-90">
-                        <Plus />
-                      </div>
-                    </Link>
-                  )}
-                </div>
-                <p className="text-gray-500">@{userData.data.username}</p>
-                <br />
-                <p className="text-gray-700">{userData.data.description}</p>
-              </div>
-              {userData.data.email === email ? (
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90">
-                    Profile settings
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Edit profile</DialogTitle>
-                    <DialogDescription>
-                      Make changes to your profile here. Click save when you are done.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="username" className="text-right">
-                        Photo
-                      </Label>
-                      <Input
-                          type="file"
-                          ref={fileInputRef1}
-                          onChange={(e) => setProfilePicture(e.target.files?.[0] || null)}
-                          className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="username" className="text-right">
-                        Background
-                      </Label>
-                      <Input
-                          type="file"
-                          ref={fileInputRef2}
-                          onChange={(e) => setBackground(e.target.files?.[0] || null)}
-                          className="col-span-3"
-                      />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="description" className="text-right">
-                        Description
-                      </Label>
-                      <Input
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        className="col-span-3"
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="button" onClick={handleSaveChanges}>
-                      Save changes
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              ) : (
-                <>
-                {isFriendLoading ? (
-                  <button className="px-4 py-2 bg-gray-300 text-white text-sm rounded-full" disabled>
-                    Loading...
-                  </button>
-                ) : (
-                  <>
-                    {isFriend ? (
-                      <button
-                        className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
-                          isFriend ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
-                        }`}
-                        onClick={isFriend ? handleRemoveFriend : handleAddFriend}
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
-                      </button>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        <button
-                          className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
-                            isFriend ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
-                          }`}
-                          onClick={isFriend ? handleRemoveFriend : handleAddFriend}
-                          disabled={isLoading}
-                        >
-                          {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
-                        </button>
-                        {isSessionUserAdmin && userData.data.email !== email && (
-                          <button
-                            className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
-                              userData.data.isBanned 
-                                ? "bg-emerald-500 hover:bg-emerald-600" 
-                                : "bg-rose-500 hover:bg-rose-600"
-                            }`}
-                            onClick={handleBanUser}
-                          >
-                            {userData.data.isBanned ? "Unban User" : "Ban User"}
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-              )}
-            </div>
-
-            <div className="mt-3 flex space-x-6 text-gray-500 text-sm">
-              <p>
-                <span className="font-bold text-black">{postsCount}</span>
-                {postsCount === 1 || postsCount == 0 ? " Post" : " Posts"}
-              </p>
-              <p 
-                className="cursor-pointer hover:underline transition-transform duration-200 hover:scale-105 active:scale-95"
-                onClick={() => setIsFriendsDialogOpen(true)}
-              >
-                <span className="font-bold text-black">{friendsCount}</span>
-                {friendsCount === 1 || friendsCount == 0 ? " Friend" : " Friends"}
-              </p>
-
-              <Dialog open={isFriendsDialogOpen} onOpenChange={setIsFriendsDialogOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Friends List</DialogTitle>
-                  </DialogHeader>
-                  <div className="max-h-60 overflow-y-auto">
-                    {friends.length > 0 ? (
-                      <ul className="space-y-2">
-                        {friends.map((friend, index) => (
-                          <Link key={index} href={`/profile/${encodeURIComponent(friend.username)}`}>
-                            <li className="p-2 border-b text-gray-700 hover:bg-gray-200 cursor-pointer flex items-center">
-                              <Image 
-                                src={friend.image} 
-                                alt={friend.username} 
-                                width={40} 
-                                height={40} 
-                                className="rounded-full border"
-                              />
-                              <p className="text-sm font-medium ml-4">{friend.username}</p> 
-                            </li>
-                          </Link>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-gray-500">No friends yet.</p>
-                    )}
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={() => setIsFriendsDialogOpen(false)}>Close</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <div className="mt-4 flex border-b text-sm">
-              <p className="text-blue-500 font-semibold border-b-2 border-blue-500 pb-2 px-4">
-                Posts
-              </p>
-            </div>
+            <button
+              onClick={() => {
+                setShowChatList(prev => !prev);
+                setShowSidebar(false);
+              }}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+            >
+              {showChatList ? "Close Friends" : "Friends"}
+            </button>
           </div>
 
-          <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-500px)]">
-            {postsCount > 0 ? (posts.map((post, index) => 
-              <Post 
-                  key={`${post.id}-${index}`} 
-                  {...post} 
-                  profilePicture={userData.data.image || ""}
-                  documentId={post.id}
-                  postType={post.postType}
-                  sessionUsername={sessionUsername}
-              />)
-              ) : (
-              <p className="text-gray-600">No posts available.</p>
-          )}
+          {/* Mobile View Content */}
+          <div className="md:hidden min-h-screen overflow-y-auto px-4">
+            {showSidebar && <Sidebar />}
+            {showChatList && <ChatList />}
+            {!showSidebar && !showChatList && profileContent}
           </div>
-        </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 p-6 h-[calc(100vh-4rem)] overflow-hidden">
+            <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
+              <Sidebar />
+            </div>
+            <div className="h-full overflow-y-auto">{profileContent}</div>
+            <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
+              <ChatList />
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

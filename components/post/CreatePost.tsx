@@ -6,6 +6,8 @@ import { useSession } from "next-auth/react";
 import { customToast } from "../ui/customToast";
 import { useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
+import ChatList from "../chat/ChatList";
+import Sidebar from "../custom-ui/Sidebar";
 
 const CreatePost = () => {
     const router = useRouter();
@@ -18,7 +20,9 @@ const CreatePost = () => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [progress, setProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
-
+    const [showSidebar, setShowSidebar] = useState(false);
+    const [showChatList, setShowChatList] = useState(false);
+  
     useEffect(() => {
         const fetchUsername = async () => {
             if (session?.user?.email) {
@@ -183,123 +187,169 @@ const CreatePost = () => {
             }    
     };
 
-    return (
-        <div className="w-full max-w-2xl bg-gray-200 shadow-lg rounded-lg p-10">
-            <h1 className="text-3xl font-bold mb-6 text-center">Create a New Post</h1>
-        
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                <label className="block text-gray-700 font-semibold">Title:</label>
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
-                    required
-                />
-                </div>
-        
-                <div>
-                <label className="block text-gray-700 font-semibold">Description:</label>
-                <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
-                    required
-                />
-                </div>
-        
-                <div>
-                <label className="block text-gray-700 font-semibold">Hashtags:</label>
-                <input
-                    type="text"
-                    value={hashtags}
-                    onChange={(e) => setHashtags(e.target.value)}
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg"
-                    placeholder="#sports #coding"
-                />
-                </div>
-        
-                <div className="w-full">
-                    <label className="block text-gray-700 font-semibold mb-2">Upload Image/Video:</label>
-                    <div 
-                        className="border-2 border-dashed border-gray-400 bg-white rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-all flex flex-col items-center justify-center"
-                        onClick={() => fileInputRef.current?.click()}
-                        onDrop={(e) => {
-                            e.preventDefault();
-                            setSelectedFile(e.dataTransfer.files[0]);
-                        }}
-                        onDragOver={(e) => e.preventDefault()}
-                    >
-                        {selectedFile ? (
-                            <>
-                                {selectedFile.type.startsWith("image/") ? (
-                                    <Image 
-                                        src={URL.createObjectURL(selectedFile)} 
-                                        alt="Preview"
-                                        width={40} 
-                                        height={40} 
-                                        className="w-32 h-32 object-cover mx-auto rounded-md shadow-md"
-                                    />
-                                ) : selectedFile.type.startsWith("video/") ? (
-                                    <video
-                                        controls
-                                        className="w-40 h-40 object-cover rounded-md shadow-md"
-                                    >
-                                        <source src={URL.createObjectURL(selectedFile)} type={selectedFile.type} />
-                                        Your browser does not support the video tag.
-                                    </video>
-                                ) : (
-                                    <p className="text-gray-600">{selectedFile.name}</p>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <div className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600">
-                                    Click to Upload
-                                </div>
-                                <p className="text-gray-500 mt-2">or drag & drop here</p>
-                                <p className="text-xs text-gray-400">(PNG, JPG, MP4, WEBM supported)</p>
-                            </>
+    const form = (
+        <div className="bg-white shadow-md rounded-lg p-8 flex items-center justify-center flex-grow overflow-auto h-[calc(100vh-120px)]">
+            <div className="w-full max-w-2xl bg-gray-200 shadow-lg rounded-lg p-10">
+                <h1 className="text-3xl font-bold mb-6 text-center">Create a New Post</h1>
+            
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                    <label className="block text-gray-700 font-semibold">Title:</label>
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full py-3 px-4 border border-gray-300 rounded-lg"
+                        required
+                    />
+                    </div>
+            
+                    <div>
+                    <label className="block text-gray-700 font-semibold">Description:</label>
+                    <textarea
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        className="w-full py-3 px-4 border border-gray-300 rounded-lg"
+                        required
+                    />
+                    </div>
+            
+                    <div>
+                    <label className="block text-gray-700 font-semibold">Hashtags:</label>
+                    <input
+                        type="text"
+                        value={hashtags}
+                        onChange={(e) => setHashtags(e.target.value)}
+                        className="w-full py-3 px-4 border border-gray-300 rounded-lg"
+                        placeholder="#sports #coding"
+                    />
+                    </div>
+            
+                    <div className="w-full">
+                        <label className="block text-gray-700 font-semibold mb-2">Upload Image/Video:</label>
+                        <div 
+                            className="border-2 border-dashed border-gray-400 bg-white rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-all flex flex-col items-center justify-center"
+                            onClick={() => fileInputRef.current?.click()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                setSelectedFile(e.dataTransfer.files[0]);
+                            }}
+                            onDragOver={(e) => e.preventDefault()}
+                        >
+                            {selectedFile ? (
+                                <>
+                                    {selectedFile.type.startsWith("image/") ? (
+                                        <Image 
+                                            src={URL.createObjectURL(selectedFile)} 
+                                            alt="Preview"
+                                            width={40} 
+                                            height={40} 
+                                            className="w-32 h-32 object-cover mx-auto rounded-md shadow-md"
+                                        />
+                                    ) : selectedFile.type.startsWith("video/") ? (
+                                        <video
+                                            controls
+                                            className="w-40 h-40 object-cover rounded-md shadow-md"
+                                        >
+                                            <source src={URL.createObjectURL(selectedFile)} type={selectedFile.type} />
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    ) : (
+                                        <p className="text-gray-600">{selectedFile.name}</p>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <div className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600">
+                                        Click to Upload
+                                    </div>
+                                    <p className="text-gray-500 mt-2">or drag & drop here</p>
+                                    <p className="text-xs text-gray-400">(PNG, JPG, MP4, WEBM supported)</p>
+                                </>
+                            )}
+                        </div>
+
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            accept="image/png, image/jpeg, image/jpg, video/mp4, video/webm, video/ogg"
+                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                            className="hidden"
+                        />
+
+                        {selectedFile && (
+                            <div className="mt-3 flex justify-between items-center">
+                                <p className="text-sm text-gray-500">{selectedFile.name}</p>
+                                <button 
+                                    type="button"
+                                    className="text-red-500 text-sm font-medium hover:underline"
+                                    onClick={() => setSelectedFile(null)}
+                                >
+                                    Remove
+                                </button>
+                            </div>
                         )}
                     </div>
-
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept="image/png, image/jpeg, image/jpg, video/mp4, video/webm, video/ogg"
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                        className="hidden"
-                    />
-
-                    {selectedFile && (
-                        <div className="mt-3 flex justify-between items-center">
-                            <p className="text-sm text-gray-500">{selectedFile.name}</p>
-                            <button 
-                                type="button"
-                                className="text-red-500 text-sm font-medium hover:underline"
-                                onClick={() => setSelectedFile(null)}
-                            >
-                                Remove
-                            </button>
+            
+                    {isUploading && (
+                        <div className="mt-4">
+                            <Progress value={progress} className="h-2 bg-gray-300" />
                         </div>
                     )}
-                </div>
-        
-                {isUploading && (
-                    <div className="mt-4">
-                        <Progress value={progress} className="h-2 bg-gray-300" />
-                    </div>
-                )}
 
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-500 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-600"
+                        disabled={isUploading}
+                    >
+                        Publish
+                    </button>
+                </form>        
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="min-h-screen bg-gray-100 text-gray-800">
+            {/* Mobile View Toggle Buttons */}
+            <div className="md:hidden flex justify-between p-4 gap-4">
                 <button
-                    type="submit"
-                    className="w-full bg-blue-500 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-600"
-                    disabled={isUploading}
+                onClick={() => {
+                    setShowSidebar(prev => !prev);
+                    setShowChatList(false);
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
                 >
-                    Publish
+                {showSidebar ? "Close Sidebar" : "Sidebar"}
                 </button>
-            </form>        
+                <button
+                onClick={() => {
+                    setShowChatList(prev => !prev);
+                    setShowSidebar(false);
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+                >
+                {showChatList ? "Close Friends" : "Friends"}
+                </button>
+            </div>
+    
+            {/* Mobile View Content */}
+            <div className="md:hidden min-h-screen overflow-y-auto px-4">
+                {showSidebar && <Sidebar />}
+                {showChatList && <ChatList />}
+                {!showSidebar && !showChatList && form}
+            </div>
+    
+            {/* Desktop Layout */}
+            <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 p-6 h-[calc(100vh-4rem)] overflow-hidden">
+                <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <Sidebar />
+                </div>
+                <div className="h-full overflow-y-auto">{form}</div>
+                <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <ChatList />
+                </div>
+            </div>
         </div>
     );
 };
