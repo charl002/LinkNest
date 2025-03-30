@@ -9,7 +9,8 @@
     "start": "node --loader ts-node/esm ./server.ts",
     "lint": "next lint",
     "test": "next build && jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "postinstall": "npm install swagger-ui-react@5.20.2 --legacy-peer-deps"
   },
   "dependencies": {
     "@atproto/api": "^0.12.2",
