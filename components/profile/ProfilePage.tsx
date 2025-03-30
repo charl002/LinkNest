@@ -359,7 +359,7 @@ export default function ProfilePage({ user }: { user: string }) {
 
   let profileContent = null;
   if (userData) profileContent = (
-    <div className="w-full h-full mx-auto bg-white border border-gray-300 shadow-sm rounded-lg overflow-hidden">
+    <div className="w-full h-full mx-auto bg-white border border-gray-300 shadow-sm rounded-lg overflow-auto custom-scrollbar">
       <div className="w-full h-32 bg-gray-300 relative">
         <Image
           src={userData.data.background || userData.data.image}
