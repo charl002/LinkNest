@@ -24,6 +24,8 @@ interface UserData {
     image: string;
     description: string;
     background: string;
+    isAdmin: boolean;
+    isBanned: boolean;
   };
 }
 
@@ -106,27 +108,32 @@ export default function ProfilePage({ user }: { user: string }) {
     }
   }, [user, sessionUsername]);
 
+  // Add this with other state declarations
+  const [isSessionUserAdmin, setIsSessionUserAdmin] = useState(false);
+  
+  // Modify fetchPosts to also check if logged-in user is admin
   const fetchPosts = useCallback(async () => {
     try {
       const [userResponse, postsResponse] = await Promise.all([
         fetch(`/api/getsingleuser?email=${email}`),
         fetch(`/api/getpostbyusername?username=${user}`)
       ]);
-
+  
       if (!userResponse.ok) {
         throw new Error("Failed to fetch user");
       }
-
+  
       const sessionUser = await userResponse.json();
       setSessionUsername(sessionUser.data?.username || "Unknown");
-
+      setIsSessionUserAdmin(sessionUser.data?.isAdmin || false);  // Add this line
+  
       if (!postsResponse.ok) {
         throw new Error("Failed to fetch posts");
       }
-
+  
       const result = await postsResponse.json();
       const posts = result.posts || [];
-
+  
       setPostsCount(posts.length);
       setPosts(posts);
     } catch (err) {
@@ -305,6 +312,53 @@ export default function ProfilePage({ user }: { user: string }) {
   };
   
 
+  const handleBanUser = async () => {
+    if (!userData) return;
+  
+    try {
+      const response = await fetch("/api/banuser", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userData.id,
+          isBanned: !userData.data.isBanned
+        }),
+      });
+  
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to update ban status");
+      }
+  
+      setUserData(prev => 
+        prev ? {
+          ...prev,
+          data: {
+            ...prev.data,
+            isBanned: !prev.data.isBanned
+          }
+        } : null
+      );
+  
+      customToast({ 
+        message: userData.data.isBanned ? 
+          `${userData.data.username} has been unbanned.` : 
+          `${userData.data.username} has been banned.`, 
+        type: "success" 
+      });
+  
+    } catch (err) {
+      customToast({ 
+        message: "Error updating ban status: " + (err as Error).message, 
+        type: "error" 
+      });
+    }
+  };
+  
+
   return (
     <div className="bg-white h-[calc(100vh-120px)] w-full text-gray-800">
       {loading && <LoadingLogo/>}
@@ -437,15 +491,43 @@ export default function ProfilePage({ user }: { user: string }) {
                     Loading...
                   </button>
                 ) : (
-                  <button
-                    className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
-                      isFriend ? "bg-red-500" : "bg-blue-500"
-                    }`}
-                    onClick={isFriend ? handleRemoveFriend : handleAddFriend}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
-                  </button>
+                  <>
+                    {isFriend ? (
+                      <button
+                        className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
+                          isFriend ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
+                        }`}
+                        onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
+                      </button>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        <button
+                          className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
+                            isFriend ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
+                          }`}
+                          onClick={isFriend ? handleRemoveFriend : handleAddFriend}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? "Processing..." : isFriend ? "Remove Friend" : "Add Friend"}
+                        </button>
+                        {isSessionUserAdmin && userData.data.email !== email && (
+                          <button
+                            className={`px-4 py-2 text-white text-sm rounded-full transition-transform duration-200 hover:scale-110 active:scale-90 ${
+                              userData.data.isBanned 
+                                ? "bg-emerald-500 hover:bg-emerald-600" 
+                                : "bg-rose-500 hover:bg-rose-600"
+                            }`}
+                            onClick={handleBanUser}
+                          >
+                            {userData.data.isBanned ? "Unban User" : "Ban User"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </>
               )}
