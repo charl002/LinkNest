@@ -55,6 +55,12 @@ export default function UserCheck() {
                 if (response.status === 404) {
                     setUsernameRequired(true);
                 } else if (response.ok) {
+                    const userData = await response.json();
+                    // Check if user is banned
+                    if (userData.data?.isBanned) {
+                        window.location.href = '/banned';
+                        return;
+                    }
                     console.log("User already exists in the database");
                 } else {
                     console.error("Failed to fetch user:", await response.json());
