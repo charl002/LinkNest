@@ -4,7 +4,7 @@ import { withRetry } from '@/utils/backoff';
 
 /**
  * @swagger
- * /api/users:
+ * /api/getalluser:
  *   get:
  *     summary: Get all users
  *     description: Retrieves a list of all users stored in Firestore.

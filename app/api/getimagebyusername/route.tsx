@@ -1,6 +1,40 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 
+/**
+ * @swagger
+ * /api/getimagebyusername:
+ *   get:
+ *     summary: Get the latest image uploaded by a user
+ *     description: Retrieves the most recent image uploaded to Firestore by a specific user, based on the provided username.
+ *     parameters:
+ *       - in: query
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Username to filter images by
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved the latest image
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 fileUrl:
+ *                   type: string
+ *                   description: URL to the image
+ *       400:
+ *         description: Username not provided in query
+ *       404:
+ *         description: No image found for the given username
+ *       500:
+ *         description: Internal server error
+ */
+
 export async function GET(request: Request) {
   try {
     // Extract username from query parameters
