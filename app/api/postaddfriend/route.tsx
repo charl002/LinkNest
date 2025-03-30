@@ -2,6 +2,49 @@ import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import addData from "@/firebase/firestore/addData";
 
+/**
+ * @swagger
+ * /api/postaddfriend:
+ *   post:
+ *     summary: Add a new friend connection
+ *     description: Adds a friendship between two users if they are not already friends.
+ *     tags:
+ *       - Friends
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - senderUsername
+ *               - receiverUsername
+ *             properties:
+ *               senderUsername:
+ *                 type: string
+ *                 example: johndoe
+ *               receiverUsername:
+ *                 type: string
+ *                 example: janedoe
+ *     responses:
+ *       200:
+ *         description: Friend added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 id:
+ *                   type: string
+ *       400:
+ *         description: Missing required usernames
+ *       409:
+ *         description: Users are already friends
+ *       500:
+ *         description: Server or Firestore error
+ */
 export async function POST(req: Request) {
     try {
         const { senderUsername, receiverUsername } = await req.json();
