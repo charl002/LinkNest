@@ -329,6 +329,7 @@ export default function UserCheck() {
 
     return (
         <div className="min-h-screen w-full text-gray-800">
+            {/* Mobile Layout */}
             <div className="md:hidden p-4 space-y-4">
                 <div className="flex justify-between gap-4">
                     <button
@@ -358,6 +359,7 @@ export default function UserCheck() {
                 </div>
             </div>
 
+            {/* Desktop Layout */}
             <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 p-6 w-full h-screen">
                 <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
                     <Sidebar />
