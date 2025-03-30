@@ -9,8 +9,7 @@
     "start": "node --loader ts-node/esm ./server.ts",
     "lint": "next lint",
     "test": "next build && jest",
-    "test:watch": "jest --watch",
-    "postinstall": "npm install swagger-ui-react@5.20.2 --legacy-peer-deps"
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@atproto/api": "^0.12.2",
@@ -48,6 +47,7 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "sonner": "^2.0.1",
+    "swagger-ui-react": "^5.20.2",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "ts-jest": "^29.2.6"
