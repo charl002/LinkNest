@@ -341,6 +341,12 @@ export default function Chat() {
     }
   };
 
+  const handleCopyMessage = (text: string) => {
+    navigator.clipboard.writeText(text)
+    .then(() => toast.success("Copied to clipboard!"))
+    .catch(() => toast.error("Failed to copy message."));
+  }
+
   const handleRemoveReaction = async (message: Message) => {
     try {
       const response = await fetch("/api/deletereaction", {
@@ -495,7 +501,9 @@ export default function Chat() {
                         <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
                           Reply
                         </button>
-                        <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
+                        <button 
+                        className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
+                        onClick={() => handleCopyMessage(msg.message)}>
                           Copy
                         </button>
 
