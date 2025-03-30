@@ -8,8 +8,6 @@ import { withRetry } from '@/utils/backoff';
  *   get:
  *     summary: Get all users
  *     description: Retrieves a list of all users stored in Firestore.
- *     tags:
- *       - Users
  *     responses:
  *       200:
  *         description: A list of users
