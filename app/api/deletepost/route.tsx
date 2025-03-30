@@ -15,6 +15,45 @@ const blobService = new BlobServiceClient(
 const containerClient = blobService.getContainerClient(containerName);
 const db = getFirestore(firebase_app);
 
+/**
+ * @swagger
+ * /api/deletepost:
+ *   delete:
+ *     summary: Delete a post by ID
+ *     description: Deletes a post from Firestore and optionally its image from Azure Blob Storage (if postType is 'posts').
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - postId
+ *               - postType
+ *             properties:
+ *               postId:
+ *                 type: string
+ *                 description: The ID of the post to delete.
+ *               postType:
+ *                 type: string
+ *                 description: The Firestore collection of the post (e.g., "posts", "news", "bluesky").
+ *     responses:
+ *       200:
+ *         description: Post deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Internal server error
+ */
 export async function DELETE(request: Request) {
   try {
     const { postId, postType } = await request.json();
