@@ -32,6 +32,7 @@ export default function UserCheck() {
     const scrollRef = useRef({ allPosts, currentPage, pageSize, hasMore, loadingPosts });
     const [showSidebar, setShowSidebar] = useState(false);
     const [showChatList, setShowChatList] = useState(false);
+    const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
 
     useEffect(() => {
         if (!session?.user) return;
@@ -61,7 +62,7 @@ export default function UserCheck() {
                         window.location.href = '/banned';
                         return;
                     }
-                    console.log("User already exists in the database");
+                    setBlockedUsers(userData.data.blockedUsers || []);
                 } else {
                     console.error("Failed to fetch user:", await response.json());
                 }
@@ -73,96 +74,69 @@ export default function UserCheck() {
         fetchData();
     }, [session]);
 
-    // useEffect(() => {
-    //   if (!sessionUsername) return;
-
-    //   async function fetchFriends() {
-    //       try {
-    //           const response = await fetch(`/api/getfriends?username=${sessionUsername}`);
-    //           const data = await response.json();
-
-    //           if (!response.ok) {
-    //               console.error("Error fetching friends:", data);
-    //               return;
-    //           }
-
-    //           const friendsData = await Promise.all(
-    //               data.friends.map(async (friendUsername: string) => {
-    //                   const userResponse = await fetch(`/api/getsingleuser?username=${friendUsername}`);
-    //                   const userData = await userResponse.json();
-
-    //                   return userResponse.ok ? { id: userData.id, ...userData.data } : null;
-    //               })
-    //           );
-
-    //           setFriends(friendsData.filter(Boolean)); // Remove null values
-    //       } catch (error) {
-    //           console.error("Error fetching friends:", error);
-    //       }
-    //   }
-
-    //   fetchFriends();
-    // }, [sessionUsername, setFriends]); // Fetch friends when username is available
-
-    useEffect(() => {
-        if (!session?.user) return;
-
-        const fetchInitialPosts = async () => {
-            setLoadingPosts(true);
-            const sessionEmail = session?.user?.email;
-            const response = await fetch(`/api/getsingleuser?email=${sessionEmail}`);
+    const fetchInitialPosts = useCallback(async () => {
+        if (!session?.user?.email) return;
+        
+        setLoadingPosts(true);
+        try {
+            const response = await fetch(`/api/getsingleuser?email=${session.user.email}`);
             const sessionUser = await response.json();
 
             if (response.ok) {
-                setSessionUsername(sessionUser.data.username)
-            } 
-
-            try {
-                const [response, newsResponse, customResponse] = await Promise.all([
-                    fetch('/api/bluesky/getfromdb'),
-                    fetch('/api/news/getfromdb'),
-                    fetch('/api/getuserpost')
-                ]);
-    
-                const [data, newsData, customData] = await Promise.all([
-                    response.json(),
-                    newsResponse.json(),
-                    customResponse.json()
-                ]);
-                
-                let fetchedPosts: PostType[] = [];
-                if (data.success) fetchedPosts = fetchedPosts.concat(data.posts);
-                if (newsData.success) fetchedPosts = fetchedPosts.concat(newsData.posts);
-                if (customData.success) fetchedPosts = fetchedPosts.concat(customData.posts);
-
-                const sortedPosts = fetchedPosts.sort((a, b) => 
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                );
-
-                setAllPosts(sortedPosts);
-                setPosts(sortedPosts.slice(0, pageSize));
-                setHasMore(sortedPosts.length > pageSize);
-                setCurrentPage(0);
-            } catch (err) {
-                console.error("Error fetching posts:", err);
-            } finally {
-                setLoadingPosts(false);
+                setSessionUsername(sessionUser.data.username);
+                setBlockedUsers(sessionUser.data.blockedUsers || []);
             }
-        };
 
-        fetchInitialPosts();
+            const [blueskyResponse, newsResponse, customResponse] = await Promise.all([
+                fetch('/api/bluesky/getfromdb'),
+                fetch('/api/news/getfromdb'),
+                fetch('/api/getuserpost')
+            ]);
+
+            const [blueskyData, newsData, customData] = await Promise.all([
+                blueskyResponse.json(),
+                newsResponse.json(),
+                customResponse.json()
+            ]);
+            
+            let fetchedPosts: PostType[] = [];
+            if (blueskyData.success) fetchedPosts = fetchedPosts.concat(blueskyData.posts);
+            if (newsData.success) fetchedPosts = fetchedPosts.concat(newsData.posts);
+            if (customData.success) fetchedPosts = fetchedPosts.concat(customData.posts);
+
+            const sortedPosts = fetchedPosts.sort((a, b) => 
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+            setAllPosts(sortedPosts);
+            setPosts(sortedPosts.slice(0, pageSize));
+            setHasMore(sortedPosts.length > pageSize);
+            setCurrentPage(0);
+        } catch (err) {
+            console.error("Error fetching posts:", err);
+        } finally {
+            setLoadingPosts(false);
+        }
     }, [session, pageSize]);
 
     const filterPosts = useCallback((posts: PostType[]) => {
         return posts.filter(post => {
+            // First filter out blocked users
+            if (blockedUsers.includes(post.username)) return false;
+            
+            // Then apply tab filtering
             if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
             if (activeTab === 'bluesky') return post.postType === 'bluesky';
             if (activeTab === 'news') return post.postType === 'news';
             return true;
         });
-    }, [activeTab]);
+    }, [activeTab, blockedUsers]);
 
-    // Effect for tab changes
+    useEffect(() => {
+        if (!session?.user) return;
+        fetchInitialPosts();
+    }, [session, fetchInitialPosts]);
+
     useEffect(() => {
         const filteredPosts = filterPosts(allPosts);
         setPosts(filteredPosts.slice(0, pageSize));
@@ -170,12 +144,10 @@ export default function UserCheck() {
         setHasMore(filteredPosts.length > pageSize);
     }, [activeTab, allPosts, pageSize, filterPosts]);
 
-    // Update ref when values change
     useEffect(() => {
         scrollRef.current = { allPosts, currentPage, pageSize, hasMore, loadingPosts };
     }, [allPosts, currentPage, pageSize, hasMore, loadingPosts]);
 
-    // Simplified infinite scroll effect
     useEffect(() => {
         if (!inView || !scrollRef.current.hasMore || scrollRef.current.loadingPosts) return;
         
@@ -237,17 +209,17 @@ export default function UserCheck() {
             return;
         }
 
-        if (username.length > 20 || username.length == 0){
+        if (username.length > 20 || username.length == 0) {
             setUsernameError("Username should be between 1 and 20 charecters long.")
             return;
         }
 
-        if (description.length > 350){
+        if (description.length > 350) {
             setUsernameError("User desctiption should be less that 350 charecters long.")
             return;
         }
 
-        const { email, name, image } = session!.user;
+        const { email, name, image } = session.user;
 
         try {
             const postResponse = await fetch('/api/postuser', {
@@ -261,7 +233,6 @@ export default function UserCheck() {
             if (!postResponse.ok) {
                 console.error("Failed to store user data in Firebase");
             } else {
-                // Username has been submitted, hide the form
                 setUsernameRequired(false);
             }
         } catch (err) {
@@ -269,57 +240,57 @@ export default function UserCheck() {
         }
     };
 
-    const mainContent =(
-      <section className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
-          <div className="flex space-x-2 mb-6">
-              <button
-                  onClick={() => setActiveTab('user')}
-                  className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
-                      activeTab === 'user' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
-              >
-                  Posts
-              </button>
-              <button
-                  onClick={() => setActiveTab('bluesky')}
-                  className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
-                      activeTab === 'bluesky' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
-              >
-                  Bluesky
-              </button>
-              <button
-                  onClick={() => setActiveTab('news')}
-                  className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
-                      activeTab === 'news' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
-              >
-                  News
-              </button>
-          </div>
-          <div className="space-y-6 overflow-y-auto flex-1 h-[calc(100vh-120px)]">
-              {posts.map((post, index) => (
-                  <Post 
-                      key={`${post.id}-${index}`} 
-                      {...post} 
-                      profilePicture={post.profilePicture || ""}
-                      documentId={post.id}
-                      postType={post.postType}
-                      sessionUsername={sessionUsername}
-                  />
-              ))}
-              <div ref={ref}>
-                  {hasMore && <div className="text-center py-4">Loading more posts...</div>}
-              </div>
-          </div>
-      </section>
-    )
+    const mainContent = (
+        <section className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
+            <div className="flex space-x-2 mb-6">
+                <button
+                    onClick={() => setActiveTab('user')}
+                    className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
+                        activeTab === 'user' 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                >
+                    Posts
+                </button>
+                <button
+                    onClick={() => setActiveTab('bluesky')}
+                    className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
+                        activeTab === 'bluesky' 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                >
+                    Bluesky
+                </button>
+                <button
+                    onClick={() => setActiveTab('news')}
+                    className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
+                        activeTab === 'news' 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                >
+                    News
+                </button>
+            </div>
+            <div className="space-y-6 overflow-y-auto flex-1 h-[calc(100vh-120px)]">
+                {posts.map((post, index) => (
+                    <Post 
+                        key={`${post.id}-${index}`} 
+                        {...post} 
+                        profilePicture={post.profilePicture || ""}
+                        documentId={post.id}
+                        postType={post.postType}
+                        sessionUsername={sessionUsername}
+                    />
+                ))}
+                <div ref={ref}>
+                    {hasMore && <div className="text-center py-4">Loading more posts...</div>}
+                </div>
+            </div>
+        </section>
+    );
 
     if (usernameRequired) {
         return (
@@ -353,53 +324,51 @@ export default function UserCheck() {
     }
 
     if (loadingPosts) {
-        return <LoadingLogo/>;
+        return <LoadingLogo />;
     }
 
     return (
-      <div className="min-h-screen w-full text-gray-800">
-      {/* Mobile Layout */}
-      <div className="md:hidden p-4 space-y-4">
-        <div className="flex justify-between gap-4">
-          <button
-            onClick={() => {
-              setShowSidebar(prev => !prev);
-              setShowChatList(false);
-            }}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
-          >
-            {showSidebar ? "Close Sidebar" : "Sidebar"}
-          </button>
-          <button
-            onClick={() => {
-              setShowChatList(prev => !prev);
-              setShowSidebar(false);
-            }}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
-          >
-            {showChatList ? "Close Friends" : "Friends"}
-          </button>
+        <div className="min-h-screen w-full text-gray-800">
+            <div className="md:hidden p-4 space-y-4">
+                <div className="flex justify-between gap-4">
+                    <button
+                        onClick={() => {
+                            setShowSidebar(prev => !prev);
+                            setShowChatList(false);
+                        }}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+                    >
+                        {showSidebar ? "Close Sidebar" : "Sidebar"}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setShowChatList(prev => !prev);
+                            setShowSidebar(false);
+                        }}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
+                    >
+                        {showChatList ? "Close Friends" : "Friends"}
+                    </button>
+                </div>
+
+                <div className="md:hidden min-h-screen overflow-y-auto px-4">
+                    {showSidebar && <Sidebar />}
+                    {showChatList && <ChatList />}
+                    {!showSidebar && !showChatList && mainContent}
+                </div>
+            </div>
+
+            <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 p-6 w-full h-screen">
+                <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
+                    <Sidebar />
+                </div>
+                {mainContent}
+                <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
+                    <ChatList />
+                </div>
+            </div>
+
+            <Toaster position="bottom-center" richColors />
         </div>
-  
-        <div className="md:hidden min-h-screen overflow-y-auto px-4">
-          {showSidebar && <Sidebar />}
-          {showChatList && <ChatList />}
-          {!showSidebar && !showChatList && mainContent}
-        </div>
-      </div>
-  
-      {/* Desktop Layout */}
-      <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 p-6 w-full h-screen">
-        <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
-          <Sidebar />
-        </div>
-        {mainContent}
-        <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
-          <ChatList />
-        </div>
-      </div>
-  
-      <Toaster position="bottom-center" richColors />
-    </div>
     );
 }
