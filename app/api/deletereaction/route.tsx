@@ -10,6 +10,8 @@ const db = getFirestore(firebase_app);
  *   put:
  *     summary: Remove a reaction from a message
  *     description: Removes a user's reaction from a specific message by messageId.
+ *     tags:
+ *      - Messages
  *     requestBody:
  *       required: true
  *       content:

@@ -14,6 +14,8 @@ interface FriendRequest {
  *   get:
  *     summary: Get pending friend requests for a user
  *     description: Retrieves all pending friend requests where the given username is the receiver.
+ *     tags:
+ *      - Friend Requests
  *     parameters:
  *       - in: query
  *         name: username

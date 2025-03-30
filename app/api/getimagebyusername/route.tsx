@@ -7,6 +7,8 @@ import { getAllDocuments } from "@/firebase/firestore/getData";
  *   get:
  *     summary: Get the latest image uploaded by a user
  *     description: Retrieves the most recent image uploaded to Firestore by a specific user, based on the provided username.
+ *     tags:
+ *      - Images
  *     parameters:
  *       - in: query
  *         name: username

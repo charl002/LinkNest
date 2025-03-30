@@ -7,6 +7,8 @@ import { getDocument } from "@/firebase/firestore/getData"; // We will define th
  *   get:
  *     summary: Get group chat data by groupId
  *     description: Retrieves information about a group chat by its ID.
+ *     tags:
+ *      - Group Chats
  *     parameters:
  *       - in: query
  *         name: groupId

@@ -11,6 +11,8 @@ const db = getFirestore(firebase_app);
  *   get:
  *     summary: Get all posts by username
  *     description: Returns all posts created by the specified username.
+ *     tags:
+ *      - Posts
  *     parameters:
  *       - in: query
  *         name: username

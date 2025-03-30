@@ -21,6 +21,8 @@ const db = getFirestore(firebase_app);
  *   delete:
  *     summary: Delete a post by ID
  *     description: Deletes a post from Firestore and optionally its image from Azure Blob Storage (if postType is 'posts').
+ *     tags:
+ *      - Posts
  *     requestBody:
  *       required: true
  *       content:

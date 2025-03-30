@@ -10,6 +10,8 @@ const db = getFirestore(firebase_app);
  *   get:
  *     summary: Get a specific message by ID
  *     description: Retrieves a message document from the Firestore "messages" collection using the provided messageId query parameter.
+ *     tags:
+ *      - Messages
  *     parameters:
  *       - in: query
  *         name: messageId

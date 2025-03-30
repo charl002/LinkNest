@@ -10,6 +10,8 @@ const db = getFirestore(firebase_app);
  *   get:
  *     summary: Get unread message counts for a user
  *     description: Retrieves unread message count and last message from each sender for the specified receiver.
+ *     tags:
+ *      - Messages
  *     parameters:
  *       - in: query
  *         name: receiver

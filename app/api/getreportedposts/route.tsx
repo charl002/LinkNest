@@ -27,6 +27,8 @@ const db = getFirestore(firebase_app);
  *   get:
  *     summary: Get all reported posts
  *     description: Retrieves all posts that have been reported from 'posts', 'news', and 'bluesky' collections.
+ *     tags:
+ *      - Moderation
  *     responses:
  *       200:
  *         description: A list of reported posts.

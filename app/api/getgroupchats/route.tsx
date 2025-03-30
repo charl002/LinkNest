@@ -8,6 +8,8 @@ import { getData } from "@/firebase/firestore/getData";
  *   get:
  *     summary: Get group chats for a user
  *     description: Retrieves all group chats where the specified user is a member.
+ *     tags:
+ *      - Group Chats
  *     parameters:
  *       - in: query
  *         name: user

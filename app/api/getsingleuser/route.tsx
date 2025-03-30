@@ -11,6 +11,8 @@ const db = getFirestore(firebase_app);
  *   get:
  *     summary: Get a single user
  *     description: Retrieves a user from the database by email or username. One of the two query parameters is required.
+ *     tags:
+ *      - Users
  *     parameters:
  *       - in: query
  *         name: email

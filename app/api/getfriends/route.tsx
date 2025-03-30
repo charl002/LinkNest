@@ -7,6 +7,8 @@ import { getAllDocuments } from "@/firebase/firestore/getData";
  *   get:
  *     summary: Get a user's friends
  *     description: Returns a list of usernames who are friends with the specified user.
+ *     tags:
+ *      - Friends
  *     parameters:
  *       - in: query
  *         name: username

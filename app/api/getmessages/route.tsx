@@ -19,6 +19,8 @@ interface Message {
  *   get:
  *     summary: Fetch direct messages between two users
  *     description: Retrieves all direct messages exchanged between the specified sender and receiver. Only the sender can access their messages.
+ *     tags:
+ *      - Messages
  *     parameters:
  *       - in: query
  *         name: sender
