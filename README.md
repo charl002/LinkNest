@@ -70,17 +70,17 @@ npm run test
 
 ## Screenshots
 ![Login Page](public/readme1.png)
-Login with the Sign in button in the top right. <br />
+    Login with the Sign in button in the top right. <br />
 ![Home Page](public/readme2.png)
-Welcome to the home page. <br />
+    Welcome to the home page. <br />
 ![Click on PFP](public/readme3.png) <br />
-Click your Profile Picture for different options. <br />
+    Click your Profile Picture for different options. <br />
 ![Chatting Page](public/readme4.png)
-Add friends and chat with them! <br />
+    Add friends and chat with them! <br />
 ![Profile Page](public/readme5.png)
-Look at user profiles. <br />
+    Look at user profiles. <br />
 ![Create Post Page](public/readme6.png)
-Create Posts! <br />
+    Create Posts! <br />
 
 ## Rationale behind development deployment
     We use Vercel as the Production Deployment since it is much faster than Render and Azure, which was not loading images.
