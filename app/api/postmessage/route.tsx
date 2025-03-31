@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
       }
 
-      const { senderUsername, receiverUsername, message, isCallMsg } = await req.json();
+      const { senderUsername, receiverUsername, message, isCallMsg, replyTo } = await req.json();
 
       if (!senderUsername || !receiverUsername || !message || isCallMsg === undefined) {
         return NextResponse.json({ message: "Both usernames and message is required!" }, { status: 400 });
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
       const now = new Date();
 
-      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime(), reactions: [], isCallMsg: isCallMsg };
+      const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime(), reactions: [], isCallMsg: isCallMsg, replyTo };
 
       const { result: docId, error } = await withRetry(
         () => addData("messages", data),

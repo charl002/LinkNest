@@ -52,6 +52,7 @@ export default function Chat() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showChatList, setShowChatList] = useState(false);
 
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
 
   // Function to scroll to bottom of messages
   const scrollToBottom = () => {
@@ -85,6 +86,7 @@ export default function Chat() {
             date: formatTimestamp(msg.date),
             isCallMsg: msg.isCallMsg,
             reactions: msg.reactions || [],
+            replyTo: msg.replyTo ?? undefined
           }))
         );
     
@@ -161,11 +163,20 @@ export default function Chat() {
   const sendMessage = async () => {
     if (socket && input.trim() && friendUsername && currentUsername) {
       try {
+        const replyData = replyToMessage
+        ? {
+            id: replyToMessage.id,
+            sender: replyToMessage.sender,
+            message: replyToMessage.message,
+          }
+        : undefined;
+
         const postMessageData = await postMessageAndUnread(
           currentUsername,
           friendUsername,
           input,
-          false
+          false,
+          replyData
         );
 
         emitPrivateMessage(
@@ -174,7 +185,8 @@ export default function Chat() {
           friendUsername,
           input,
           postMessageData.docId,
-          false
+          false,
+          replyData
         );
 
         setMessages((prev) => [
@@ -185,6 +197,7 @@ export default function Chat() {
             message: input,
             date: formatTimestamp(new Date().toISOString()),
             isCallMsg: false,
+            replyTo: replyData
           },
         ]);
       } catch (error) {
@@ -193,6 +206,7 @@ export default function Chat() {
       }
 
       setInput("");
+      setReplyToMessage(null);
     }
   };
 
@@ -272,6 +286,32 @@ export default function Chat() {
     }
   };
 
+  const handleDeleteMessage = async (message: Message) => {
+    const messageId = typeof message.id === "string" ? message.id : String(message.id);
+    const username = currentUsername;
+    try {
+      const response = await fetch("/api/deletemessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messageId, username
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        toast.error(data.message || "Failed to delete message");
+        return;
+      }
+  
+      setMessages((prev) => prev.filter((msg) => msg.id !== message.id));
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      toast.error("An error occurred while deleting the message");
+    }
+  };
+
   // Formating the timestamp so its human readable
   const handleAddReaction = async (message: Message, reaction: string) => {
     try {
@@ -309,12 +349,17 @@ export default function Chat() {
         )
       );
 
-      toast.success("Reaction updated!");
     } catch (error) {
       console.error("Error updating reaction:", error);
       toast.error("An error occurred.");
     }
   };
+
+  const handleCopyMessage = (text: string) => {
+    navigator.clipboard.writeText(text)
+    .then(() => toast.success("Copied to clipboard!"))
+    .catch(() => toast.error("Failed to copy message."));
+  }
 
   const handleRemoveReaction = async (message: Message) => {
     try {
@@ -441,6 +486,15 @@ export default function Chat() {
                       </HoverCardContent>
                     </HoverCard>
                   )}
+                  {msg.isCallMsg ? (
+                    <div className="relative">
+                      <ChatMessage
+                        message={msg}
+                        isCurrentUser={isCurrentUser}
+                        user={user}
+                      />
+                    </div>
+                  ) : (
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <div className="relative">
@@ -458,10 +512,14 @@ export default function Chat() {
                       className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
                     >
                       <div className="flex flex-col space-y-2">
-                        <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
+                        <button 
+                        className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
+                        onClick={() => setReplyToMessage(msg)}>
                           Reply
                         </button>
-                        <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
+                        <button 
+                        className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
+                        onClick={() => handleCopyMessage(msg.message)}>
                           Copy
                         </button>
 
@@ -505,49 +563,69 @@ export default function Chat() {
                             </div>
                           </HoverCardContent>
                         </HoverCard>
-
-                        <button className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600">
+                        {isCurrentUser && (
+                        <button 
+                          className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
+                          onClick={() => handleDeleteMessage(msg)}>
                           Delete
                         </button>
+                        )}
                       </div>
                     </HoverCardContent>
-                  </HoverCard>
+                  </HoverCard>)}
                 </div>
               </div>
             );
           })}
     </div>
-    <div className="p-4 bg-white shadow-md flex items-center space-x-2 mt-auto">
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        className="flex-1 p-2 border rounded-lg w-full"
-        placeholder="Type a message..."
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            sendMessage();
-            // Also scroll to bottom after sending
-            setTimeout(scrollToBottom, 100);
-          }
-        }}
-      />
-      <button
-        onClick={() => {
-          sendMessage();
-          // Also scroll to bottom after sending
-          setTimeout(scrollToBottom, 100);
-        }}
-        className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
-      >
-        Send
-      </button>
-      <button
-        onClick={handleRedirectToCall}
-        className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
-      >
-        <Video />
-      </button>
+    <div className="p-4 bg-white shadow-md mt-auto">
+      <div className="flex flex-col space-y-2">
+        {replyToMessage && (
+          <div className="p-2 border-l-4 border-blue-500 bg-blue-50 rounded shadow-sm text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-blue-600 font-medium">Replying to {replyToMessage.sender}:</span>
+              <button
+                className="text-red-500 text-xs ml-2 hover:underline"
+                onClick={() => setReplyToMessage(null)}
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="truncate">{replyToMessage.message}</p>
+          </div>
+        )}
+
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 p-2 border rounded-lg w-full"
+            placeholder="Type a message..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+                setTimeout(scrollToBottom, 100);
+              }
+            }}
+          />
+          <button
+            onClick={() => {
+              sendMessage();
+              setTimeout(scrollToBottom, 100);
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+          >
+            Send
+          </button>
+          <button
+            onClick={handleRedirectToCall}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+          >
+            <Video />
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 );
