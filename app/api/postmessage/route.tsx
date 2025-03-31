@@ -9,7 +9,36 @@ export async function POST(req: Request) {
 
     if (!session || !session.user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      //
     }
+
+    //   const data = { sender: senderUsername, receiver: receiverUsername, message: message, seen: false, date: now.getTime(), reactions: [], isCallMsg: isCallMsg, ...(replyTo !== undefined && { replyTo }) };
+
+    //   const { result: docId, error } = await withRetry(
+    //     () => addData("messages", data),
+    //     {
+    //       maxAttempts: 3,
+    //       initialDelay: 500,
+    //       maxDelay: 3000
+    //     }
+    //   );
+
+    //   if (error) {
+    //       console.error("Firestore error:", error);
+    //       return NextResponse.json({ message: "Error adding message", error }, { status: 500 });
+    //   }
+
+    //   return NextResponse.json({ message: "Message added successfully", id: docId }, { status: 200 });
+
+    // } catch (err) {
+    //   console.error("Server error:", err);
+    //   return NextResponse.json({ 
+    //     message: "Unexpected error occurred", 
+    //     error: err instanceof Error ? err.message : "Unknown error" 
+    //   }, { status: 500 });
+    // }
+
+    //
 
     const {
       senderUsername,
@@ -54,7 +83,7 @@ export async function POST(req: Request) {
       groupId: groupId || null, // Group ID can be null for private messages
       receiver: receiverUsername || null, // Receiver will be null for group messages
       receiversUsernames: receiversUsernames || [], // Receivers for group messages
-      replyTo: replyTo || null
+      ...(replyTo !== undefined && { replyTo }) 
     };
 
     console.log("data", data)

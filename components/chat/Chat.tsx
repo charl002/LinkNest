@@ -221,7 +221,7 @@ export default function Chat() {
       }
     });
 
-    socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, }) => {
+    socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, replyTo }) => {
       
       if (senderId === friendUsername) {
         setMessages((prev) => [
@@ -233,6 +233,7 @@ export default function Chat() {
             date: formatTimestamp(new Date().toISOString()),
             isCallMsg: isCallMsg,
             reactions: [],
+            replyTo: replyTo ?? undefined,
           }, // Format timestamp
         ]);
       }
@@ -284,7 +285,7 @@ export default function Chat() {
           setMessages((prev) => [
             ...prev,
             {
-              id: postMessageData.docId,
+              id: postMessageData.id,
               sender: currentUsername,
               message: input,
               date: formatTimestamp(new Date().toISOString()),
@@ -319,7 +320,7 @@ export default function Chat() {
             socket,
             currentUsername,
             input,
-            postMessageData.docId,
+            postMessageData.id,
             false, // Not a call message
             undefined,
             groupchatId,
@@ -331,12 +332,12 @@ export default function Chat() {
           setMessages((prev) => [
             ...prev,
             {
-              id: postMessageData.docId,
+              id: postMessageData.id,
               sender: currentUsername,
               message: input,
               date: formatTimestamp(new Date().toISOString()),
               isCallMsg: false,
-              replyTo: replyData
+              replyTo: replyData ?? undefined
             },
           ]);
         }
@@ -396,7 +397,7 @@ export default function Chat() {
           socket,
           currentUsername,
           callMessage,
-          postMessageData.docId,
+          postMessageData.id,
           true,
           friendUsername
         );

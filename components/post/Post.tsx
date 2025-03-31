@@ -15,6 +15,7 @@ import { customToast } from "@/components/ui/customToast";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 import { useInView } from 'react-intersection-observer';
 import ReportDialog from "./ReportDialog";
+import { useRouter } from "next/navigation";
 
 interface PostProps {
     title: string;
@@ -56,7 +57,8 @@ export default function Post({ title, username, description, tags, comments, lik
         fetchSessionUsername();
     }, [session, likedBy, sessionUsername]);
 
-      
+    
+    
     // Fetch profile pictures for comments
     const fetchProfilePictures = async (comments: Comment[]) => {
       const updatedComments = await Promise.all(
@@ -82,6 +84,7 @@ export default function Post({ title, username, description, tags, comments, lik
       return updatedComments;
   };    
 
+    const router = useRouter();
     const handleToggleLike = async () => {
         if (!session?.user || !sessionUsername || isLoading) return;
 
@@ -102,6 +105,7 @@ export default function Post({ title, username, description, tags, comments, lik
             if (response.ok) {
                 setLikeCount(prevCount => newIsLiked ? prevCount + 1 : prevCount - 1);
                 setIsLiked(newIsLiked);
+                router.refresh();
             } else {
                 console.error(data.message);
             }
@@ -146,7 +150,7 @@ export default function Post({ title, username, description, tags, comments, lik
           // Fetch profile pictures for all comments (including the new one)
           const updatedCommentsWithProfilePictures = await fetchProfilePictures([...updatedComments, newCommentData]);
           setPostComments(updatedCommentsWithProfilePictures);
-  
+          router.refresh();
                 setNewComment(""); 
             } else {
                 console.error(data.message);
@@ -203,6 +207,7 @@ export default function Post({ title, username, description, tags, comments, lik
             } else {
                 console.error(data.message);
             }
+            router.refresh();
         } catch (error) {
             console.error('Error liking the comment:', error);
         } finally {
