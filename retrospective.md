@@ -46,3 +46,25 @@
     Went well -> Adding Decline friend request and remove friends features.
     Went bad -> Modularity and Comments, and not having tests already implemented.
     Next sprint -> More unit tests, and complete champion features.
+
+# RETROSPECTIVE 3:
+    Thiha:
+    Went well -> Adding the tests that everyone was able to use as a blueprint to test their own APIs, and adding Group Chats.
+    Went bad -> Group Chat Implementation being pretty complex and time consumming.
+    Next sprint -> Implement new features and fix any bugs we encounter.
+    Charles:
+    Went well -> Adding Moderation features like reports, blocking and banning.
+    Went bad -> Not being able to fix the infinite scrolling features on mobile CSS.
+    Next sprint -> Implement new features and fix any bugs we encounter.
+    Abdullah:
+    Went well -> Adding a fix sized to each image so that they don't take too much space on the page.
+    Went bad -> Figuring out how to update the cache after posts are added/updated.
+    Next sprint -> Implement new features and fix any bugs we encounter.
+    Mohammad:
+    Went well -> Adding encryption to all messages.
+    Went bad -> Not having enough time to implement encryption for chatting URLs.
+    Next sprint -> Implement new features and fix any bugs we encounter.
+    Ahmed:
+    Went well -> Adding reactions and replies to chat messages.
+    Went bad -> Reactions and messages only working after you refresh.
+    Next sprint -> Implement new features and fix any bugs we encounter.
