@@ -3,6 +3,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { withRetry } from '@/utils/backoff';
+import cache from "@/lib/cache";
 
 // Azure Storage Configuration
 const sasToken = process.env.AZURE_SAS;
@@ -87,6 +88,9 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    cache.del("user-posts");
+    console.log("[CACHE INVALIDATION] user-posts cleared due to new post.");
 
     return NextResponse.json(
       { 
