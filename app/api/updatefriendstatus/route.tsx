@@ -2,45 +2,6 @@ import { NextResponse } from "next/server";
 import { getFriendRequests } from "@/firebase/firestore/getData";
 import { updateFriendRequestStatus } from "@/firebase/firestore/updateStatus";
 
-/**
- * @swagger
- * /api/updatefriendstatus:
- *   post:
- *     summary: Update friend request status
- *     description: Accept or reject a friend request between two users.
- *     tags:
- *       - Friend Requests
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - senderUsername
- *               - receiverUsername
- *               - status
- *             properties:
- *               senderUsername:
- *                 type: string
- *                 example: "john_doe"
- *               receiverUsername:
- *                 type: string
- *                 example: "jane_doe"
- *               status:
- *                 type: string
- *                 enum: [accepted, rejected]
- *                 example: "accepted"
- *     responses:
- *       200:
- *         description: Friend request status updated successfully
- *       400:
- *         description: Missing parameters
- *       404:
- *         description: Friend request not found
- *       500:
- *         description: Internal server error
- */
 export async function POST(req: Request) {
     try {
         const { senderUsername, receiverUsername, status } = await req.json();

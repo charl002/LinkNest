@@ -3,61 +3,6 @@ import addData from "@/firebase/firestore/addData";
 import { auth } from "@/lib/auth";
 import { withRetry } from '@/utils/backoff';
 
-/**
- * @swagger
- * /api/postmessage:
- *   post:
- *     summary: Send a message between users
- *     description: Adds a message to the Firestore database. Requires authentication.
- *     tags:
- *       - Messages
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - senderUsername
- *               - receiverUsername
- *               - message
- *               - isCallMsg
- *             properties:
- *               senderUsername:
- *                 type: string
- *                 example: johndoe
- *               receiverUsername:
- *                 type: string
- *                 example: janedoe
- *               message:
- *                 type: string
- *                 example: Hello there!
- *               isCallMsg:
- *                 type: boolean
- *                 example: false
- *     responses:
- *       200:
- *         description: Message added successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Message added successfully
- *                 id:
- *                   type: string
- *                   example: abc123XYZ
- *       400:
- *         description: Missing or invalid request parameters
- *       401:
- *         description: Unauthorized (no valid session)
- *       500:
- *         description: Internal server error
- */
 export async function POST(req: Request) {
     try {
       const session = await auth();

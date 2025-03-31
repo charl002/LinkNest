@@ -16,44 +16,6 @@ const blobService = new BlobServiceClient(
 );
 const containerClient = blobService.getContainerClient(containerName);
 
-/**
- * @swagger
- * /api/deleteaccount:
- *   delete:
- *     summary: Delete a user and all associated data
- *     description: Deletes a user and all associated records from Firestore and Azure Blob Storage including posts, images, messages, comments, likes, friendships, friend requests, and unread messages.
- *     tags:
- *       - User Management
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - username
- *             properties:
- *               username:
- *                 type: string
- *                 description: The username of the user to delete
- *     responses:
- *       200:
- *         description: User and all associated data deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: User and all associated data deleted successfully
- *       400:
- *         description: Username is required
- *       404:
- *         description: User not found
- *       500:
- *         description: Unexpected server error
- */
 export async function DELETE(req: Request) {
   try {
     const { username } = await req.json();

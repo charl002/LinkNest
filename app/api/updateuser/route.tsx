@@ -4,52 +4,6 @@ import { getFirestore, doc, updateDoc } from "@firebase/firestore";
 
 const db = getFirestore(firebase_app);
 
-/**
- * @swagger
- * /api/updateuser:
- *   patch:
- *     summary: Update user profile
- *     description: Update a user's username, profile picture, background, or description.
- *     tags:
- *       - Users
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - id
- *               - username
- *             properties:
- *               id:
- *                 type: string
- *                 description: Firestore document ID of the user
- *                 example: "abc123"
- *               username:
- *                 type: string
- *                 description: New username
- *                 example: "new_username"
- *               description:
- *                 type: string
- *                 description: User's profile description
- *                 example: "Updated profile description"
- *               image:
- *                 type: string
- *                 description: Profile picture URL
- *                 example: "https://example.com/profile.jpg"
- *               background:
- *                 type: string
- *                 description: Background image URL
- *                 example: "https://example.com/background.jpg"
- *     responses:
- *       200:
- *         description: User updated successfully
- *       400:
- *         description: Missing required fields
- *       500:
- *         description: Unexpected server error
- */
 export async function PATCH(req: Request) {
     try {
         const { id, username, description, image, background } = await req.json();

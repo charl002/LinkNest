@@ -20,54 +20,6 @@ interface ReportedPost {
 
 const db = getFirestore(firebase_app);
 
-
-/**
- * @swagger
- * /api/getreportedposts:
- *   get:
- *     summary: Get all reported posts
- *     description: Retrieves all posts that have been reported from 'posts', 'news', and 'bluesky' collections.
- *     tags:
- *      - Moderation
- *     responses:
- *       200:
- *         description: A list of reported posts.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 posts:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       postType:
- *                         type: string
- *                         description: Source collection of the post (e.g., posts, news, bluesky)
- *                       title:
- *                         type: string
- *                       description:
- *                         type: string
- *                       username:
- *                         type: string
- *                       reports:
- *                         type: array
- *                         items:
- *                           type: object
- *                           properties:
- *                             reportedBy:
- *                               type: string
- *                             reason:
- *                               type: string
- *                             timestamp:
- *                               type: string
- *                               format: date-time
- *       500:
- *         description: Server error while retrieving reported posts
- */
 export async function GET() {
     try {
         const collections = ['posts', 'news', 'bluesky'];
