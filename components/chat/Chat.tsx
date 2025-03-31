@@ -31,7 +31,6 @@ import { GroupChat } from "@/types/group";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { AvatarFallback } from "../ui/avatar";
 import { useGroupChats } from "../provider/GroupChatsProvider";
-import { FaCommentDollar } from "react-icons/fa";
 
 export default function Chat() {
   const socket = useSocket();

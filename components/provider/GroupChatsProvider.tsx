@@ -53,7 +53,7 @@ export function GroupChatsProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        console.log(data.groupChats);
+        console.log("Group Chat: ", data.groupChats);
 
         setGroupChats(data.groupChats);
       } catch (error) {
