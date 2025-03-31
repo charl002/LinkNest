@@ -18,6 +18,7 @@ export async function POST(req: Request) {
       isCallMsg,
       groupId,
       receiversUsernames,
+      replyTo
     } = await req.json();
 
     // Validate inputs
@@ -53,7 +54,10 @@ export async function POST(req: Request) {
       groupId: groupId || null, // Group ID can be null for private messages
       receiver: receiverUsername || null, // Receiver will be null for group messages
       receiversUsernames: receiversUsernames || [], // Receivers for group messages
+      replyTo
     };
+
+    console.log("data", data)
 
     const { result: docId, error } = await withRetry(
       () => addData("messages", data),

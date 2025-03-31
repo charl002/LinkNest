@@ -86,7 +86,8 @@ export async function GET(req: Request) {
                   date: new Date(data.date),
                   isCallMsg: isCall,
                   reactions: data.reactions,
-                  groupId: data.groupId || null
+                  groupId: data.groupId || null,
+                  replyTo: data.replyTo || undefined
               };
           })
           .filter(msg => {

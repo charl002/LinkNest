@@ -77,6 +77,8 @@ export default function Chat() {
           `/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`
         );
         const data = await response.json();
+
+        console.log("messages", data);
     
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
@@ -247,13 +249,23 @@ export default function Chat() {
       try {
         // If there's a single friend, send a private message
         if (friendUsername) {
+
+          const replyData = replyToMessage
+        ? {
+            id: replyToMessage.id,
+            sender: replyToMessage.sender,
+            message: replyToMessage.message,
+          }
+        : undefined;
+
           const postMessageData = await postMessageAndUnread(
             currentUsername,
             input,
             false,
             friendUsername,   // Send to a single friend
             undefined,          // No groupId for private messages
-            undefined           // No receivers for private messages
+            undefined,           // No receivers for private messages
+            replyData
           );
 
           emitPrivateMessage(
@@ -262,7 +274,10 @@ export default function Chat() {
             input,
             postMessageData.docId,
             false, // Not a call message
-            friendUsername
+            friendUsername,
+            undefined,
+            undefined,
+            replyData
           );
 
           // Update the UI with the new message
@@ -274,6 +289,7 @@ export default function Chat() {
               message: input,
               date: formatTimestamp(new Date().toISOString()),
               isCallMsg: false,
+              replyTo: replyData
             },
           ]);
         } 
@@ -295,7 +311,8 @@ export default function Chat() {
             false,
             undefined,          // No single receiver for group chat
             groupchatId,        // Group ID
-            validMembers      // Send to all group members
+            validMembers,      // Send to all group members
+            replyData
           );
 
           emitPrivateMessage(
