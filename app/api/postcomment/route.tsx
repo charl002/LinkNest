@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import updateArrayField from "@/firebase/firestore/updateData";
 import { withRetry } from '@/utils/backoff';
+import cache from "@/lib/cache";
 
 export async function POST(req: Request) {
     try {
@@ -39,6 +40,9 @@ export async function POST(req: Request) {
         if (error) {
             return NextResponse.json({ message: "Error adding comment", error }, { status: 500 });
         }
+
+        cache.del(`${postType}-posts`);
+        console.log(`[CACHE INVALIDATION] ${postType}-posts cleared due to new comment.`);
 
         return NextResponse.json({ message: "comment added successfully", id: docId }, { status: 200 });
 
