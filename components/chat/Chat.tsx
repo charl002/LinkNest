@@ -78,7 +78,7 @@ export default function Chat() {
         );
         const data = await response.json();
 
-        console.log("messages", data);
+        // console.log("messages", data);
     
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
@@ -201,6 +201,8 @@ export default function Chat() {
     socket.emit("register", currentUsername);
     
     socket.on("groupMessage", ({ senderId, message, msgId, isCallMsg, groupId }) => {
+      
+      console.log("gC", message);
 
       if (groupId === groupchatId) {
 

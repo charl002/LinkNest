@@ -22,6 +22,7 @@ import { GroupChat } from "@/types/group";
 import { useGroupChats } from "../provider/GroupChatsProvider";
 import { useSocket } from "../provider/SocketProvider";
 import { Badge } from "../ui/badge";
+import { decryptMessage } from "@/utils/decrypt";
 
 interface GroupChatsListProps {
   currentUser: string | null;
@@ -39,7 +40,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   const [warningMessage, setWarningMessage] = useState<string>("");
   // const [isLoading, setIsLoading] = useState(true);
   const [groupImage, setGroupImage] = useState<File | null>(null);
-  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, { count: number; message: string }>>({});
   const socket = useSocket();
   const searchParams = useSearchParams();
   const activeGroupId = searchParams.get("group");
@@ -50,6 +51,8 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   
     // Listen for group messages and update unread count
     socket.on("groupMessage", async ({ senderId, groupId, message }) => {
+      // console.log('Group Stuff', senderId, groupId, message, activeGroupId);
+      // console.log(activeGroupId);
       if (groupId) {
         // If it's not from the current user, increment unread count
         if (senderId !== currentUser) {
@@ -58,37 +61,43 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
             if (activeGroupId !== groupId) {
               return {
                 ...prev,
-                [groupId]: (prev[groupId] || 0) + 1, // Increment unread count for the group
+                [groupId]: {
+                  count: (prev[groupId]?.count || 0) + 1, // Increment unread count for the group
+                  message: decryptMessage(message),  // Keep the previous message, don't reset it
+                },
               };
             }
   
             // If the current user is chatting in this group, reset the unread count
             return {
               ...prev,
-              [groupId]: 0, // Reset unread count for this group
+              [groupId]: {
+                count: 0, // Reset unread count for this group
+                message: '',   // Set the actual new message
+              },
             };
           });
         }
       }
   
       // Check if the receiver is online, if not update Firestore
-      if (activeGroupId === groupId) {
-        try {
-          await fetch("/api/postunreadmessage", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sender: senderId,
-              receiver: currentUser, // In this case, it's the group message
-              count: 0, // Reset unread count
-              message,
-              groupId
-            }),
-          });
-        } catch (error) {
-          console.error("Error resetting unread count:", error);
-        }
-      }
+      // if (activeGroupId === groupId) {
+      //   try {
+      //     await fetch("/api/postunreadmessage", {
+      //       method: "POST",
+      //       headers: { "Content-Type": "application/json" },
+      //       body: JSON.stringify({
+      //         sender: senderId,
+      //         receiver: currentUser, // In this case, it's the group message
+      //         count: 0, // Reset unread count
+      //         message,
+      //         groupId
+      //       }),
+      //     });
+      //   } catch (error) {
+      //     console.error("Error resetting unread count:", error);
+      //   }
+      // }
     });
   
     // Clean up the socket listener when the component unmounts
@@ -96,6 +105,62 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
       socket.off("groupMessage");
     };
   }, [activeGroupId, currentUser, socket]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // const fetchUnreadMessages = async () => {
+    //   try {
+    //     const unreadCounts: Record<string, { count: number; message: string }> = {}; // Track count & message for each group
+  
+    //     // Assuming you have a `groupChats` state or context with the groupIds
+    //     // Loop through each group chat
+    //     const groupFetchPromises = groupChats.map(async (group) => {
+    //       const groupId = group.id;
+    //       console.log(`Fetching unread messages for group ${groupId}`);
+  
+    //       // Fetch unread messages from the API for this group
+    //       const unreadResponse = await fetch(`/api/getunreadmessage?receiver=${currentUser}&groupId=${groupId}`);
+    //       const unreadData = await unreadResponse.json();
+  
+    //       console.log(unreadData);
+  
+    //       if (unreadResponse.ok && unreadData?.unreadCounts && typeof unreadData.unreadCounts === 'object') {
+    //         // Process unread messages for this group
+    //         const groupUnreadMessages = unreadData.unreadCounts;
+  
+    //         // Initialize the group entry in unreadCounts if it doesn't exist yet
+    //         unreadCounts[groupId] = unreadCounts[groupId] || { count: 0, message: "" };
+  
+    //         // Process each sender's unread message for the group
+    //         Object.keys(groupUnreadMessages).forEach((sender) => {
+    //           const encryptedMsg = groupUnreadMessages[sender].message;
+    //           // Decrypt the message if it exists
+    //           const decryptedMessage = encryptedMsg ? decryptMessage(encryptedMsg) : "";
+  
+    //           // Update the unread count for the group
+    //           unreadCounts[groupId].count += groupUnreadMessages[sender].count;
+    //           unreadCounts[groupId].message = decryptedMessage; // Store the last unread message
+    //         });
+    //       } else {
+    //         console.warn(`Unread message data is not in the expected format for group ${groupId}:`, unreadData);
+    //       }
+    //     });
+  
+    //     await Promise.all(groupFetchPromises); // Wait for all fetches to complete
+    //     setUnreadMessages(unreadCounts); // Update the unreadMessages state with the new data
+
+    //     console.log('Updated unreadMessages:', unreadCounts); // Debugging
+  
+    //   } catch (error) {
+    //     console.error("Error fetching unread messages for groups:", error);
+    //   }
+    // };
+
+    // fetchUnreadMessages(); // Call the function to fetch unread messages
+  
+  }, [currentUser, groupChats]); // Dependencies: currentUser and groupChats
+  
   
 
   const handleFriendSelect = (friend: User) => {
@@ -385,9 +450,9 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
                   </div>
 
                   {/* Badge for unread messages */}
-                  {unreadMessages[group.id] > 0 && (
+                  {unreadMessages[group.id] && unreadMessages[group.id].count > 0 && (
                     <Badge variant="destructive" className="absolute top-0 right-0 -mr-0">
-                      {unreadMessages[group.id]}
+                      {unreadMessages[group.id].count}
                     </Badge>
                   )}
                 
@@ -397,6 +462,18 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
                   >
                     Chat
                   </Button>
+                </div>
+
+                <div className="flex-1 ml-6 pb-2">
+                  {unreadMessages?.[group.id]?.message ? (
+                    <span className="text-xs text-gray-500">
+                      {unreadMessages[group.id].message.length > 30
+                        ? unreadMessages[group.id].message.substring(0, 30) + "..."
+                        : unreadMessages[group.id].message}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-black-800">Chat with this person!</span>
+                  )}
                 </div>
               </div>
             ))

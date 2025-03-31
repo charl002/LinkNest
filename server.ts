@@ -33,7 +33,6 @@ app.prepare().then(() => {
     });
 
     socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, receiverId, groupId, receiversIds }) => {
-      console.log("In server", senderId, message, msgId, isCallMsg, receiverId, groupId, receiversIds)
       if(receiversIds && receiversIds.length > 0){
         receiversIds.forEach((groupReceiverId: string) => {
           const receiverSocketId = userSockets[groupReceiverId];

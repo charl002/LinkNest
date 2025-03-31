@@ -59,7 +59,8 @@ export default function ChatList() {
                     ? decryptMessage(encryptedMsg)
                     : ""; // or leave it undefined/null if you prefer
                 });
-          
+                
+                // console.log("unread friend", JSON.stringify(unreadData.unreadCounts));
                 setUnreadMessages(unreadData.unreadCounts); // Set unread message counts for private chats
               }
             } else {
