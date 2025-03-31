@@ -1,6 +1,8 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { useFriends } from "../provider/FriendsProvider";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "@/types/user";
 import {
   Dialog,
@@ -18,6 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useRouter } from 'next/navigation';
 import { GroupChat } from "@/types/group";
 import { useGroupChats } from "../provider/GroupChatsProvider";
+import { useSocket } from "../provider/SocketProvider";
+import { Badge } from "../ui/badge";
 
 interface GroupChatsListProps {
   currentUser: string | null;
@@ -35,31 +39,30 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   const [warningMessage, setWarningMessage] = useState<string>("");
   // const [isLoading, setIsLoading] = useState(true);
   const [groupImage, setGroupImage] = useState<File | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
+  const socket = useSocket();
 
-  // For now everytime you go switch the tab from Friends to -> Group Chats, this is fetched, so 
-  // We might need to move this to the parent component if it becomes problematic (ChatList).
-  // useEffect(() => {
-  //   if (!currentUser) return;
+  useEffect(() => {
+    if (!socket || !currentUser) return;
 
-  //   const fetchGroupChats = async () => {
-  //     try {
-  //       const response = await fetch(`/api/getgroupchats?user=${currentUser}`);
-  //       const data = await response.json();
+    // Listen for group messages and update unread count
+    socket.on("groupMessage", ({ senderId, groupId, message, msgId }) => {
+      if (groupId) {
+        // If it's not from the current user, increment unread count
+        if (senderId !== currentUser) {
+          setUnreadMessages((prev) => ({
+            ...prev,
+            [groupId]: (prev[groupId] || 0) + 1,
+          }));
+        }
+      }
+    });
 
-  //       if (response.ok) {
-  //         setGroupChats(data.groupChats || []);
-  //       } else {
-  //         console.error("Error fetching group chats:", data.message);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching group chats:", error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
-  //   fetchGroupChats();
-  // }, [currentUser]);
+    // Clean up the socket listener when the component unmounts
+    return () => {
+      socket.off("groupMessage");
+    };
+  }, [socket, currentUser]);
 
   const handleFriendSelect = (friend: User) => {
     setSelectedFriends((prev) =>
@@ -186,8 +189,6 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   const handleGroupChatSelect = (groupId: string) => {
     // Navigate to the group chat page
     console.log(`Navigating to group chat with ID: ${groupId}`);
-    // In a real implementation, you would navigate to the group chat page like:
-    // router.push(`/group-chat/${groupId}`);
 
     router.push(`/chat/?group=${groupId}&user=${currentUser}`);
   };
@@ -348,6 +349,14 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
                     {/* Group name */}
                     <p className="text-sm font-medium">{group.name}</p>
                   </div>
+
+                  {/* Badge for unread messages */}
+                  {unreadMessages[group.id] > 0 && (
+                    <Badge variant="destructive" className="absolute top-0 right-0 -mr-0">
+                      {unreadMessages[group.id]}
+                    </Badge>
+                  )}
+                
                   <Button
                     className="transition-transform duration-200 hover:scale-105 active:scale-95"
                     onClick={() => handleGroupChatSelect(group.id)}

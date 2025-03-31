@@ -68,20 +68,19 @@ export const postMessageAndUnread = async (
       const postMessageData = await postMessageResponse.json();
       
       // FIX: UNREADMSG 
-      // Send the unread message data for all receivers in the group
-      // for (const receiver of receivers) {
-      //   await fetch("/api/postunreadmessage", {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({
-      //       sender: sender,
-      //       receiver: receiver,
-      //       receivers: receivers,
-      //       count: 1,
-      //       message: encryptedMessage,
-      //     }),
-      //   });
-      // }
+      for (const receiver of receivers) {
+        await fetch("/api/postunreadmessage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: sender,
+            receiver: receiver,
+            count: 1,
+            message: encryptedMessage,
+            groupId: groupId
+          }),
+        });
+      }
 
       return postMessageData;
     }

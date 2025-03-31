@@ -72,32 +72,36 @@ export async function GET(req: Request) {
         }
 
         const messages: Message[] = results.docs
-            .map(doc => {
-                const data = doc.data();
+    .map(doc => {
+        const data = doc.data();
 
-                const isCall = data.isCallMsg || false; 
+        const isCall = data.isCallMsg || false;
 
-                return {
-                    id: doc.id,
-                    sender: data.sender,
-                    receiver: data.receiver,
-                    message: data.message,
-                    seen: data.seen,
-                    date: new Date(data.date),
-                    isCallMsg: isCall,
-                    reactions: data.reactions,
-                    groupId: data.groupId || null
-                };
-            })
-            .filter(msg => {
-              // Filter messages based on sender, receiver or groupId
-              const isPrivateMessage = (msg.sender === sender && msg.receiver === receiver) || (msg.sender === receiver && msg.receiver === sender);
+              return {
+                  id: doc.id,
+                  sender: data.sender,
+                  receiver: data.receiver,
+                  message: data.message,
+                  seen: data.seen,
+                  date: new Date(data.date),
+                  isCallMsg: isCall,
+                  reactions: data.reactions,
+                  groupId: data.groupId || null
+              };
+          })
+          .filter(msg => {
+              const isPrivateMessage =
+                  (msg.sender === sender && msg.receiver === receiver) ||
+                  (msg.sender === receiver && msg.receiver === sender);
+              
               const isGroupMessage = groupId && msg.groupId === groupId;
-              return isPrivateMessage || isGroupMessage;
-            })
-            .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-        return NextResponse.json({ messages }, { status: 200 });
+              // Ensure the message is either a private message or a group message with the correct groupId
+              return (isPrivateMessage && !groupId) || isGroupMessage;
+          })
+          .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      return NextResponse.json({ messages }, { status: 200 });
 
     } catch (error) {
       console.error("Server error:", error);

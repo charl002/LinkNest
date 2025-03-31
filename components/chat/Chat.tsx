@@ -31,6 +31,7 @@ import { GroupChat } from "@/types/group";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { AvatarFallback } from "../ui/avatar";
 import { useGroupChats } from "../provider/GroupChatsProvider";
+import { FaCommentDollar } from "react-icons/fa";
 
 export default function Chat() {
   const socket = useSocket();
@@ -125,11 +126,15 @@ export default function Chat() {
         if (!groupData) {
           throw new Error("Group not found");
         }
+
+        console.log(groupchatId);
+
         setGroup(groupData);
-        
 
         const response = await fetch(`/api/getmessages?groupId=${groupchatId}&sender=${currentUsername}`);
         const data = await response.json();
+
+        console.log(data);
         
         if (!response.ok) throw new Error(data.message || "Failed to fetch messages");
 
