@@ -197,7 +197,7 @@ export default function Chat() {
             message: input,
             date: formatTimestamp(new Date().toISOString()),
             isCallMsg: false,
-            replyTo: replyData
+            replyTo: replyData ?? undefined
           },
         ]);
       } catch (error) {
