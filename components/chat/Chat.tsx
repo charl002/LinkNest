@@ -578,51 +578,54 @@ export default function Chat() {
             );
           })}
     </div>
-    <div className="p-4 bg-white shadow-md flex items-center space-x-2 mt-auto">
-    {replyToMessage && (
-      <div className="mb-2 p-2 border-l-4 border-blue-500 bg-blue-50 rounded shadow-sm text-sm">
-        <div className="flex justify-between items-center">
-          <span className="text-blue-600 font-medium">Replying to {replyToMessage.sender}:</span>
+    <div className="p-4 bg-white shadow-md mt-auto">
+      <div className="flex flex-col space-y-2">
+        {replyToMessage && (
+          <div className="p-2 border-l-4 border-blue-500 bg-blue-50 rounded shadow-sm text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-blue-600 font-medium">Replying to {replyToMessage.sender}:</span>
+              <button
+                className="text-red-500 text-xs ml-2 hover:underline"
+                onClick={() => setReplyToMessage(null)}
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="truncate">{replyToMessage.message}</p>
+          </div>
+        )}
+
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 p-2 border rounded-lg w-full"
+            placeholder="Type a message..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+                setTimeout(scrollToBottom, 100);
+              }
+            }}
+          />
           <button
-            className="text-red-500 text-xs ml-2 hover:underline"
-            onClick={() => setReplyToMessage(null)}
+            onClick={() => {
+              sendMessage();
+              setTimeout(scrollToBottom, 100);
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
           >
-            Cancel
+            Send
+          </button>
+          <button
+            onClick={handleRedirectToCall}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+          >
+            <Video />
           </button>
         </div>
-        <p className="truncate">{replyToMessage.message}</p>
       </div>
-    )}
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        className="flex-1 p-2 border rounded-lg w-full"
-        placeholder="Type a message..."
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            sendMessage();
-            // Also scroll to bottom after sending
-            setTimeout(scrollToBottom, 100);
-          }
-        }}
-      />
-      <button
-        onClick={() => {
-          sendMessage();
-          // Also scroll to bottom after sending
-          setTimeout(scrollToBottom, 100);
-        }}
-        className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
-      >
-        Send
-      </button>
-      <button
-        onClick={handleRedirectToCall}
-        className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
-      >
-        <Video />
-      </button>
     </div>
   </section>
 );
