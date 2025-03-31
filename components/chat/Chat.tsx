@@ -52,6 +52,7 @@ export default function Chat() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showChatList, setShowChatList] = useState(false);
 
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
 
   // Function to scroll to bottom of messages
   const scrollToBottom = () => {
@@ -85,6 +86,7 @@ export default function Chat() {
             date: formatTimestamp(msg.date),
             isCallMsg: msg.isCallMsg,
             reactions: msg.reactions || [],
+            replyTo: msg.replyTo ?? undefined
           }))
         );
     
@@ -161,11 +163,20 @@ export default function Chat() {
   const sendMessage = async () => {
     if (socket && input.trim() && friendUsername && currentUsername) {
       try {
+        const replyData = replyToMessage
+        ? {
+            id: replyToMessage.id,
+            sender: replyToMessage.sender,
+            message: replyToMessage.message,
+          }
+        : undefined;
+
         const postMessageData = await postMessageAndUnread(
           currentUsername,
           friendUsername,
           input,
-          false
+          false,
+          replyData
         );
 
         emitPrivateMessage(
@@ -174,7 +185,8 @@ export default function Chat() {
           friendUsername,
           input,
           postMessageData.docId,
-          false
+          false,
+          replyData
         );
 
         setMessages((prev) => [
@@ -185,6 +197,7 @@ export default function Chat() {
             message: input,
             date: formatTimestamp(new Date().toISOString()),
             isCallMsg: false,
+            replyTo: replyData
           },
         ]);
       } catch (error) {
@@ -193,6 +206,7 @@ export default function Chat() {
       }
 
       setInput("");
+      setReplyToMessage(null);
     }
   };
 
@@ -498,7 +512,9 @@ export default function Chat() {
                       className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
                     >
                       <div className="flex flex-col space-y-2">
-                        <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
+                        <button 
+                        className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
+                        onClick={() => setReplyToMessage(msg)}>
                           Reply
                         </button>
                         <button 
@@ -563,6 +579,20 @@ export default function Chat() {
           })}
     </div>
     <div className="p-4 bg-white shadow-md flex items-center space-x-2 mt-auto">
+    {replyToMessage && (
+      <div className="mb-2 p-2 border-l-4 border-blue-500 bg-blue-50 rounded shadow-sm text-sm">
+        <div className="flex justify-between items-center">
+          <span className="text-blue-600 font-medium">Replying to {replyToMessage.sender}:</span>
+          <button
+            className="text-red-500 text-xs ml-2 hover:underline"
+            onClick={() => setReplyToMessage(null)}
+          >
+            Cancel
+          </button>
+        </div>
+        <p className="truncate">{replyToMessage.message}</p>
+      </div>
+    )}
       <input
         type="text"
         value={input}

@@ -11,7 +11,8 @@ export const postMessageAndUnread = async (
   sender: string,
   receiver: string,
   message: string,
-  isCallMsg: boolean
+  isCallMsg: boolean,
+  replyTo?: { id: string, sender: string; message: string }
 ) => {
   try {
     const encryptedMessage = encryptMessage(message);
@@ -24,6 +25,7 @@ export const postMessageAndUnread = async (
         receiverUsername: receiver,
         message: encryptedMessage,
         isCallMsg: isCallMsg,
+        replyTo
       }),
     });
 
@@ -52,7 +54,8 @@ export const emitPrivateMessage = (
   receiver: string,
   message: string,
   docId: string,
-  isCallMsg: boolean
+  isCallMsg: boolean,
+  replyTo?: { id: string; sender: string; message: string }
 ) => {
   const encryptedMessage = encryptMessage(message);
 
@@ -62,5 +65,6 @@ export const emitPrivateMessage = (
     message: encryptedMessage,
     msgId: docId,
     isCallMsg: isCallMsg,
+    replyTo
   });
 };
