@@ -5,6 +5,89 @@ import { Comment } from "@/types/comment";
 
 const db = getFirestore(firebase_app);
 
+/**
+ * @swagger
+ * /api/getpostsbyusername:
+ *   get:
+ *     summary: Get all posts by username
+ *     description: Returns all posts created by the specified username.
+ *     tags:
+ *      - Posts
+ *     parameters:
+ *       - in: query
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The username to filter posts by.
+ *     responses:
+ *       200:
+ *         description: A list of posts by the user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 posts:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                       username:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       tags:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       likedBy:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       comments:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             comment:
+ *                               type: string
+ *                             username:
+ *                               type: string
+ *                             date:
+ *                               type: string
+ *                             likes:
+ *                               type: number
+ *                             likedBy:
+ *                               type: array
+ *                               items:
+ *                                 type: string
+ *                       likes:
+ *                         type: number
+ *                       images:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             url:
+ *                               type: string
+ *                             alt:
+ *                               type: string
+ *                             thumb:
+ *                               type: string
+ *                       postType:
+ *                         type: string
+ *       400:
+ *         description: Username parameter is required
+ *       500:
+ *         description: Error fetching posts
+ */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const username = searchParams.get("username");

@@ -1,6 +1,39 @@
 import { NextResponse } from "next/server";
 import { getDocument } from "@/firebase/firestore/getData"; // We will define this function next
 
+/**
+ * @swagger
+ * /api/getgroup:
+ *   get:
+ *     summary: Get group chat data by groupId
+ *     description: Retrieves information about a group chat by its ID.
+ *     tags:
+ *      - Group Chats
+ *     parameters:
+ *       - in: query
+ *         name: groupId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the group chat
+ *     responses:
+ *       200:
+ *         description: Group chat data returned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 group:
+ *                   type: object
+ *                   additionalProperties: true
+ *       400:
+ *         description: groupId query parameter is missing
+ *       404:
+ *         description: Group not found
+ *       500:
+ *         description: Unexpected server error
+ */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

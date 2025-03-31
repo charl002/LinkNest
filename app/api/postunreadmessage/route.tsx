@@ -5,6 +5,67 @@ import { getDocument } from "@/firebase/firestore/getData";
 import updateData from "@/firebase/firestore/updateUnreadCount";
 import { withRetry } from "@/utils/backoff";
 
+/**
+ * @swagger
+ * /api/postunreadmessage:
+ *   post:
+ *     summary: Update unread message count between sender and receiver
+ *     description: Updates or creates a Firestore document that tracks unread message count and the latest message between a sender and receiver. Requires authentication.
+ *     tags:
+ *       - Messages
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sender
+ *               - receiver
+ *               - count
+ *               - message
+ *             properties:
+ *               sender:
+ *                 type: string
+ *                 example: johndoe
+ *               receiver:
+ *                 type: string
+ *                 example: janedoe
+ *               count:
+ *                 type: integer
+ *                 example: 1
+ *               message:
+ *                 type: string
+ *                 example: "Hey, are you there?"
+ *     responses:
+ *       200:
+ *         description: Unread message count successfully created or updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Message count updated successfully
+ *                 id:
+ *                   type: string
+ *                   example: johndoe_janedoe
+ *                 count:
+ *                   type: integer
+ *                   example: 2
+ *                 latestMessage:
+ *                   type: string
+ *                   example: "Hey, are you there?"
+ *       400:
+ *         description: Missing required request parameters
+ *       401:
+ *         description: Unauthorized (no session)
+ *       500:
+ *         description: Server error
+ */
 export async function POST(req: Request) {
   try {
     const session = await auth();

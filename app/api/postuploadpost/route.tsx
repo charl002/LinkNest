@@ -15,6 +15,65 @@ const blobService = new BlobServiceClient(
 );
 const containerClient = blobService.getContainerClient(containerName);
 
+/**
+ * @swagger
+ * /api/postuploadpost:
+ *   post:
+ *     summary: Upload a new post with optional image to Azure Blob Storage
+ *     description: Accepts form data with post metadata and an optional image file. The post is stored in Firestore, and the image is uploaded to Azure Blob Storage.
+ *     tags:
+ *       - Posts
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - title
+ *               - text
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: johndoe
+ *               title:
+ *                 type: string
+ *                 example: My first post
+ *               text:
+ *                 type: string
+ *                 example: This is a great day to share something cool.
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["fun", "life"]
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional image or file to upload
+ *     responses:
+ *       201:
+ *         description: Post created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Post created successfully
+ *                 postId:
+ *                   type: string
+ *                   example: abc123
+ *                 fileUrl:
+ *                   type: string
+ *                   example: https://webprojazure.blob.core.windows.net/helloblob/1711832958678-image.png
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Server error or Azure/Firestore failure
+ */
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();

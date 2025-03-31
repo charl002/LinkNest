@@ -13,6 +13,64 @@ interface Message {
     isCallMsg: boolean;
 }
 
+/**
+ * @swagger
+ * /api/getmessages:
+ *   get:
+ *     summary: Fetch direct messages between two users
+ *     description: Retrieves all direct messages exchanged between the specified sender and receiver. Only the sender can access their messages.
+ *     tags:
+ *      - Messages
+ *     parameters:
+ *       - in: query
+ *         name: sender
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The username of the sender (must match the authenticated user)
+ *       - in: query
+ *         name: receiver
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The username of the receiver
+ *     responses:
+ *       200:
+ *         description: List of messages retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 messages:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       sender:
+ *                         type: string
+ *                       receiver:
+ *                         type: string
+ *                       message:
+ *                         type: string
+ *                       seen:
+ *                         type: boolean
+ *                       date:
+ *                         type: string
+ *                         format: date-time
+ *                       isCallMsg:
+ *                         type: boolean
+ *       400:
+ *         description: Missing sender or receiver query parameter
+ *       401:
+ *         description: User is not authenticated
+ *       403:
+ *         description: Authenticated user is not allowed to access messages
+ *       500:
+ *         description: Server error occurred
+ */
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);

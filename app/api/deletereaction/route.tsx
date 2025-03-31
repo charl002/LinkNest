@@ -4,6 +4,49 @@ import firebase_app from "@/firebase/config";
 
 const db = getFirestore(firebase_app);
 
+/**
+ * @swagger
+ * /api/deletereaction:
+ *   put:
+ *     summary: Remove a reaction from a message
+ *     description: Removes a user's reaction from a specific message by messageId.
+ *     tags:
+ *      - Messages
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - messageId
+ *               - user
+ *             properties:
+ *               messageId:
+ *                 type: string
+ *                 description: The ID of the message.
+ *               user:
+ *                 type: string
+ *                 description: The username of the user whose reaction should be removed.
+ *     responses:
+ *       200:
+ *         description: Reaction removed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 id:
+ *                   type: string
+ *       400:
+ *         description: Missing messageId or user
+ *       404:
+ *         description: Message not found
+ *       500:
+ *         description: Unexpected server error
+ */
 export async function PUT(req: Request) {
     try {
         const { messageId, user } = await req.json();

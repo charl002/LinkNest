@@ -5,6 +5,47 @@ import { withRetry } from '@/utils/backoff';
 
 const db = getFirestore(firebase_app);
 
+/**
+ * @swagger
+ * /api/getsingleuser:
+ *   get:
+ *     summary: Get a single user
+ *     description: Retrieves a user from the database by email or username. One of the two query parameters is required.
+ *     tags:
+ *      - Users
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The email of the user to retrieve
+ *       - in: query
+ *         name: username
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The username of the user to retrieve
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   description: User document data
+ *       400:
+ *         description: Missing query parameter
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");

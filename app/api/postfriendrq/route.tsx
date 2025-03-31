@@ -3,7 +3,56 @@ import addData from "@/firebase/firestore/addData";
 import { getFriendRequests } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';
 
-
+/**
+ * @swagger
+ * /api/postfriendrq:
+ *   post:
+ *     summary: Send a friend request
+ *     description: Sends a friend request from one user to another. Prevents duplicates and sets status to "pending".
+ *     tags:
+ *       - Friend Requests
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - senderUsername
+ *               - receiverUsername
+ *             properties:
+ *               senderUsername:
+ *                 type: string
+ *                 example: "john_doe"
+ *               receiverUsername:
+ *                 type: string
+ *                 example: "jane_smith"
+ *     responses:
+ *       200:
+ *         description: Friend request sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Friend request sent
+ *                 id:
+ *                   type: string
+ *                   example: "ABC123"
+ *       400:
+ *         description: Missing parameters or duplicate request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Internal server or Firestore error
+ */
 export async function POST(req: Request) {
     try {
         const { senderUsername, receiverUsername } = await req.json();
