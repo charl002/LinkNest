@@ -32,6 +32,14 @@ export default function ChatMessage({ message, isCurrentUser, user }: ChatMessag
                 <span className="text-xs text-gray-500">{message.date}</span>
               </div>
             </Link>
+            {message.replyTo && (
+              <div className="text-xs p-2 border-l-4 border-gray-300 bg-gray-50 rounded mb-1">
+                <p className="font-medium text-gray-600">
+                  Replying to {message.replyTo.sender}
+                </p>
+                <p className="truncate text-gray-500 italic">{message.replyTo.message}</p>
+              </div>
+            )}
             <p className="text-black-600 text-sm break-all">{message.message}</p>
           </div>
         </div>
