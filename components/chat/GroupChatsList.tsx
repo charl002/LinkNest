@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { useFriends } from "../provider/FriendsProvider";
 import { useEffect, useState } from "react";
@@ -13,57 +15,153 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import Image from "next/image";
 import HoverCardComponent from "../custom-ui/HoverCardComponent";
-import { Skeleton } from "../ui/skeleton";
+// import { Skeleton } from "../ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { GroupChat } from "@/types/group";
+import { useGroupChats } from "../provider/GroupChatsProvider";
+import { useSocket } from "../provider/SocketProvider";
+import { Badge } from "../ui/badge";
+import { decryptMessage } from "@/utils/decrypt";
 
 interface GroupChatsListProps {
   currentUser: string | null;
   router: ReturnType<typeof useRouter>;
 }
 
-interface GroupChat {
-  id: string;
-  name: string;
-  members: (string | null)[];
-  image: string;
-}
-
 const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
-  const [groupChats, setGroupChats] = useState<GroupChat[]>([]);
+  const { groupChats } = useGroupChats();
+  const { setGroupChats } = useGroupChats();
   const { friends } = useFriends();
   const [selectedFriends, setSelectedFriends] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState(""); // For search input
   const [groupName, setGroupName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [warningMessage, setWarningMessage] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const [groupImage, setGroupImage] = useState<File | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, { count: number; message: string }>>({});
+  const socket = useSocket();
+  const searchParams = useSearchParams();
+  const activeGroupId = searchParams.get("group");
+  
 
-  // For now everytime you go switch the tab from Friends to -> Group Chats, this is fetched, so 
-  // We might need to move this to the parent component if it becomes problematic (ChatList).
+  useEffect(() => {
+    if (!socket || !currentUser) return;
+  
+    // Listen for group messages and update unread count
+    socket.on("groupMessage", async ({ senderId, groupId, message }) => {
+      // console.log('Group Stuff', senderId, groupId, message, activeGroupId);
+      // console.log(activeGroupId);
+      if (groupId) {
+        // If it's not from the current user, increment unread count
+        if (senderId !== currentUser) {
+          setUnreadMessages((prev) => {
+            // If the current group is not being chatted with, increment the unread count
+            if (activeGroupId !== groupId) {
+              return {
+                ...prev,
+                [groupId]: {
+                  count: (prev[groupId]?.count || 0) + 1, // Increment unread count for the group
+                  message: decryptMessage(message),  // Keep the previous message, don't reset it
+                },
+              };
+            }
+  
+            // If the current user is chatting in this group, reset the unread count
+            return {
+              ...prev,
+              [groupId]: {
+                count: 0, // Reset unread count for this group
+                message: '',   // Set the actual new message
+              },
+            };
+          });
+        }
+      }
+  
+      // Check if the receiver is online, if not update Firestore
+      // if (activeGroupId === groupId) {
+      //   try {
+      //     await fetch("/api/postunreadmessage", {
+      //       method: "POST",
+      //       headers: { "Content-Type": "application/json" },
+      //       body: JSON.stringify({
+      //         sender: senderId,
+      //         receiver: currentUser, // In this case, it's the group message
+      //         count: 0, // Reset unread count
+      //         message,
+      //         groupId
+      //       }),
+      //     });
+      //   } catch (error) {
+      //     console.error("Error resetting unread count:", error);
+      //   }
+      // }
+    });
+  
+    // Clean up the socket listener when the component unmounts
+    return () => {
+      socket.off("groupMessage");
+    };
+  }, [activeGroupId, currentUser, socket]);
+
   useEffect(() => {
     if (!currentUser) return;
 
-    const fetchGroupChats = async () => {
-      try {
-        const response = await fetch(`/api/getgroupchats?user=${currentUser}`);
-        const data = await response.json();
+    // const fetchUnreadMessages = async () => {
+    //   try {
+    //     const unreadCounts: Record<string, { count: number; message: string }> = {}; // Track count & message for each group
+  
+    //     // Assuming you have a `groupChats` state or context with the groupIds
+    //     // Loop through each group chat
+    //     const groupFetchPromises = groupChats.map(async (group) => {
+    //       const groupId = group.id;
+    //       console.log(`Fetching unread messages for group ${groupId}`);
+  
+    //       // Fetch unread messages from the API for this group
+    //       const unreadResponse = await fetch(`/api/getunreadmessage?receiver=${currentUser}&groupId=${groupId}`);
+    //       const unreadData = await unreadResponse.json();
+  
+    //       console.log(unreadData);
+  
+    //       if (unreadResponse.ok && unreadData?.unreadCounts && typeof unreadData.unreadCounts === 'object') {
+    //         // Process unread messages for this group
+    //         const groupUnreadMessages = unreadData.unreadCounts;
+  
+    //         // Initialize the group entry in unreadCounts if it doesn't exist yet
+    //         unreadCounts[groupId] = unreadCounts[groupId] || { count: 0, message: "" };
+  
+    //         // Process each sender's unread message for the group
+    //         Object.keys(groupUnreadMessages).forEach((sender) => {
+    //           const encryptedMsg = groupUnreadMessages[sender].message;
+    //           // Decrypt the message if it exists
+    //           const decryptedMessage = encryptedMsg ? decryptMessage(encryptedMsg) : "";
+  
+    //           // Update the unread count for the group
+    //           unreadCounts[groupId].count += groupUnreadMessages[sender].count;
+    //           unreadCounts[groupId].message = decryptedMessage; // Store the last unread message
+    //         });
+    //       } else {
+    //         console.warn(`Unread message data is not in the expected format for group ${groupId}:`, unreadData);
+    //       }
+    //     });
+  
+    //     await Promise.all(groupFetchPromises); // Wait for all fetches to complete
+    //     setUnreadMessages(unreadCounts); // Update the unreadMessages state with the new data
 
-        if (response.ok) {
-          setGroupChats(data.groupChats || []);
-        } else {
-          console.error("Error fetching group chats:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching group chats:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    //     console.log('Updated unreadMessages:', unreadCounts); // Debugging
+  
+    //   } catch (error) {
+    //     console.error("Error fetching unread messages for groups:", error);
+    //   }
+    // };
 
-    fetchGroupChats();
-  }, [currentUser]);
+    // fetchUnreadMessages(); // Call the function to fetch unread messages
+  
+  }, [currentUser, groupChats]); // Dependencies: currentUser and groupChats
+  
+  
 
   const handleFriendSelect = (friend: User) => {
     setSelectedFriends((prev) =>
@@ -190,23 +288,21 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   const handleGroupChatSelect = (groupId: string) => {
     // Navigate to the group chat page
     console.log(`Navigating to group chat with ID: ${groupId}`);
-    // In a real implementation, you would navigate to the group chat page like:
-    // router.push(`/group-chat/${groupId}`);
 
-    router.push(`/chat/?group=${groupId}`);
+    router.push(`/chat/?group=${groupId}&user=${currentUser}`);
   };
 
   // Temporary put a skeleton for loading.
-  if (isLoading) {
-    return (
-      <>
-        <Skeleton className="w-10 h-10 rounded-full" /> {/* Avatar Skeleton */}
-        <Skeleton className="h-4 w-24 rounded-md" />{" "}
-        {/* Username & Time Skeleton */}
-        <Skeleton className="h-12 w-40 rounded-md" /> {/* Message Skeleton */}
-      </>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <>
+  //       <Skeleton className="w-10 h-10 rounded-full" /> {/* Avatar Skeleton */}
+  //       <Skeleton className="h-4 w-24 rounded-md" />{" "}
+  //       {/* Username & Time Skeleton */}
+  //       <Skeleton className="h-12 w-40 rounded-md" /> {/* Message Skeleton */}
+  //     </>
+  //   );
+  // }
 
   return (
     <div>
@@ -337,7 +433,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
       <div className="mt-6">
         <h2 className="text-lg font-semibold mb-4">Your Group Chats:</h2>
         <div className="flex flex-col space-y-4">
-          {groupChats.length > 0 ? (
+          {groupChats.length > 0 && groupChats ? (
             groupChats.map((group) => (
               <div
                 key={group.id}
@@ -352,12 +448,32 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
                     {/* Group name */}
                     <p className="text-sm font-medium">{group.name}</p>
                   </div>
+
+                  {/* Badge for unread messages */}
+                  {unreadMessages[group.id] && unreadMessages[group.id].count > 0 && (
+                    <Badge variant="destructive" className="absolute top-0 right-0 -mr-0">
+                      {unreadMessages[group.id].count}
+                    </Badge>
+                  )}
+                
                   <Button
                     className="transition-transform duration-200 hover:scale-105 active:scale-95"
                     onClick={() => handleGroupChatSelect(group.id)}
                   >
                     Chat
                   </Button>
+                </div>
+
+                <div className="flex-1 ml-6 pb-2">
+                  {unreadMessages?.[group.id]?.message ? (
+                    <span className="text-xs text-gray-500">
+                      {unreadMessages[group.id].message.length > 30
+                        ? unreadMessages[group.id].message.substring(0, 30) + "..."
+                        : unreadMessages[group.id].message}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-black-800">Chat with this Group!</span>
+                  )}
                 </div>
               </div>
             ))

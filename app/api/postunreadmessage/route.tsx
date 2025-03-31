@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { sender, receiver, count, message } = await req.json();
+    const { sender, receiver, count, message, groupId } = await req.json();
 
     if (!sender || !receiver || count === undefined || message === undefined) {
       return NextResponse.json(
@@ -22,7 +22,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const docId = `${sender}_${receiver}`; // 🔹 Unique doc ID for sender-receiver pair
+    const docId = groupId
+      ? `${sender}_${receiver}_${groupId}` // For group messages
+      : `${sender}_${receiver}`; // For private messages
+
     const existingData = await withRetry(
       () => getDocument("unreadmessages", docId),
       {
@@ -39,7 +42,7 @@ export async function POST(req: Request) {
 
       const { error } = await withRetry(
         () =>
-          updateData("unreadmessages", docId, { count: updatedCount, message }), // Save latest message
+          updateData("unreadmessages", docId, { count: updatedCount, message, groupId: groupId }), // Save latest message
         {
           maxAttempts: 3,
           initialDelay: 500,
@@ -65,7 +68,7 @@ export async function POST(req: Request) {
       );
     } else {
       // Create a new document for unread messages with the latest message
-      const newData = { sender, receiver, count: count === 0 ? 0 : 1, message }; // Include message in new data
+      const newData = { sender, receiver, count: count === 0 ? 0 : 1, message, groupId }; // Include message in new data
 
       const { result, error } = await addData("unreadmessages", newData, docId);
 

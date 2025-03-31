@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { message: "Group chat created", docId },
+      { message: "Group chat created", docId, image },
       { status: 200 }
     );
   } catch (err) {

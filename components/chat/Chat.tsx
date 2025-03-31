@@ -27,7 +27,10 @@ import type { Message } from "@/types/message";
 import type { User } from "@/types/user";
 import { emitPrivateMessage, postMessageAndUnread } from "@/utils/messageUtils";
 import { decryptMessage } from "@/utils/decrypt";
-// import { GroupChat } from "@/types/group";
+import { GroupChat } from "@/types/group";
+import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
+import { AvatarFallback } from "../ui/avatar";
+import { useGroupChats } from "../provider/GroupChatsProvider";
 
 export default function Chat() {
   const socket = useSocket();
@@ -36,8 +39,9 @@ export default function Chat() {
   const friendUsername = searchParams.get("friend");
   const currentUsername = searchParams.get("user");
   const groupchatId = searchParams.get("group");
-  // const [group, setGroup] = useState<GroupChat | null>(null);
+  const { groupChats } = useGroupChats();
 
+  const [group, setGroup] = useState<GroupChat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -45,7 +49,7 @@ export default function Chat() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [friendUser, setFriendUser] = useState<User | null>(null);
+  const [otherUsers, setOtherUsers] = useState<User[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -73,6 +77,8 @@ export default function Chat() {
           `/api/getmessages?sender=${currentUsername}&receiver=${friendUsername}`
         );
         const data = await response.json();
+
+        // console.log("messages", data);
     
         if (!response.ok) {
           throw new Error(data.message || "Failed to fetch messages");
@@ -99,7 +105,7 @@ export default function Chat() {
         const friendData = await friendResponse.json();
     
         setCurrentUser(senderData.data);
-        setFriendUser(friendData.data);
+        setOtherUsers([friendData.data]);
       } catch (error: unknown) {
         if (error instanceof Error) {
           setErrorMessage(error.message);
@@ -115,31 +121,108 @@ export default function Chat() {
   }, [currentUsername, friendUsername, router]);
 
   useEffect(() => {
-    if (groupchatId) {
-      setErrorMessage("Hang on tight, this is still being built!");
-      return;
+    if(!groupchatId || !currentUsername) return;
 
-      // Fetch group details based on the groupId
-      // async function fetchGroup() {
-      //   const response = await fetch(`/api/getgroup?groupId=${groupchatId}`);
-      //   const data = await response.json();
-      //   // console.log(data);
-      //   setGroup(data);
-      // }
-      
-      // console.log(group);
+    async function fetchGroupMessages() {
+      if (!groupchatId || !currentUsername || !groupChats || groupChats.length === 0) return;
+  
+      try {
+        setIsLoading(true);
 
-      // fetchGroup();
-    }
-  }, [groupchatId]);
+        const groupData = groupChats.find((group) => group.id === groupchatId);
+        if (!groupData) {
+          throw new Error("Group not found");
+        }
+
+        console.log(groupchatId);
+
+        setGroup(groupData);
+
+        const response = await fetch(`/api/getmessages?groupId=${groupchatId}&sender=${currentUsername}`);
+        const data = await response.json();
+
+        console.log(data);
+        
+        if (!response.ok) throw new Error(data.message || "Failed to fetch messages");
+
+        setMessages(
+          data.messages.map((msg: Message) => ({
+            id: msg.id,
+            sender: msg.sender,
+            message: decryptMessage(msg.message),
+            date: formatTimestamp(msg.date),
+            isCallMsg: msg.isCallMsg,
+            reactions: msg.reactions || [],
+            groupId: msg.groupId
+          }))
+        );
+
+        const fetchUsers = async () => {
+          const members = groupData.members.filter(
+            (member): member is string => member !== null,
+          )
+    
+          const fetchedUsers = await Promise.all(
+            members.map(async (value) => {
+              const userResponse = await fetch(`/api/getsingleuser?username=${value}`)
+              const userData = await userResponse.json()
+              return userData.data as User
+            }),
+          )
+
+          const currentUserData = fetchedUsers.find((user: User) => user.username === currentUsername) || null;
+          const otherUsersData = fetchedUsers.filter((user: User) => user.username !== currentUsername);
+
+          setCurrentUser(currentUserData);
+          setOtherUsers(otherUsersData);
+        }
+    
+        fetchUsers()
+
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage("An unexpected error occurred. Please try again.");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGroupMessages();
+  }, [currentUsername, groupChats, groupchatId])
 
   // This useEffect listens for messages on the Socket IO
   useEffect(() => {
-    if (!socket || !friendUsername) return;
+    console.log("test", socket);
+    if (!socket) return;
 
     socket.emit("register", currentUsername);
+    
+    socket.on("groupMessage", ({ senderId, message, msgId, isCallMsg, groupId }) => {
+      
+      console.log("gC", message);
+
+      if (groupId === groupchatId) {
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: msgId,
+            sender: senderId,
+            message: decryptMessage(message),
+            date: formatTimestamp(new Date().toISOString()),
+            isCallMsg,
+            reactions: [],
+            groupId,
+          },
+        ]);
+      }
+    });
 
     socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, replyTo }) => {
+      
       if (senderId === friendUsername) {
         setMessages((prev) => [
           ...prev,
@@ -158,13 +241,17 @@ export default function Chat() {
 
     return () => {
       socket.off("privateMessage");
+      // socket.off("groupMessage");
     };
-  }, [socket, currentUsername, friendUsername]);
+  }, [socket, currentUsername, friendUsername, groupchatId]);
 
   const sendMessage = async () => {
-    if (socket && input.trim() && friendUsername && currentUsername) {
+    if (socket && input.trim() && currentUsername) {
       try {
-        const replyData = replyToMessage
+        // If there's a single friend, send a private message
+        if (friendUsername) {
+
+          const replyData = replyToMessage
         ? {
             id: replyToMessage.id,
             sender: replyToMessage.sender,
@@ -172,44 +259,98 @@ export default function Chat() {
           }
         : undefined;
 
-        const postMessageData = await postMessageAndUnread(
-          currentUsername,
-          friendUsername,
-          input,
-          false,
-          replyData
-        );
+          const postMessageData = await postMessageAndUnread(
+            currentUsername,
+            input,
+            false,
+            friendUsername,   // Send to a single friend
+            undefined,          // No groupId for private messages
+            undefined,           // No receivers for private messages
+            replyData
+          );
 
-        emitPrivateMessage(
-          socket,
-          currentUsername,
-          friendUsername,
-          input,
-          postMessageData.docId,
-          false,
-          replyData
-        );
+          emitPrivateMessage(
+            socket,
+            currentUsername,
+            input,
+            postMessageData.docId,
+            false, // Not a call message
+            friendUsername,
+            undefined,
+            undefined,
+            replyData
+          );
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: postMessageData.id,
-            sender: currentUsername,
-            message: input,
-            date: formatTimestamp(new Date().toISOString()),
-            isCallMsg: false,
-            replyTo: replyData ?? undefined
-          },
-        ]);
+          // Update the UI with the new message
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: postMessageData.id,
+              sender: currentUsername,
+              message: input,
+              date: formatTimestamp(new Date().toISOString()),
+              isCallMsg: false,
+              replyTo: replyData
+            },
+          ]);
+        } 
+        // If it's a group chat, send a message to all group members
+        else if (groupchatId && group?.members) {
+          const validMembers = group.members.filter((member) => member !== null && member != currentUsername) as string[]; // Filter out nulls
+
+          const replyData = replyToMessage
+        ? {
+            id: replyToMessage.id,
+            sender: replyToMessage.sender,
+            message: replyToMessage.message,
+          }
+        : undefined;
+
+          const postMessageData = await postMessageAndUnread(
+            currentUsername,
+            input,
+            false,
+            undefined,          // No single receiver for group chat
+            groupchatId,        // Group ID
+            validMembers,      // Send to all group members
+            replyData
+          );
+
+          emitPrivateMessage(
+            socket,
+            currentUsername,
+            input,
+            postMessageData.id,
+            false, // Not a call message
+            undefined,
+            groupchatId,
+            validMembers,
+            replyData
+          );
+
+          // Update the UI with the new message
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: postMessageData.id,
+              sender: currentUsername,
+              message: input,
+              date: formatTimestamp(new Date().toISOString()),
+              isCallMsg: false,
+              replyTo: replyData ?? undefined
+            },
+          ]);
+        }
       } catch (error) {
         toast.error("Error storing message.");
         console.error("Error storing message:", error);
       }
-
+  
+      // Clear the input field after sending the message
       setInput("");
       setReplyToMessage(null);
     }
-  };
+  };  
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -247,18 +388,18 @@ export default function Chat() {
       const postMessageData = await postMessageAndUnread(
         currentUsername,
         friendUsername,
+        true,
         callMessage,
-        true
       );
 
       if(socket){
         emitPrivateMessage(
           socket,
           currentUsername,
-          friendUsername,
           callMessage,
-          postMessageData.docId,
-          true
+          postMessageData.id,
+          true,
+          friendUsername
         );
 
         socket.emit("call", {
@@ -414,60 +555,124 @@ export default function Chat() {
       hour12: true,
     });
   }
-
   const chatMainContent = (
-  <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
-    <h1 className="text-lg font-semibold p-4">
-      Chat with {friendUsername}
-    </h1>
-    <div
-      ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
-      style={{ scrollbarWidth: "thin" }}
-    >
-      {isLoading
-        ? [...Array(8)].map((_, index) => (
-            <div
-              key={index}
-              className={`flex items-start space-x-4 ${
-                index % 2 === 0 ? "justify-start" : "justify-end"
-              }`}
-            >
-              <Skeleton className="w-10 h-10 rounded-full" />{" "}
-              {/* Avatar Skeleton */}
-              <div className="flex flex-col space-y-2">
-                <Skeleton className="h-4 w-24 rounded-md" />{" "}
-                {/* Username & Time Skeleton */}
-                <Skeleton className="h-12 w-40 rounded-md" />{" "}
-                {/* Message Skeleton */}
-              </div>
-            </div>
-          ))
-        : messages.map((msg, index) => {
-            const isCurrentUser = msg.sender === currentUsername;
-            const user = isCurrentUser ? currentUser : friendUser;
-
-            return (
+    <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
+      <h1 className="text-lg font-semibold p-4">
+        {groupchatId && group ? (
+          <div className="flex items-center gap-2">
+            <Avatar className="w-10 h-10 rounded-full">
+              <AvatarImage 
+                src={group?.image || "/defaultGroupPic.png"}
+                alt={group?.name || "Group Chat"}
+                className="w-full h-full object-cover rounded-full"
+              />
+              <AvatarFallback className="flex items-center justify-center w-full h-full bg-gray-300 text-white rounded-full">
+                {group?.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {/* Show skeleton if group name is loading */}
+            {group ? (
+              <span>{group.name}</span>
+            ) : (
+              <Skeleton className="h-4 w-32 rounded-md" />
+            )}
+          </div>
+        ) : friendUsername ? (
+          `Chat with ${friendUsername}`
+        ) : (
+          <Skeleton className="h-4 w-32 rounded-md" />
+        )}
+      </h1>
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
+        style={{ scrollbarWidth: "thin" }}
+      >
+        {isLoading
+          ? [...Array(8)].map((_, index) => (
               <div
                 key={index}
-                className={`relative flex ${
-                  isCurrentUser ? "justify-end" : "justify-start"
-                } p-2`}
+                className={`flex items-start space-x-4 ${
+                  index % 2 === 0 ? "justify-start" : "justify-end"
+                }`}
               >
-                <div className="relative flex flex-col">
-                  {msg.reactions && msg.reactions.length > 0 && (
+                <Skeleton className="w-10 h-10 rounded-full" />{" "}
+                {/* Avatar Skeleton */}
+                <div className="flex flex-col space-y-2">
+                  <Skeleton className="h-4 w-24 rounded-md" />{" "}
+                  {/* Username & Time Skeleton */}
+                  <Skeleton className="h-12 w-40 rounded-md" />{" "}
+                  {/* Message Skeleton */}
+                </div>
+              </div>
+            ))
+          : messages.map((msg, index) => {
+              const isCurrentUser = msg.sender === currentUsername;
+              let user;
+              if(isCurrentUser){
+                user = currentUser;
+              } else {
+                user = otherUsers.find((user) => user.username === msg.sender) || null;
+              }
+
+  
+              return (
+                <div
+                  key={index}
+                  className={`relative flex ${
+                    isCurrentUser ? "justify-end" : "justify-start"
+                  } p-2`}
+                >
+                  <div className="relative flex flex-col">
+                    {msg.reactions && msg.reactions.length > 0 && (
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <div
+                            className={`absolute -top-8 ${
+                              isCurrentUser ? "left+25" : "right-0"
+                            } flex space-x-1 bg-white shadow-md rounded-full px-2 py-1 cursor-pointer border border-gray-300`}
+                          >
+                            {msg.reactions.map((reaction, idx) => (
+                              <span key={idx} className="text-sm">
+                                {reaction.reaction}
+                              </span>
+                            ))}
+                          </div>
+                        </HoverCardTrigger>
+                        <HoverCardContent
+                          side="top"
+                          align="center"
+                          sideOffset={5}
+                          className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
+                        >
+                          <div className="flex flex-col space-y-1">
+                            {msg.reactions.map((reaction, idx) => (
+                              <p key={idx} className="text-xs text-gray-600">
+                                {reaction.user} reacted with{" "}
+                                {reaction.reaction}
+                              </p>
+                            ))}
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                    )}
+                    {msg.isCallMsg ? (
+                      <div className="relative">
+                        <ChatMessage
+                          message={msg}
+                          isCurrentUser={isCurrentUser}
+                          user={user}
+                        />
+                      </div>
+                    ) : (
                     <HoverCard>
                       <HoverCardTrigger asChild>
-                        <div
-                          className={`absolute -top-8 ${
-                            isCurrentUser ? "left+25" : "right-0"
-                          } flex space-x-1 bg-white shadow-md rounded-full px-2 py-1 cursor-pointer border border-gray-300`}
-                        >
-                          {msg.reactions.map((reaction, idx) => (
-                            <span key={idx} className="text-sm">
-                              {reaction.reaction}
-                            </span>
-                          ))}
+                        <div className="relative">
+                          <ChatMessage
+                            message={msg}
+                            isCurrentUser={isCurrentUser}
+                            user={user}
+                          />
                         </div>
                       </HoverCardTrigger>
                       <HoverCardContent
@@ -476,219 +681,184 @@ export default function Chat() {
                         sideOffset={5}
                         className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
                       >
-                        <div className="flex flex-col space-y-1">
-                          {msg.reactions.map((reaction, idx) => (
-                            <p key={idx} className="text-xs text-gray-600">
-                              {reaction.user} reacted with{" "}
-                              {reaction.reaction}
-                            </p>
-                          ))}
+                        <div className="flex flex-col space-y-2">
+                          <button 
+                          className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
+                          onClick={() => setReplyToMessage(msg)}>
+                            Reply
+                          </button>
+                          <button 
+                          className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
+                          onClick={() => handleCopyMessage(msg.message)}>
+                            Copy
+                          </button>
+  
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
+                                React
+                              </button>
+                            </HoverCardTrigger>
+                            <HoverCardContent
+                              side="right"
+                              align="center"
+                              sideOffset={5}
+                              className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
+                            >
+                              <div className="flex space-x-2">
+                                {["👍", "❤️", "😂", "👎", "😭"].map(
+                                  (emoji) => (
+                                    <button
+                                      key={emoji}
+                                      className="text-lg hover:scale-125"
+                                      onClick={() =>
+                                        handleAddReaction(msg, emoji)
+                                      }
+                                    >
+                                      {emoji}
+                                    </button>
+                                  )
+                                )}
+                                {(msg.reactions ?? []).some(
+                                  (reaction) =>
+                                    reaction.user === currentUsername
+                                ) && (
+                                  <button
+                                    className="text-lg text-red-500 hover:scale-125"
+                                    onClick={() => handleRemoveReaction(msg)}
+                                  >
+                                    ❌
+                                  </button>
+                                )}
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                          {isCurrentUser && (
+                          <button 
+                            className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
+                            onClick={() => handleDeleteMessage(msg)}>
+                            Delete
+                          </button>
+                          )}
                         </div>
                       </HoverCardContent>
-                    </HoverCard>
-                  )}
-                  {msg.isCallMsg ? (
-                    <div className="relative">
-                      <ChatMessage
-                        message={msg}
-                        isCurrentUser={isCurrentUser}
-                        user={user}
-                      />
-                    </div>
-                  ) : (
-                  <HoverCard>
-                    <HoverCardTrigger asChild>
-                      <div className="relative">
-                        <ChatMessage
-                          message={msg}
-                          isCurrentUser={isCurrentUser}
-                          user={user}
-                        />
-                      </div>
-                    </HoverCardTrigger>
-                    <HoverCardContent
-                      side="top"
-                      align="center"
-                      sideOffset={5}
-                      className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
-                    >
-                      <div className="flex flex-col space-y-2">
-                        <button 
-                        className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
-                        onClick={() => setReplyToMessage(msg)}>
-                          Reply
-                        </button>
-                        <button 
-                        className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
-                        onClick={() => handleCopyMessage(msg.message)}>
-                          Copy
-                        </button>
-
-                        <HoverCard>
-                          <HoverCardTrigger asChild>
-                            <button className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200">
-                              React
-                            </button>
-                          </HoverCardTrigger>
-                          <HoverCardContent
-                            side="right"
-                            align="center"
-                            sideOffset={5}
-                            className="bg-white shadow-lg p-2 rounded-lg border border-gray-200"
-                          >
-                            <div className="flex space-x-2">
-                              {["👍", "❤️", "😂", "👎", "😭"].map(
-                                (emoji) => (
-                                  <button
-                                    key={emoji}
-                                    className="text-lg hover:scale-125"
-                                    onClick={() =>
-                                      handleAddReaction(msg, emoji)
-                                    }
-                                  >
-                                    {emoji}
-                                  </button>
-                                )
-                              )}
-                              {(msg.reactions ?? []).some(
-                                (reaction) =>
-                                  reaction.user === currentUsername
-                              ) && (
-                                <button
-                                  className="text-lg text-red-500 hover:scale-125"
-                                  onClick={() => handleRemoveReaction(msg)}
-                                >
-                                  ❌
-                                </button>
-                              )}
-                            </div>
-                          </HoverCardContent>
-                        </HoverCard>
-                        {isCurrentUser && (
-                        <button 
-                          className="px-3 py-1 text-sm bg-red-500 text-white rounded-md hover:bg-red-600"
-                          onClick={() => handleDeleteMessage(msg)}>
-                          Delete
-                        </button>
-                        )}
-                      </div>
-                    </HoverCardContent>
-                  </HoverCard>)}
+                    </HoverCard>)}
+                  </div>
                 </div>
+              );
+            })}
+      </div>
+      <div className="p-4 bg-white shadow-md mt-auto">
+        <div className="flex flex-col space-y-2">
+          {replyToMessage && (
+            <div className="p-2 border-l-4 border-blue-500 bg-blue-50 rounded shadow-sm text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-blue-600 font-medium">Replying to {replyToMessage.sender}:</span>
+                <button
+                  className="text-red-500 text-xs ml-2 hover:underline"
+                  onClick={() => setReplyToMessage(null)}
+                >
+                  Cancel
+                </button>
               </div>
-            );
-          })}
-    </div>
-    <div className="p-4 bg-white shadow-md mt-auto">
-      <div className="flex flex-col space-y-2">
-        {replyToMessage && (
-          <div className="p-2 border-l-4 border-blue-500 bg-blue-50 rounded shadow-sm text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-blue-600 font-medium">Replying to {replyToMessage.sender}:</span>
-              <button
-                className="text-red-500 text-xs ml-2 hover:underline"
-                onClick={() => setReplyToMessage(null)}
-              >
-                Cancel
-              </button>
+              <p className="truncate">{replyToMessage.message}</p>
             </div>
-            <p className="truncate">{replyToMessage.message}</p>
-          </div>
-        )}
-
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="flex-1 p-2 border rounded-lg w-full"
-            placeholder="Type a message..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
+          )}
+  
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="flex-1 p-2 border rounded-lg w-full"
+              placeholder="Type a message..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  sendMessage();
+                  setTimeout(scrollToBottom, 100);
+                }
+              }}
+            />
+            <button
+              onClick={() => {
                 sendMessage();
                 setTimeout(scrollToBottom, 100);
-              }
-            }}
-          />
+              }}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+            >
+              Send
+            </button>
+            <button
+              onClick={handleRedirectToCall}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+            >
+              <Video />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+  
+    return (
+      <div className="bg-grey-100 min-h-screen w-full text-gray-800">
+        {/* Mobile Toggle Buttons */}
+        <div className="md:hidden flex justify-between p-4 gap-4">
           <button
             onClick={() => {
-              sendMessage();
-              setTimeout(scrollToBottom, 100);
+              setShowSidebar((prev) => !prev);
+              setShowChatList(false);
             }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+            className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
           >
-            Send
+            {showSidebar ? "Close Sidebar" : "Sidebar"}
           </button>
           <button
-            onClick={handleRedirectToCall}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg transition-transform duration-200 hover:scale-105 active:scale-95"
+            onClick={() => {
+              setShowChatList((prev) => !prev);
+              setShowSidebar(false);
+            }}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
           >
-            <Video />
+            {showChatList ? "Close Friends" : "Friends"}
           </button>
         </div>
-      </div>
-    </div>
-  </section>
-);
-
-  return (
-    <div className="bg-grey-100 min-h-screen w-full text-gray-800">
-      {/* Mobile Toggle Buttons */}
-      <div className="md:hidden flex justify-between p-4 gap-4">
-        <button
-          onClick={() => {
-            setShowSidebar((prev) => !prev);
-            setShowChatList(false);
-          }}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
-        >
-          {showSidebar ? "Close Sidebar" : "Sidebar"}
-        </button>
-        <button
-          onClick={() => {
-            setShowChatList((prev) => !prev);
-            setShowSidebar(false);
-          }}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
-        >
-          {showChatList ? "Close Friends" : "Friends"}
-        </button>
-      </div>
-
-      {/* Mobile View Content */}
-      <div className="md:hidden min-h-screen overflow-y-auto px-4">
-        {showSidebar && <Sidebar />}
-        {showChatList && <ChatList />}
-        {!showSidebar && !showChatList && chatMainContent}
-      </div>
-
-      {/* Desktop View */}
-      <div className="hidden md:grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-[calc(100vh-40px)] overflow-hidden">
-        <div className="h-full overflow-y-auto">
-          <Sidebar />
+  
+        {/* Mobile View Content */}
+        <div className="md:hidden min-h-screen overflow-y-auto px-4">
+          {showSidebar && <Sidebar />}
+          {showChatList && <ChatList />}
+          {!showSidebar && !showChatList && chatMainContent}
         </div>
-        <div className="h-full overflow-y-auto">
-          {chatMainContent}
+  
+        {/* Desktop View */}
+        <div className="hidden md:grid grid-cols-[300px_2fr_300px] gap-6 p-6 w-full h-[calc(100vh-40px)] overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            <Sidebar />
+          </div>
+          <div className="h-full overflow-y-auto">
+            {chatMainContent}
+          </div>
+          <div className="h-full overflow-y-auto">
+            <ChatList />
+          </div>
         </div>
-        <div className="h-full overflow-y-auto">
-          <ChatList />
-        </div>
+  
+        {errorMessage && (
+          <Dialog open={true}>
+            <DialogContent forceMount className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Error</DialogTitle>
+              </DialogHeader>
+              <p>{errorMessage}</p>
+              <DialogFooter>
+                <Button onClick={handleRedirectToHome}>Continue</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+        <Toaster position="bottom-center" richColors />
       </div>
-
-      {errorMessage && (
-        <Dialog open={true}>
-          <DialogContent forceMount className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Error</DialogTitle>
-            </DialogHeader>
-            <p>{errorMessage}</p>
-            <DialogFooter>
-              <Button onClick={handleRedirectToHome}>Continue</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-      <Toaster position="bottom-center" richColors />
-    </div>
-  );
-}
+    );
+  }
+  
