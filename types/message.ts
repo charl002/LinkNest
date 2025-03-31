@@ -6,4 +6,9 @@ export interface Message {
   isCallMsg: boolean;
   reactions?: { user: string; reaction: string }[];
   groupId?: string;
+  replyTo?: {
+    id: string;
+    sender: string;
+    message: string;
+  }
 }

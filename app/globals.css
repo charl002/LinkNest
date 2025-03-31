@@ -106,3 +106,11 @@ body {
   flex-direction: column;
   height: 100%;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Edge */
+}
+
+.custom-scrollbar {
+  scrollbar-width: none; /* For Firefox */
+}

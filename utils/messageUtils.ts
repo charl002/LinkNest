@@ -13,7 +13,8 @@ export const postMessageAndUnread = async (
   isCallMsg: boolean,
   receiver?: string,
   groupId?: string,
-  receivers?: string[]    
+  receivers?: string[],
+  replyTo?: { id: string, sender: string; message: string }
 ) => {
   try {
     const encryptedMessage = encryptMessage(message);
@@ -30,6 +31,7 @@ export const postMessageAndUnread = async (
           isCallMsg: isCallMsg,
           groupId: null,       // Group ID is not needed for private messages
           receiversUsernames: null, // Receivers are null for private messages
+          replyTo
         }),
       });
 
@@ -99,7 +101,8 @@ export const emitPrivateMessage = (
   isCallMsg: boolean,
   receiver?: string,
   groupId?: string,
-  receivers?: string[]
+  receivers?: string[],
+  replyTo?: { id: string; sender: string; message: string }
 ) => {
   const encryptedMessage = encryptMessage(message);
 
@@ -110,6 +113,7 @@ export const emitPrivateMessage = (
     isCallMsg: isCallMsg,
     receiverId: receiver,
     groupId: groupId,
-    receiversIds: receivers
+    receiversIds: receivers,
+    replyTo
   });
 };
