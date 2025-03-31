@@ -63,6 +63,17 @@ Run Tests:
 ```bash
 npm run test
 ```
+
+To see Swagger Documentation:
+```bash
+git checkout swagger-doc
+
+npm install
+
+npm run dev
+```
+Go to [http://localhost:3000/api-doc](http://localhost:3000/api-doc) to see Swagger Documentation (Not in deployment since it was breaking the pipeline due to dependency version issues)
+
 ## Production Website Links
 
 [`Production Deployment Website`](https://www.linknest.live/).
