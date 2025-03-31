@@ -79,7 +79,7 @@ build-app-archive:
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "staging" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" || $CI_COMMIT_BRANCH == "fix-prod"
   before_script:
-    - npm prune --production
+    - npm ci --omit=dev --legacy-peer-deps
     - npm dedupe 
     - rm -rf node_modules/.cache .next/cache node_modules/.bin
   script:
