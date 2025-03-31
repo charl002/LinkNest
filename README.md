@@ -9,7 +9,11 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - Ahmed Sobh
 
 ## Project Description
-    A new social media website where users can create an account, create, comment, like and share posts. Users can chat with each other, one on one or in group chats, with complete encryption of all chat logs. Users can Video Call each other. Complete with full moderation features, such as reporting posts, banning users who do not follow the terms of service and blocking users.
+    A new social media website where users can create an account, create, comment, like and share posts. 
+    Users can chat with each other, one on one or in group chats, with complete encryption of all chat logs. 
+    Users can Video Call each other. 
+    Complete with full moderation features, such as reporting posts, 
+    banning users who do not follow the terms of service and blocking users.
 
 ## Technology Stack
     NextJS, Typescript, Firebase. 
@@ -87,10 +91,10 @@ Create Posts! <br />
 
 ## Champion features
 - Moderation/Automation: Charles-Alexandre Bouchard
-    We have a cron job that runs our Bluesky and News APIs every hour to add new posts to their respective tabs, we also have a Report system, a ban system and a block system.
+    * We have a cron job that runs our Bluesky and News APIs every hour to add new posts to their respective tabs, we also have a Report system, a ban system and a block system.
 - Community: Thiha Min Thein and Ahmed Sohb
-    We have multiple features that allow for a more interesting user experience, such as group chats, reactions to messages, notifications, replies to chats, and a Mobile View.
+    * We have multiple features that allow for a more interesting user experience, such as group chats, reactions to messages, notifications, replies to chats, and a Mobile View.
 - Security: Mohammad Mahbub Rahman
-    We have encrypted messaging, so that even if there was a data breach, no user data would be leaked.
+    * We have encrypted messaging, so that even if there was a data breach, no user data would be leaked.
 - Performance: Abdullah Badat
-    We have server side and browser caching implemented, we also only make more posts load if the user scrolls to not use too much memory. The Performance score of our website is pretty high on the Production deployment.
+    * We have server side and browser caching implemented, we also only make more posts load if the user scrolls to not use too much memory. The Performance score of our website is pretty high on the Production deployment.
