@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { incrementCommentLikes } from "@/firebase/firestore/updateCommentLikes";
 import { withRetry } from '@/utils/backoff';
+import cache from "@/lib/cache";
 
 export async function PUT(req: Request) {
     try {
@@ -20,6 +21,9 @@ export async function PUT(req: Request) {
                 maxDelay: 3000
             }
         );
+
+        cache.del(`${type}-posts`);
+        console.log(`[CACHE INVALIDATION] ${type}-posts cleared due to comment like update.`);
 
         return NextResponse.json({ message }, { status: 200 });
     } catch (error) {
