@@ -6,56 +6,6 @@ import { Comment } from "@/types/comment";
 const db = getFirestore(firebase_app);
 const collections = ["posts", "bluesky", "news"];
 
-/**
- * @swagger
- * /api/deletecomment:
- *   post:
- *     summary: Delete a comment from a post
- *     description: Deletes a comment by username, comment text, and date from posts, bluesky, or news collections.
- *     tags:
- *       - Comments
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - postId
- *               - username
- *               - comment
- *               - date
- *             properties:
- *               postId:
- *                 type: string
- *                 description: The ID of the post
- *               username:
- *                 type: string
- *                 description: The username who posted the comment
- *               comment:
- *                 type: string
- *                 description: The content of the comment
- *               date:
- *                 type: string
- *                 description: The date the comment was posted
- *     responses:
- *       200:
- *         description: Comment deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Comment deleted successfully
- *       400:
- *         description: Missing required fields
- *       404:
- *         description: Post or comment not found
- *       500:
- *         description: Internal server error
- */
 export async function POST(request: Request) {
   try {
     const { postId, username, comment, date } = await request.json();

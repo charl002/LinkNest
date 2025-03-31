@@ -4,43 +4,6 @@ import firebase_app from "@/firebase/config";
 
 const db = getFirestore(firebase_app);
 
-/**
- * @swagger
- * /api/getunreadmessages:
- *   get:
- *     summary: Get unread message counts for a user
- *     description: Retrieves unread message count and last message from each sender for the specified receiver.
- *     tags:
- *      - Messages
- *     parameters:
- *       - in: query
- *         name: receiver
- *         schema:
- *           type: string
- *         required: true
- *         description: The username of the message receiver
- *     responses:
- *       200:
- *         description: A map of senders and their unread message count and last message
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 unreadCounts:
- *                   type: object
- *                   additionalProperties:
- *                     type: object
- *                     properties:
- *                       count:
- *                         type: number
- *                       message:
- *                         type: string
- *       400:
- *         description: The receiver query parameter is required
- *       500:
- *         description: Server error while fetching unread messages
- */
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const receiver = searchParams.get("receiver");

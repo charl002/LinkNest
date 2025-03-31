@@ -2,48 +2,6 @@ import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import deleteData from "@/firebase/firestore/deleteData";
 
-/**
- * @swagger
- * /api/deletefriend:
- *   delete:
- *     summary: Delete a friendship and associated friend request
- *     description: Removes both a friend request (if it exists) and the friendship between two users.
- *     tags:
- *       - Friends
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - senderUsername
- *               - receiverUsername
- *             properties:
- *               senderUsername:
- *                 type: string
- *                 example: user1
- *               receiverUsername:
- *                 type: string
- *                 example: user2
- *     responses:
- *       200:
- *         description: Friendship and friend request deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Friendship and friend request deleted successfully
- *       400:
- *         description: Missing senderUsername or receiverUsername
- *       404:
- *         description: Friendship not found
- *       500:
- *         description: Server or Firestore error
- */
 export async function DELETE(req: Request) {
     try {
         const { senderUsername, receiverUsername } = await req.json();

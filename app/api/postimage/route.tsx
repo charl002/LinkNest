@@ -14,56 +14,6 @@ const blobService = new BlobServiceClient(
 );
 const containerClient = blobService.getContainerClient(containerName);
 
-
-/**
- * @swagger
- * /api/postimage:
- *   post:
- *     summary: Upload an image to Azure Blob Storage and save metadata to Firestore
- *     description: Uploads an image file for a given user. The file is stored in Azure Blob Storage, and the file metadata is saved to Firestore.
- *     tags:
- *       - Image Upload
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - username
- *               - file
- *             properties:
- *               username:
- *                 type: string
- *                 description: The username associated with the image
- *                 example: johndoe
- *               file:
- *                 type: string
- *                 format: binary
- *                 description: The image file to upload
- *     responses:
- *       201:
- *         description: Image uploaded and metadata saved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Image uploaded successfully
- *                 imageId:
- *                   type: string
- *                   example: Abc123XYZ
- *                 fileUrl:
- *                   type: string
- *                   format: uri
- *                   example: https://webprojazure.blob.core.windows.net/helloblob/168102341-test.jpg
- *       400:
- *         description: Missing required fields (username or file)
- *       500:
- *         description: Internal server or upload error
- */
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
