@@ -192,7 +192,7 @@ export default function Chat() {
         setMessages((prev) => [
           ...prev,
           {
-            id: postMessageData,
+            id: postMessageData.id,
             sender: currentUsername,
             message: input,
             date: formatTimestamp(new Date().toISOString()),
