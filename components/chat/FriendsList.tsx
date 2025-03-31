@@ -37,6 +37,7 @@ const FriendsList = ({ unreadMessages, setUnreadMessages, currentUser, router, f
           receiver: currentUsername,
           count: 0,
           message: "",
+          groupId: null
         }),
       });
     } catch (error) {

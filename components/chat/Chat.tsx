@@ -221,8 +221,6 @@ export default function Chat() {
 
     socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, }) => {
       
-      // console.log("Received privateMessage", senderId, receiverId, message, msgId, isCallMsg, groupId);
-
       if (senderId === friendUsername) {
         setMessages((prev) => [
           ...prev,

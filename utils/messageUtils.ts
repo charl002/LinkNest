@@ -46,6 +46,7 @@ export const postMessageAndUnread = async (
           receivers: null,     // No receivers for private message
           count: 1,
           message: encryptedMessage,
+          groupId: null
         }),
       });
 
@@ -117,3 +118,4 @@ export const emitPrivateMessage = (
     replyTo
   });
 };
+

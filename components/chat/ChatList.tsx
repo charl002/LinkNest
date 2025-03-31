@@ -45,26 +45,30 @@ export default function ChatList() {
           const unreadData = await unreadResponse.json();
 
           if (unreadResponse.ok) {
-          
             if (unreadData?.unreadCounts && typeof unreadData.unreadCounts === 'object') {
-              
-              // Add a check to see if the message is undefined. React on strict mode calls the useEffect
-              // twice, so I made it pass an empty string when it gets an undefined value.
-              Object.keys(unreadData.unreadCounts).forEach((sender) => {
-                const encryptedMsg = unreadData.unreadCounts[sender].message;
-                unreadData.unreadCounts[sender].message = encryptedMsg
-                  ? decryptMessage(encryptedMsg)
-                  : ""; // or leave it undefined/null if you prefer
-              });
-              
-              setUnreadMessages(unreadData.unreadCounts);
+              // Check if groupId is present to handle only group chat messages
+
+              if (unreadData.unreadCounts.groupId) {
+                // Skip setting unread messages for group chats
+                console.log("This is a group chat message, skipping unread message update.");
+              } else {
+                // Add a check to see if the message is undefined. React on strict mode calls the useEffect twice, so I made it pass an empty string when it gets an undefined value.
+                Object.keys(unreadData.unreadCounts).forEach((sender) => {
+                  const encryptedMsg = unreadData.unreadCounts[sender].message;
+                  unreadData.unreadCounts[sender].message = encryptedMsg
+                    ? decryptMessage(encryptedMsg)
+                    : ""; // or leave it undefined/null if you prefer
+                });
+          
+                setUnreadMessages(unreadData.unreadCounts); // Set unread message counts for private chats
+              }
             } else {
               console.warn("unreadCounts is missing or not an object", unreadData);
-              setUnreadMessages({}); 
+              setUnreadMessages({});
             }
           } else {
             console.error("Error fetching unread messages:", unreadData?.message || "Unknown error");
-          }
+          }          
         }
       } catch (error) {
         console.error("Error fetching users or unread messages:", error);
@@ -87,7 +91,7 @@ export default function ChatList() {
       // This will increment the unread msg count if you are not currently chatting with this person.
       setUnreadMessages((prev = {}) => {
         if (activeChatFriend === data.senderId) {
-          return { ...prev, [data.senderId]: { count: 0, message: data.message } }; // Reset unread count when chat is opened
+          return { ...prev, [data.senderId]: { count: 0, message: "" } }; // Reset unread count when chat is opened
         }
   
         return {
@@ -99,6 +103,9 @@ export default function ChatList() {
         };
       });
 
+      console.log(activeChatFriend);
+      console.log(data.senderId);
+
       // Check if the receiver is online, if not update Firestore
       if (activeChatFriend === data.senderId) {
         try {
@@ -109,7 +116,8 @@ export default function ChatList() {
               sender: data.senderId,
               receiver: data.receiverId,
               count: 0, // Reset unread count
-              message: data.message
+              message: '',
+              groupId: null
             }),
           });
         } catch (error) {
@@ -124,69 +132,6 @@ export default function ChatList() {
     };
   }, [currentUser, socket, activeChatFriend]);
 
-  // return (
-  //   <aside className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)] overflow-y-auto">
-  //     <h2 className="text-lg font-semibold mb-4">Friends</h2>
-  //     <ScrollArea className="w-full max-h-120 overflow-y-auto">
-  //       <div className="flex flex-col space-y-2">
-  //         {friends.length > 0 ? (
-  //           friends.map((user, index) => (
-  //             <div key={`${index}`} className="bg-gray-100 mt-6 rounded-md shadow-md">
-  //               <div 
-  //                 key={user.id || `${user.username}-${index}`}
-  //                 className="relative flex items-center justify-between p-2 rounded-md"
-  //               >
-  //                 {/* Only render Badge if unread count is greater than 0 */}
-  //                 {unreadMessages != undefined && unreadMessages[user.username]?.count > 0 && (
-  //                   <Badge variant="destructive" className="absolute top-0 right-0 -mr-0 ">
-  //                     {unreadMessages[user.username].count}
-  //                   </Badge>
-  //                 )}
-
-  //                 <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
-  //                   <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-105 active:scale-95">
-  //                     <Image 
-  //                       src={user.image} 
-  //                       alt={user.username} 
-  //                       width={40} 
-  //                       height={40} 
-  //                       className="rounded-full border"
-  //                     />
-  //                     <p className="text-sm font-medium">{user.username}</p>
-  //                   </div>
-  //                 </Link>
-
-  //                 <div className="flex items-center gap-2">
-  //                   <Button className="transition-transform duration-200 hover:scale-105 active:scale-95" onClick={() => openChat(user.username, currentUser)}>
-  //                     Chat
-  //                   </Button>
-  //                 </div>
-  //               </div>
-
-  //               <div className="flex-1 ml-6 pb-2">
-  //                 {/* Ensure unreadMessages is defined and check for the message */}
-  //                 {unreadMessages != undefined && unreadMessages?.[user.username]?.message ? (
-  //                   <span
-  //                     className="text-xs text-gray-500"
-  //                     onClick={() => openChat(user.username, currentUser)}
-  //                   >
-  //                     {unreadMessages[user.username].message.length > 30
-  //                       ? unreadMessages[user.username].message.substring(0, 30) + "..."
-  //                       : unreadMessages[user.username].message}
-  //                   </span>
-  //                 ) : (
-  //                   <span className="text-xs text-black-800">Chat with this person!</span> // Default text when no unread message
-  //                 )}
-  //               </div>
-  //             </div>
-  //           ))
-  //         ) : (
-  //           <p className="text-gray-500">No friends found</p>
-  //         )}
-  //       </div>
-  //     </ScrollArea>
-  //   </aside>
-  // );
   return (
     <aside className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)] overflow-y-auto">
       <Tabs defaultValue="friends">

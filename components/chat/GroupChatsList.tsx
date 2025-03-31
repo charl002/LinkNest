@@ -17,7 +17,7 @@ import Image from "next/image";
 import HoverCardComponent from "../custom-ui/HoverCardComponent";
 // import { Skeleton } from "../ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { GroupChat } from "@/types/group";
 import { useGroupChats } from "../provider/GroupChatsProvider";
 import { useSocket } from "../provider/SocketProvider";
@@ -41,28 +41,62 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   const [groupImage, setGroupImage] = useState<File | null>(null);
   const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
   const socket = useSocket();
+  const searchParams = useSearchParams();
+  const activeGroupId = searchParams.get("group");
+  
 
   useEffect(() => {
     if (!socket || !currentUser) return;
-
+  
     // Listen for group messages and update unread count
-    socket.on("groupMessage", ({ senderId, groupId, message, msgId }) => {
+    socket.on("groupMessage", async ({ senderId, groupId, message }) => {
       if (groupId) {
         // If it's not from the current user, increment unread count
         if (senderId !== currentUser) {
-          setUnreadMessages((prev) => ({
-            ...prev,
-            [groupId]: (prev[groupId] || 0) + 1,
-          }));
+          setUnreadMessages((prev) => {
+            // If the current group is not being chatted with, increment the unread count
+            if (activeGroupId !== groupId) {
+              return {
+                ...prev,
+                [groupId]: (prev[groupId] || 0) + 1, // Increment unread count for the group
+              };
+            }
+  
+            // If the current user is chatting in this group, reset the unread count
+            return {
+              ...prev,
+              [groupId]: 0, // Reset unread count for this group
+            };
+          });
+        }
+      }
+  
+      // Check if the receiver is online, if not update Firestore
+      if (activeGroupId === groupId) {
+        try {
+          await fetch("/api/postunreadmessage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sender: senderId,
+              receiver: currentUser, // In this case, it's the group message
+              count: 0, // Reset unread count
+              message,
+              groupId
+            }),
+          });
+        } catch (error) {
+          console.error("Error resetting unread count:", error);
         }
       }
     });
-
+  
     // Clean up the socket listener when the component unmounts
     return () => {
       socket.off("groupMessage");
     };
-  }, [socket, currentUser]);
+  }, [activeGroupId, currentUser, socket]);
+  
 
   const handleFriendSelect = (friend: User) => {
     setSelectedFriends((prev) =>
