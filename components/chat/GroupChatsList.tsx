@@ -472,7 +472,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
                         : unreadMessages[group.id].message}
                     </span>
                   ) : (
-                    <span className="text-xs text-black-800">Chat with this person!</span>
+                    <span className="text-xs text-black-800">Chat with this Group!</span>
                   )}
                 </div>
               </div>

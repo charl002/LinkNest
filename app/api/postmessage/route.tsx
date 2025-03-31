@@ -86,8 +86,6 @@ export async function POST(req: Request) {
       ...(replyTo !== undefined && { replyTo }) 
     };
 
-    console.log("data", data)
-
     const { result: docId, error } = await withRetry(
       () => addData("messages", data),
       {
