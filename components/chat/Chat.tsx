@@ -139,7 +139,7 @@ export default function Chat() {
 
     socket.emit("register", currentUsername);
 
-    socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg }) => {
+    socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, replyTo }) => {
       if (senderId === friendUsername) {
         setMessages((prev) => [
           ...prev,
@@ -150,6 +150,7 @@ export default function Chat() {
             date: formatTimestamp(new Date().toISOString()),
             isCallMsg: isCallMsg,
             reactions: [],
+            replyTo: replyTo ?? undefined,
           }, // Format timestamp
         ]);
       }
