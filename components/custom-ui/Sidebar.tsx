@@ -106,7 +106,7 @@ export default function Sidebar() {
 
         try {
           const response = await fetch(
-            `/api/getuserbyusername?username=${senderUsername}`
+            `/api/getsingleuser?username=${senderUsername}`
           );
           const userData = await response.json();
 

@@ -28,9 +28,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       console.log("Disconnected from WebSocket");
     });
 
-    socketInstance.on("privateMessage", (data) => {
-      console.log("Received privateMessage:", data); // Log received message
-    });
+    // socketInstance.on("privateMessage", (data) => {
+    //   console.log("Received privateMessage:", data); // Log received message
+    // });
+
+    // socketInstance.on("groupMessage", (data) => {
+    //     console.log("Received group Message:", data); 
+    // });
 
     return () => {
       socketInstance.disconnect();

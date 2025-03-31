@@ -116,7 +116,7 @@ export default function Chat() {
     if(!groupchatId || !currentUsername) return;
 
     async function fetchGroupMessages() {
-      if (!groupchatId) return;
+      if (!groupchatId || !currentUsername || !groupChats || groupChats.length === 0) return;
   
       try {
         setIsLoading(true);
@@ -147,12 +147,8 @@ export default function Chat() {
 
         const fetchUsers = async () => {
           const members = groupData.members.filter(
-            (member): member is string => member !== currentUsername && member !== null,
+            (member): member is string => member !== null,
           )
-
-          const senderResponse = await fetch(`/api/getsingleuser?username=${currentUsername}`);
-          const senderData = await senderResponse.json();
-          setCurrentUser(senderData.data);
     
           const fetchedUsers = await Promise.all(
             members.map(async (value) => {
@@ -161,8 +157,12 @@ export default function Chat() {
               return userData.data as User
             }),
           )
-    
-          setOtherUsers(fetchedUsers)
+
+          const currentUserData = fetchedUsers.find((user: User) => user.username === currentUsername) || null;
+          const otherUsersData = fetchedUsers.filter((user: User) => user.username !== currentUsername);
+
+          setCurrentUser(currentUserData);
+          setOtherUsers(otherUsersData);
         }
     
         fetchUsers()
@@ -183,11 +183,34 @@ export default function Chat() {
 
   // This useEffect listens for messages on the Socket IO
   useEffect(() => {
-    if (!socket || !friendUsername) return;
+    console.log("test", socket);
+    if (!socket) return;
 
     socket.emit("register", currentUsername);
+    
+    socket.on("groupMessage", ({ senderId, message, msgId, isCallMsg, groupId }) => {
 
-    socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg }) => {
+      if (groupId === groupchatId) {
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: msgId,
+            sender: senderId,
+            message: decryptMessage(message),
+            date: formatTimestamp(new Date().toISOString()),
+            isCallMsg,
+            reactions: [],
+            groupId,
+          },
+        ]);
+      }
+    });
+
+    socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, }) => {
+      
+      // console.log("Received privateMessage", senderId, receiverId, message, msgId, isCallMsg, groupId);
+
       if (senderId === friendUsername) {
         setMessages((prev) => [
           ...prev,
@@ -205,8 +228,9 @@ export default function Chat() {
 
     return () => {
       socket.off("privateMessage");
+      // socket.off("groupMessage");
     };
-  }, [socket, currentUsername, friendUsername]);
+  }, [socket, currentUsername, friendUsername, groupchatId]);
 
   const sendMessage = async () => {
     if (socket && input.trim() && currentUsername) {
@@ -217,7 +241,7 @@ export default function Chat() {
             currentUsername,
             input,
             false,
-            friendUsername,    // Send to a single friend
+            friendUsername,   // Send to a single friend
             undefined,          // No groupId for private messages
             undefined           // No receivers for private messages
           );
@@ -225,10 +249,10 @@ export default function Chat() {
           emitPrivateMessage(
             socket,
             currentUsername,
-            friendUsername,
             input,
             postMessageData.docId,
-            false // Not a call message
+            false, // Not a call message
+            friendUsername
           );
 
           // Update the UI with the new message
@@ -245,7 +269,7 @@ export default function Chat() {
         } 
         // If it's a group chat, send a message to all group members
         else if (groupchatId && group?.members) {
-          const validMembers = group.members.filter((member) => member !== null) as string[]; // Filter out nulls
+          const validMembers = group.members.filter((member) => member !== null && member != currentUsername) as string[]; // Filter out nulls
 
           const postMessageData = await postMessageAndUnread(
             currentUsername,
@@ -255,18 +279,17 @@ export default function Chat() {
             groupchatId,        // Group ID
             validMembers      // Send to all group members
           );
-  
-          // Emit the message to all receivers in the group
-          // group.members.forEach((member) => {
-          //   emitPrivateMessage(
-          //     socket,
-          //     currentUsername,
-          //     member,
-          //     input,
-          //     postMessageData.docId,
-          //     false // Not a call message
-          //   );
-          // });
+
+          emitPrivateMessage(
+            socket,
+            currentUsername,
+            input,
+            postMessageData.docId,
+            false, // Not a call message
+            undefined,
+            groupchatId,
+            validMembers
+          );
 
           // Update the UI with the new message
           setMessages((prev) => [
@@ -334,10 +357,10 @@ export default function Chat() {
         emitPrivateMessage(
           socket,
           currentUsername,
-          friendUsername,
           callMessage,
           postMessageData.docId,
-          true
+          true,
+          friendUsername
         );
 
         socket.emit("call", {
@@ -519,11 +542,9 @@ export default function Chat() {
               ))
             : messages.map((msg, index) => {
                 const isCurrentUser = msg.sender === currentUsername;
-                console.log(isCurrentUser);
                 let user;
                 if(isCurrentUser){
                   user = currentUser;
-                  console.log(user);
                 } else {
                   user = otherUsers.find((user) => user.username === msg.sender) || null;
                 }

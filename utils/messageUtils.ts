@@ -66,21 +66,22 @@ export const postMessageAndUnread = async (
       });
 
       const postMessageData = await postMessageResponse.json();
-
+      
+      // FIX: UNREADMSG 
       // Send the unread message data for all receivers in the group
-      for (const receiver of receivers) {
-        await fetch("/api/postunreadmessage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sender: sender,
-            receiver: receiver,
-            receivers: receivers,
-            count: 1,
-            message: encryptedMessage,
-          }),
-        });
-      }
+      // for (const receiver of receivers) {
+      //   await fetch("/api/postunreadmessage", {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({
+      //       sender: sender,
+      //       receiver: receiver,
+      //       receivers: receivers,
+      //       count: 1,
+      //       message: encryptedMessage,
+      //     }),
+      //   });
+      // }
 
       return postMessageData;
     }
@@ -94,18 +95,22 @@ export const postMessageAndUnread = async (
 export const emitPrivateMessage = (
   socket: Socket,
   sender: string,
-  receiver: string,
   message: string,
   docId: string,
-  isCallMsg: boolean
+  isCallMsg: boolean,
+  receiver?: string,
+  groupId?: string,
+  receivers?: string[]
 ) => {
   const encryptedMessage = encryptMessage(message);
 
   socket.emit("privateMessage", {
     senderId: sender,
-    receiverId: receiver,
     message: encryptedMessage,
     msgId: docId,
     isCallMsg: isCallMsg,
+    receiverId: receiver,
+    groupId: groupId,
+    receiversIds: receivers
   });
 };
