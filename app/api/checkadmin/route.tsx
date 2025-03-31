@@ -4,40 +4,6 @@ import firebase_app from "@/firebase/config";
 
 const db = getFirestore(firebase_app);
 
-/**
- * @swagger
- * /api/checkadmin:
- *   get:
- *     summary: Check if a user is an admin
- *     description: Returns whether a user has administrative privileges based on their email.
- *     tags:
- *       - Users
- *     parameters:
- *       - in: query
- *         name: email
- *         required: true
- *         schema:
- *           type: string
- *           format: email
- *         description: The email address of the user to check
- *     responses:
- *       200:
- *         description: Successfully retrieved admin status
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 isAdmin:
- *                   type: boolean
- *                   example: true
- *       400:
- *         description: Missing email parameter
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const email = searchParams.get('email');

@@ -10,49 +10,6 @@ interface Report {
 
 const db = getFirestore(firebase_app);
 
-/**
- * @swagger
- * /api/reportpost:
- *   post:
- *     summary: Report a post
- *     description: Allows a user to report a post with a reason. Prevents duplicate reports from the same user.
- *     tags:
- *       - Posts
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - postId
- *               - reportedBy
- *               - reason
- *               - postType
- *             properties:
- *               postId:
- *                 type: string
- *                 example: "post123"
- *               reportedBy:
- *                 type: string
- *                 example: "janedoe"
- *               reason:
- *                 type: string
- *                 example: "Inappropriate content"
- *               postType:
- *                 type: string
- *                 enum: [posts, bluesky, news]
- *                 example: "posts"
- *     responses:
- *       200:
- *         description: Post reported successfully
- *       400:
- *         description: Missing fields or duplicate report
- *       404:
- *         description: Post not found
- *       500:
- *         description: Internal server error
- */
 export async function POST(request: Request) {
     try {
         const { postId, reportedBy, reason, postType } = await request.json();
