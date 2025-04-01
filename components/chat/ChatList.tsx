@@ -2,17 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useFriends } from "../provider/FriendsProvider";
-import { Badge } from "@/components/ui/badge";
 import { useSocket } from "@/components/provider/SocketProvider";
 import { useSearchParams } from "next/navigation"; 
-
 import { User } from "@/types/user";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import FriendsList from "./FriendsList";
+import GroupChatsList from "./GroupChatsList";
+import { decryptMessage } from "@/utils/decrypt";
 
 export default function ChatList() {
   const { data: session } = useSession();
@@ -21,7 +20,7 @@ export default function ChatList() {
 
   const { friends } = useFriends();
   const socket = useSocket();
-  const [unreadMessages, setUnreadMessages] = useState<Record<string, number>>({});
+  const [unreadMessages, setUnreadMessages] = useState<Record<string, { count: number; message: string }>>({});
 
   const currentUser = users.find(user => user.email === session?.user?.email)?.username || null;
 
@@ -46,10 +45,31 @@ export default function ChatList() {
           const unreadData = await unreadResponse.json();
 
           if (unreadResponse.ok) {
-            setUnreadMessages(unreadData.unreadCounts);
+            if (unreadData?.unreadCounts && typeof unreadData.unreadCounts === 'object') {
+              // Check if groupId is present to handle only group chat messages
+
+              if (unreadData.unreadCounts.groupId) {
+                // Skip setting unread messages for group chats
+                console.log("This is a group chat message, skipping unread message update.");
+              } else {
+                // Add a check to see if the message is undefined. React on strict mode calls the useEffect twice, so I made it pass an empty string when it gets an undefined value.
+                Object.keys(unreadData.unreadCounts).forEach((sender) => {
+                  const encryptedMsg = unreadData.unreadCounts[sender].message;
+                  unreadData.unreadCounts[sender].message = encryptedMsg
+                    ? decryptMessage(encryptedMsg)
+                    : ""; // or leave it undefined/null if you prefer
+                });
+                
+                // console.log("unread friend", JSON.stringify(unreadData.unreadCounts));
+                setUnreadMessages(unreadData.unreadCounts); // Set unread message counts for private chats
+              }
+            } else {
+              console.warn("unreadCounts is missing or not an object", unreadData);
+              setUnreadMessages({});
+            }
           } else {
-            console.error("Error fetching unread messages:", unreadData.message);
-          }
+            console.error("Error fetching unread messages:", unreadData?.message || "Unknown error");
+          }          
         }
       } catch (error) {
         console.error("Error fetching users or unread messages:", error);
@@ -63,18 +83,29 @@ export default function ChatList() {
   useEffect(() => {
     if (!socket || !currentUser) return;
 
-    socket.on("privateMessage", async (data: { senderId: string; receiverId: string }) => {
+    socket.on("privateMessage", async (data: { senderId: string; receiverId: string, message: string }) => {
       if (data.receiverId !== currentUser) return; // Ignore messages not meant for the current user
 
+      // Decrypt the message if it exists (same logic as before)
+      const decryptedMessage = data.message ? decryptMessage(data.message) : "";
+
+      // This will increment the unread msg count if you are not currently chatting with this person.
       setUnreadMessages((prev = {}) => {
         if (activeChatFriend === data.senderId) {
-          return { ...prev, [data.senderId]: 0 };
+          return { ...prev, [data.senderId]: { count: 0, message: "" } }; // Reset unread count when chat is opened
         }
+  
         return {
           ...prev,
-          [data.senderId]: (prev[data.senderId] || 0) + 1,
+          [data.senderId]: {
+            count: (prev[data.senderId]?.count || 0) + 1,
+            message: decryptedMessage, // Store the latest message as a snippet
+          },
         };
       });
+
+      console.log(activeChatFriend);
+      console.log(data.senderId);
 
       // Check if the receiver is online, if not update Firestore
       if (activeChatFriend === data.senderId) {
@@ -86,6 +117,8 @@ export default function ChatList() {
               sender: data.senderId,
               receiver: data.receiverId,
               count: 0, // Reset unread count
+              message: '',
+              groupId: null
             }),
           });
         } catch (error) {
@@ -100,71 +133,39 @@ export default function ChatList() {
     };
   }, [currentUser, socket, activeChatFriend]);
 
-  const openChat = async (friendUsername: string, currentUsername: string | null) => {
-    if (!currentUsername) return;
-  
-    setUnreadMessages((prev) => ({
-      ...prev,
-      [friendUsername]: 0,
-    }));
-
-    try {
-      await fetch("/api/postunreadmessage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sender: friendUsername,
-          receiver: currentUsername,
-          count: 0,
-        }),
-      });
-    } catch (error) {
-      console.error("Error resetting unread count:", error);
-    }
-  
-    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
-  };  
-
   return (
-    <aside className="bg-white shadow-md p-4 rounded-md">
-      <h2 className="text-lg font-semibold mb-4">Friends</h2>
-      <ScrollArea className="w-full max-h-120 overflow-y-auto">
-        <div className="flex flex-col space-y-2">
-          {friends.length > 0 ? (
-            friends.map((user, index) => (
-              <div 
-                key={user.id || `${user.username}-${index}`}
-                className="flex items-center justify-between p-2 bg-gray-100 rounded-md"
-              >
-                <Link href={`/profile/${encodeURIComponent(user.username)}`} className="flex items-center gap-x-3">
-                  <div className="flex items-center space-x-2">
-                    <Image 
-                      src={user.image} 
-                      alt={user.username} 
-                      width={40} 
-                      height={40} 
-                      className="rounded-full border"
-                    />
-                    <p className="text-sm font-medium">{user.username}</p>
-                  </div>
-                </Link>
-                <div className="flex items-center gap-2">
-                  {unreadMessages && unreadMessages[user.username] > 0 && (
-                    <Badge variant="destructive">
-                      {unreadMessages[user.username]}
-                    </Badge>
-                  )}
-                  <Button onClick={() => openChat(user.username, currentUser)}>
-                    Chat
-                  </Button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No friends found</p>
-          )}
-        </div>
-      </ScrollArea>
+    <aside className="bg-white shadow-md p-4 rounded-md h-[calc(100vh-120px)] overflow-y-auto">
+      <Tabs defaultValue="friends">
+        <TabsList className="flex gap-4">
+          <TabsTrigger value="friends">Friends</TabsTrigger>
+          <TabsTrigger value="groupChats">Group Chats</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="friends">
+          <h2 className="text-lg font-semibold mb-4">Friends</h2>
+          <ScrollArea className="w-full max-h-120 overflow-y-auto">
+            <FriendsList 
+              unreadMessages={unreadMessages}
+              setUnreadMessages={setUnreadMessages}
+              currentUser={currentUser}
+              router={router}
+              friends={friends}
+            />
+          </ScrollArea>
+          
+        </TabsContent>
+
+        <TabsContent value="groupChats">
+          <h2 className="text-lg font-semibold mb-4">Group Chats</h2>
+          <ScrollArea className="w-full max-h-120 overflow-y-auto">
+            <GroupChatsList 
+              router={router}
+              currentUser={currentUser}
+            />
+          </ScrollArea>
+          
+        </TabsContent>
+      </Tabs>
     </aside>
   );
 }

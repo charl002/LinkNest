@@ -1,7 +1,11 @@
 'use client';
 
 import { Toaster } from "sonner";
-import Call from "@/components/chat/Call";
+import dynamic from 'next/dynamic';
+
+const Call = dynamic(() => import('@/components/chat/Call'), {
+  ssr: false, // Disable SSR
+});
 
 export default function Page(){
     return (

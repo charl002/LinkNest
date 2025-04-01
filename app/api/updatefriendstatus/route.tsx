@@ -10,17 +10,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Missing parameters" }, { status: 400 });
         }
 
-        const { requests, error } = await getFriendRequests();
+        const { data, error } = await getFriendRequests();
 
         if (error) {
             return NextResponse.json({ message: "Error fetching friend requests", error }, { status: 500 });
         }
 
-        if (!requests || requests.length === 0) {
+        if (!data || data.length === 0) {
             return NextResponse.json({ message: "No friend requests found" }, { status: 404 });
         }
 
-        const friendRequest = requests.find(
+        const friendRequest = data.find(
             req => req.senderUsername === senderUsername && req.receiverUsername === receiverUsername
         );
 

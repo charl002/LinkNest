@@ -87,3 +87,30 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #aaa; 
 }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; 
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; 
+  overflow: auto; 
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Edge */
+}
+
+.custom-scrollbar {
+  scrollbar-width: none; /* For Firefox */
+}

@@ -1,5 +1,5 @@
 import firebase_app from "../config";
-import { getFirestore, doc, getDoc, DocumentData, DocumentSnapshot, getDocs, QuerySnapshot, collection } from "@firebase/firestore";
+import { getFirestore, doc, getDoc, DocumentData, DocumentSnapshot, getDocs, QuerySnapshot, collection, query, where } from "@firebase/firestore";
 
 const db = getFirestore(firebase_app);
 
@@ -8,9 +8,14 @@ interface GetDocumentResult {
     error: unknown;
 }
 
-interface GetFriendRequestsResult {
-  requests: DocumentData[] | null;
+interface GetDataResult {
+  data: DocumentData[] | null;
   error: unknown;
+}
+
+interface QueryObject {
+  field: string; // The field to filter by (e.g., 'members' or 'users')
+  value: string; // The value to search for (e.g., the current user's username)
 }
 
 export async function getDocument(collection: string, id: string): Promise<GetDocumentResult> {
@@ -50,18 +55,36 @@ export async function getAllDocuments(collectionName: string): Promise<GetAllDoc
 
 // WIll use this temporarely
 
-export async function getFriendRequests(): Promise<GetFriendRequestsResult> {
+export async function getFriendRequests(): Promise<GetDataResult> {
   const colRef = collection(db, "friend_requests");
 
-  let requests: DocumentData[] | null = null;
+  let data: DocumentData[] | null = null;
   let error: unknown = null;
 
   try {
       const snapshot: QuerySnapshot<DocumentData> = await getDocs(colRef);
-      requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Convert docs to objects
+      data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Convert docs to objects
   } catch (e) {
       error = e;
   }
 
-  return { requests, error };
+  return { data, error };
+}
+
+export async function getData(collectionName: string, queryObj: QueryObject): Promise<GetDataResult> {
+  try {
+      // Create a query with the 'members' field filter
+      const colRef = collection(db, collectionName);
+      const q = query(colRef, where("members", "array-contains", queryObj.value));
+
+      // Get the query snapshot
+      const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(q);
+      
+      // Map the documents into an array
+      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      return { data, error: null };
+  } catch (error) {
+      return { data: null, error };
+  }
 }

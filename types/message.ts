@@ -3,5 +3,12 @@ export interface Message {
   sender: string;
   message: string;
   date: string;
+  isCallMsg: boolean;
   reactions?: { user: string; reaction: string }[];
+  groupId?: string;
+  replyTo?: {
+    id: string;
+    sender: string;
+    message: string;
+  }
 }

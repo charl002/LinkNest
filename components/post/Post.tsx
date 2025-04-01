@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Comment } from "@/types/comment";
-import { FaExpand } from "react-icons/fa";
 import { Trash2 } from 'lucide-react';
 import { customToast } from "@/components/ui/customToast";
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
+import { useInView } from 'react-intersection-observer';
+import ReportDialog from "./ReportDialog";
+import { useRouter } from "next/navigation";
 
 interface PostProps {
     title: string;
@@ -32,6 +34,10 @@ interface PostProps {
 
 
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
+    const { ref, inView } = useInView({
+        threshold: 0.1,
+        triggerOnce: true
+    });
     const { data: session } = useSession();
     const [likeCount, setLikeCount] = useState(likes);
     const [isLiked, setIsLiked] = useState(false);
@@ -40,6 +46,7 @@ export default function Post({ title, username, description, tags, comments, lik
     const [isLoading, setIsLoading] = useState(false);
     const [isOverLimit, setIsOverLimit] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
+    const [showReportDialog, setShowReportDialog] = useState(false);
 
     useEffect(() => {
         const fetchSessionUsername = async () => {
@@ -50,14 +57,15 @@ export default function Post({ title, username, description, tags, comments, lik
         fetchSessionUsername();
     }, [session, likedBy, sessionUsername]);
 
-      
+    
+    
     // Fetch profile pictures for comments
     const fetchProfilePictures = async (comments: Comment[]) => {
       const updatedComments = await Promise.all(
           comments.map(async (comment) => {
               if (!comment.profilePicture || comment.profilePicture === "/defaultProfilePic.jpg") {
                   try {
-                      const response = await fetch(`/api/getuserbyusername?username=${comment.username}`);
+                      const response = await fetch(`/api/getsingleuser?username=${comment.username}`);
                       if (!response.ok) throw new Error("Failed to fetch profile picture");
 
                       const userData = await response.json();
@@ -76,6 +84,7 @@ export default function Post({ title, username, description, tags, comments, lik
       return updatedComments;
   };    
 
+    const router = useRouter();
     const handleToggleLike = async () => {
         if (!session?.user || !sessionUsername || isLoading) return;
 
@@ -96,6 +105,7 @@ export default function Post({ title, username, description, tags, comments, lik
             if (response.ok) {
                 setLikeCount(prevCount => newIsLiked ? prevCount + 1 : prevCount - 1);
                 setIsLiked(newIsLiked);
+                router.refresh();
             } else {
                 console.error(data.message);
             }
@@ -140,7 +150,7 @@ export default function Post({ title, username, description, tags, comments, lik
           // Fetch profile pictures for all comments (including the new one)
           const updatedCommentsWithProfilePictures = await fetchProfilePictures([...updatedComments, newCommentData]);
           setPostComments(updatedCommentsWithProfilePictures);
-  
+          router.refresh();
                 setNewComment(""); 
             } else {
                 console.error(data.message);
@@ -197,6 +207,7 @@ export default function Post({ title, username, description, tags, comments, lik
             } else {
                 console.error(data.message);
             }
+            router.refresh();
         } catch (error) {
             console.error('Error liking the comment:', error);
         } finally {
@@ -265,7 +276,7 @@ export default function Post({ title, username, description, tags, comments, lik
       const response = await fetch("/api/deletepost", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId: documentId }),
+        body: JSON.stringify({ postId: documentId, postType: "posts" }),
       });
 
       if (!response.ok) {
@@ -282,11 +293,15 @@ export default function Post({ title, username, description, tags, comments, lik
     }
   };
 
+    if (!inView) {
+        return <div ref={ref} className="h-[300px] bg-gray-100 animate-pulse rounded-md" />;
+    }
+
     return (
-      <div className="bg-white shadow-md p-4 rounded-md">
+      <div ref={ref} className="bg-white shadow-md p-4 rounded-md">
           <div className="flex items-center justify-between w-full">
           <Link href={`/profile/${encodeURIComponent(username)}`}>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-110 active:scale-90">
               {profilePicture ? (
                 <Image 
                   src={profilePicture} 
@@ -313,7 +328,7 @@ export default function Post({ title, username, description, tags, comments, lik
             {sessionUsername === username && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button onClick={(e) => e.stopPropagation()}>
+                  <Button onClick={(e) => e.stopPropagation()} className="transition-transform duration-200 hover:scale-110 active:scale-90">
                     <Trash2/>
                   </Button>
                 </AlertDialogTrigger>
@@ -334,13 +349,7 @@ export default function Post({ title, username, description, tags, comments, lik
           </div>
 
         {images.length > 0 && images[0].url ? (
-          <div className="mt-4 relative w-full overflow-hidden bg-gray-200 rounded-md group">
-            <button 
-              onClick={() => setIsZoomed(true)}
-              className="absolute top-2 right-2 z-10 p-2 bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <FaExpand />
-            </button>
+          <div className="mt-4 relative w-full overflow-hidden bg-transparent rounded-md group">
             {images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
               <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
                 <video 
@@ -352,7 +361,7 @@ export default function Post({ title, username, description, tags, comments, lik
                 </video>
               </div>
             ) : (
-              <div className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
+              <button onClick={() => setIsZoomed(true)} className="relative w-full h-0" style={{ paddingTop: '56.25%' }}>
                 <Image 
                   src={images[0].url} 
                   alt={images[0].alt} 
@@ -361,14 +370,14 @@ export default function Post({ title, username, description, tags, comments, lik
                   className="object-contain"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-              </div>
+              </button>
             )}
           </div>
         ) : null}
 
       {/* Zoom  media*/}
         <Dialog open={isZoomed} onOpenChange={setIsZoomed}>
-          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/90">
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-transparent border-none">
             <button
               onClick={() => setIsZoomed(false)}
               className="absolute top-4 right-4 z-50 p-2 bg-white rounded-full hover:bg-gray-200"
@@ -411,7 +420,7 @@ export default function Post({ title, username, description, tags, comments, lik
         <div className="mt-4 flex items-center space-x-6">
           <button
             onClick={handleToggleLike}
-            className={`flex items-center space-x-2 px-3 py-1 rounded-md transition text-sm 
+            className={`flex items-center space-x-2 px-3 py-1 rounded-md text-sm transition-transform duration-200 hover:scale-105 active:scale-95 
                 ${isLiked ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'} hover:bg-blue-200`}
             disabled={isLoading}
           >
@@ -425,7 +434,7 @@ export default function Post({ title, username, description, tags, comments, lik
               }
           }}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center space-x-2">
+              <Button variant="outline" className="flex items-center bg-gray-100 text-gray-600 space-x-2 px-3 py-1 rounded-md transition-transform duration-200 hover:scale-105 active:scale-95">
                 <FaRegComment />
                 <span>Comment</span>
               </Button>
@@ -438,20 +447,24 @@ export default function Post({ title, username, description, tags, comments, lik
                 {postComments.length > 0 ? (
                   postComments.map((comment, index) => (
                     <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
-                      <Image
-                        src={comment.profilePicture || defaultImageUrl}
-                        alt={comment.username}
-                        width={40}
-                        height={40}
-                        className="rounded-full flex-shrink-0"
-                      />
+                      <Link key={index} href={`/profile/${encodeURIComponent(comment.username)}`}>
+                        <Image
+                          src={comment.profilePicture || defaultImageUrl}
+                          alt={comment.username}
+                          width={40}
+                          height={40}
+                          className="rounded-full flex-shrink-0 transition-transform duration-200 hover:scale-105 active:scale-95"
+                        />
+                      </Link>
                       <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="font-bold text-sm text-gray-900">
+                      <Link key={index} href={`/profile/${encodeURIComponent(comment.username)}`}>
+                        <p className="font-bold text-sm text-gray-900 transition-transform duration-200 hover:scale-105 active:scale-95">
                           {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
                         </p>
+                      </Link>
                         {sessionUsername === comment.username && (
-                          <button onClick={() => handleDeleteComment(comment)}
+                          <button className="transition-transform duration-200 hover:scale-110 active:scale-90" onClick={() => handleDeleteComment(comment)}
                           disabled={isLoading}>
                             <Trash2 />
                           </button>
@@ -511,7 +524,20 @@ export default function Post({ title, username, description, tags, comments, lik
               </div>
             </DialogContent>
           </Dialog>
+          <button
+            onClick={() => setShowReportDialog(true)}
+            className="text-gray-400 hover:text-red-500 text-sm transition-colors duration-200"
+          >
+            Report
+          </button>
         </div>
+        {showReportDialog && (
+          <ReportDialog
+              postId={documentId}
+              username={sessionUsername}
+              postType={postType}
+              onClose={() => setShowReportDialog(false)}
+          />
+      )}
       </div>
-    );
-}
+    );}
