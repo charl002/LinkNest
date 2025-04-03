@@ -1,3 +1,8 @@
+/**
+ * Logout component
+ *
+ * Renders a logout button that triggers the `doLogout` server action when submitted.
+ */
 "use client";
 import { doLogout } from "@/app/actions"
 
