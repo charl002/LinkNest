@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { authenticateAdmin } from "@/lib/authMiddleware";
 
 const db = getFirestore(firebase_app);
 
 export async function POST(request: Request) {
+  // Check admin authentication
+  const authError = await authenticateAdmin();
+  if (authError) return authError;
+
   try {
     const { userId, isBanned } = await request.json();
 

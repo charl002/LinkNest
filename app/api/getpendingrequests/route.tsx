@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';
+import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";
 
 interface FriendRequest {
   receiverUsername: string;
@@ -10,12 +11,20 @@ interface FriendRequest {
 
 export async function GET(req: Request) {
     try {
+        // Check authentication
+        const authError = await authenticateRequest();
+        if (authError) return authError;
+
         const { searchParams } = new URL(req.url);
         const receiverUsername = searchParams.get("username");
 
         if (!receiverUsername) {
             return NextResponse.json({ message: "Missing username parameter" }, { status: 400 });
         }
+
+        // Authorize the user
+        const authzError = await authorizeUser(receiverUsername);
+        if (authzError) return authzError;
 
         const { results, error } = await withRetry(
             () => getAllDocuments("friend_requests"),

@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { getFirestore,  updateDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";
 
 const db = getFirestore(firebase_app);
 
 export async function POST(request: Request) {
+  // Check authentication
+  const authError = await authenticateRequest();
+  if (authError) return authError;
+
   try {
     const { userId: blockerUsername, blockedUserId: blockedUsername } = await request.json();
 
@@ -14,6 +19,10 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Authorize the user making the request
+    const authzError = await authorizeUser(blockerUsername);
+    if (authzError) return authzError;
 
     // Get the blocker's user document
     const usersRef = collection(db, "users");
