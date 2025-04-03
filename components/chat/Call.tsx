@@ -194,7 +194,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
       } 
     }
 
-  }, [remoteUsers, router, email, currentUsername, friendUsername]);
+  }, [remoteUsers, router, email, currentUsername, friendUsername, callMembers]);
 
   if (!isValidUser) return <LoadingLogo />;
 
