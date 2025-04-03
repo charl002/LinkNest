@@ -57,7 +57,15 @@ export default function Post({ title, username, description, tags, comments, lik
         fetchSessionUsername();
     }, [session, likedBy, sessionUsername]);
 
-    
+    // Fetch profile pictures on mount
+    useEffect(() => {
+      const fetchInitialCommentPics = async () => {
+          const withPics = await fetchProfilePictures(comments);
+          setPostComments(withPics);
+      };
+      fetchInitialCommentPics();
+    }, [comments]);
+
     
     // Fetch profile pictures for comments
     const fetchProfilePictures = async (comments: Comment[]) => {
@@ -427,9 +435,13 @@ export default function Post({ title, username, description, tags, comments, lik
             <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
           </button>
 
-          <Dialog onOpenChange={(isOpen) => {
-              if (isOpen && comments.length > 0) {
-                  fetchProfilePictures(comments).then(setPostComments);
+          <Dialog onOpenChange={async (isOpen) => {
+              if (isOpen) {
+                //Refetch the post if user interaction on a post since cache was reset
+                const res = await fetch(`/api/getsinglepost?id=${documentId}&type=${postType}`);
+                const json = await res.json();
+                const withPics = await fetchProfilePictures(json.comments);
+                setPostComments(withPics);
               }
           }}>
             <DialogTrigger asChild>
