@@ -128,30 +128,29 @@ export default function Post({ title, username, description, tags, comments, lik
   
             const data = await response.json();
             if (response.ok) {
-                // Convert "Just now" to the actual timestamp for previous comments
-                const updatedComments = postComments.map(comment =>
-                    comment.date === "Just now"
-                        ? { ...comment, date: new Date().toLocaleString() }
-                        : comment
-                );
+              const isoDate = new Date().toISOString();
+              // This makes a copy of all previous comments and removes the justNow marker from them.
+              const updatedComments = postComments.map(c => ({ ...c, justNow: false }));
   
-            // Add the new comment with a temporary profile picture
+            // Add the new comment with "justNow: true" and a temporary profile picture
             const newCommentData = { 
               username: sessionUsername, 
               comment: newComment, 
-              date: "Just now", 
+              date: isoDate, 
               likes: 0, 
               likedBy: [],
-              profilePicture: "/defaultProfilePic.jpg" // Temporary placeholder
+              profilePicture: "/defaultProfilePic.jpg", // Temporary placeholder
+              justNow: true 
           };
 
-          setPostComments([...updatedComments, newCommentData]);
 
-          // Fetch profile pictures for all comments (including the new one)
-          const updatedCommentsWithProfilePictures = await fetchProfilePictures([...updatedComments, newCommentData]);
-          setPostComments(updatedCommentsWithProfilePictures);
+          const withNewComment = [...updatedComments, newCommentData];
+          const withPics = await fetchProfilePictures(withNewComment);
+          // Ensure only the last comment gets justNow: true
+          const finalComments = withPics.map((c, i, arr) => i === arr.length - 1 ? { ...c, justNow: true } : { ...c, justNow: false });
+          setPostComments(finalComments);
+          setNewComment("");
           router.refresh();
-                setNewComment(""); 
             } else {
                 console.error(data.message);
             }
@@ -460,7 +459,7 @@ export default function Post({ title, username, description, tags, comments, lik
                       <div className="flex items-center justify-between">
                       <Link key={index} href={`/profile/${encodeURIComponent(comment.username)}`}>
                         <p className="font-bold text-sm text-gray-900 transition-transform duration-200 hover:scale-105 active:scale-95">
-                          {comment.username} <span className="text-gray-500 text-xs">{new Date(comment.date).toLocaleString()}</span>
+                          {comment.username} <span className="text-gray-500 text-xs"> {comment.justNow ? "Just now" : new Date(comment.date).toLocaleString()}</span>
                         </p>
                       </Link>
                         {sessionUsername === comment.username && (
