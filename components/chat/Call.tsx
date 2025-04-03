@@ -35,9 +35,11 @@ function Call() {
   const friend = searchParams.get("friend") ?? "Guest";
   const friendUsername = decodeURIComponent(friend);
   const current = searchParams.get("user") ?? "Guest";
+  const groupchatId = searchParams.get("group");
   const currentUsername = decodeURIComponent(current);
   const [first, second] = [currentUsername, friendUsername].sort();
-  const channelName = `${first}_${second}`;
+  const channelName = friendUsername === "Guest" ? groupchatId ?? `${first}_${second}` : `${first}_${second}`;
+
   const socket = useSocket();
   
   const handleLeaveCall = async () => {
@@ -97,6 +99,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   audioTracks.map((track) => track.play());
 
   useEffect(() => {
+
     const validateUser = async () => {
       try {
         const userResponse = await fetch(`/api/getsingleuser?email=${email}`);
@@ -119,12 +122,14 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
 
     validateUser();
 
-    if (remoteUsers.length >= 2) {
-      customToast({ message: "This call is full, you cannot join at the moment", type: "error" });
-      router.push("/");
-    } 
+    if (friendUsername != "Guest"){
+      if (remoteUsers.length >= 2) {
+        customToast({ message: "This call is full, you cannot join at the moment", type: "error" });
+        router.push("/");
+      } 
+    }
 
-  }, [remoteUsers, router, email, currentUsername]);
+  }, [remoteUsers, router, email, currentUsername, friendUsername]);
 
   if (!isValidUser) return <LoadingLogo />;
 
@@ -154,7 +159,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
             </span>
           </div>
         </div>
-        {remoteUsers.length > 0 && remoteUsers.length < 2 ? (
+        {remoteUsers.length > 0 ? (
           remoteUsers.map((user) => (
             <div key={user.uid} className="relative w-full h-full">
               <RemoteUser

@@ -378,7 +378,74 @@ export default function Chat() {
 
   //Handles the logic of entering a VideoCall with a friend
   const handleRedirectToCall = async () => {
-    if (!currentUsername || !friendUsername) return;
+
+    if (!currentUsername || !friendUsername) {
+      if (groupchatId) {
+        
+        if (!currentUsername || !groupchatId) return;
+
+        const callMessage = "📞 I entered the call! Join Up!";
+        const isCallMsg = true;
+
+        try {
+          if (socket && groupchatId && group?.members) {
+              const validMembers = group.members.filter((member) => member !== null && member != currentUsername) as string[]; // Filter out nulls
+    
+              const replyData = replyToMessage
+            ? {
+                id: replyToMessage.id,
+                sender: replyToMessage.sender,
+                message: replyToMessage.message,
+              }
+            : undefined;
+    
+              const postMessageData = await postMessageAndUnread(
+                currentUsername,
+                callMessage,
+                false,
+                undefined,          // No single receiver for group chat
+                groupchatId,        // Group ID
+                validMembers,      // Send to all group members
+                replyData
+              );
+    
+              emitPrivateMessage(
+                socket,
+                currentUsername,
+                callMessage,
+                postMessageData.id,
+                false, // Not a call message
+                undefined,
+                groupchatId,
+                validMembers,
+                replyData
+              );
+    
+              // Update the UI with the new message
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: postMessageData.id,
+                  sender: currentUsername,
+                  message: input,
+                  date: formatTimestamp(new Date().toISOString()),
+                  isCallMsg: isCallMsg,
+                  replyTo: replyData ?? undefined
+                },
+              ]);
+
+            setInput(""); // Clear the input field
+        
+            router.push(`/channel?group=${encodeURIComponent(groupchatId)}&user=${encodeURIComponent(currentUsername)}`);
+          }
+        } catch (error) {
+          console.error("Error starting the call:", error);
+          toast.error("Error starting the call.");
+        }
+          
+      }
+      return;
+  }
 
     const callMessage = "📞 I entered the call! Join Up!";
     const isCallMsg = true;
