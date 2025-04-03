@@ -21,6 +21,8 @@ import LoadingLogo from "../custom-ui/LoadingLogo";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { customToast } from "@/components/ui/customToast";
+import { useGroupChats } from "../provider/GroupChatsProvider";
+import { GroupChat } from "@/types/group";
 
 
 
@@ -39,15 +41,41 @@ function Call() {
   const currentUsername = decodeURIComponent(current);
   const [first, second] = [currentUsername, friendUsername].sort();
   const channelName = friendUsername === "Guest" ? groupchatId ?? `${first}_${second}` : `${first}_${second}`;
+  const { groupChats } = useGroupChats();
+  const [group, setGroup] = useState<GroupChat | null>(null);
+   
 
   const socket = useSocket();
   
   const handleLeaveCall = async () => {
-    // Send the call end message
-    await sendCallEndMessage(currentUsername, friendUsername);
 
-    // Leave the call and redirect to the chat page
-    router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
+    if (friendUsername != "Guest"){
+    // Send the call end message
+      await sendCallEndMessage(currentUsername, friendUsername);
+
+      // Leave the call and redirect to the chat page
+      router.push(`/chat?friend=${friendUsername}&user=${currentUsername}`);
+    }
+    else if (groupchatId){
+
+      const groupData = groupChats.find((group) => group.id === groupchatId);
+      if (!groupData) {
+        throw new Error("Group not found");
+      }
+
+      console.log(groupchatId);
+
+      setGroup(groupData);
+
+      if (groupchatId && group?.members) {
+
+        const validMembers = group.members.filter((member) => member !== null && member != currentUsername) as string[];
+
+        await sendGroupCallEndMessage(currentUsername, validMembers);
+
+        router.push(`/chat?group=${groupchatId}&user=${currentUsername}`);
+      }
+    }
   };
 
   const sendCallEndMessage = async (currentUsername: string, friendUsername: string) => {
@@ -60,6 +88,35 @@ function Call() {
       
     } catch (error) {
       console.error("Error posting call end message:", error);
+    }
+  };
+
+  const sendGroupCallEndMessage = async (currentUsername: string, validMembers: string[]) => {
+    try {
+      if(!socket || !groupchatId) return;
+
+      const postMessageData = await postMessageAndUnread(
+        currentUsername,
+        '📞 I left the group call room.',
+        false,
+        undefined,          
+        groupchatId,        
+        validMembers
+      );
+
+      emitPrivateMessage(
+        socket,
+        currentUsername,
+        '📞 I left the group call room.',
+        postMessageData.id,
+        false, // Not a call message
+        undefined,
+        groupchatId,
+        validMembers
+      );
+      
+    } catch (error) {
+      console.error("Error posting group call end message:", error);
     }
   };
 

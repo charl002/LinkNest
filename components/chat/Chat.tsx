@@ -447,7 +447,7 @@ export default function Chat() {
       return;
   }
 
-    const callMessage = "📞 I entered the call! Join Up!";
+    const callMessage = "📞 I entered the group call! Join Up!";
     const isCallMsg = true;
 
     try {
