@@ -460,7 +460,7 @@ export default function Post({ title, username, description, tags, comments, lik
                       <div className="flex items-center justify-between">
                       <Link key={index} href={`/profile/${encodeURIComponent(comment.username)}`}>
                         <p className="font-bold text-sm text-gray-900 transition-transform duration-200 hover:scale-105 active:scale-95">
-                          {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
+                          {comment.username} <span className="text-gray-500 text-xs">{new Date(comment.date).toLocaleString()}</span>
                         </p>
                       </Link>
                         {sessionUsername === comment.username && (
