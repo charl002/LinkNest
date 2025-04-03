@@ -168,10 +168,10 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
         const sessionUser = await userResponse.json();
         const fetchedUsername = sessionUser.data?.username || "Unknown";
 
-        if (friendUsername == "Guest" && !callMembers.includes(currentUsername)){
+        /*if (friendUsername == "Guest" && !callMembers.includes(currentUsername)){
           customToast({ message: "You cannot access this call!", type: "error" });
           router.push("/")
-        }
+        }*/
 
         if (fetchedUsername !== currentUsername) {
           customToast({ message: "You cannot access this call!", type: "error" });
