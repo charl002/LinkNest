@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/getuserpost
+ * @description Retrieves all user posts from Firestore, enriched with user profile data.
+ *              Uses a server-side cache to improve performance and reduce Firestore reads.
+ *              If cached data is available, it returns that instead of querying the database.
+ *
+ * @returns {200 OK} JSON array of user posts with fields: title, username, tags, comments, likes, images, profile picture, and metadata.
+ * @returns {500 Internal Server Error} If data retrieval from Firestore fails.
+ *
+ * @cache server-only (no-store)
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { Comment } from "@/types/comment";

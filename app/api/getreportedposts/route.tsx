@@ -1,3 +1,12 @@
+/**
+ * @route GET /api/getreportedposts
+ * @description Retrieves all reported posts across 'posts', 'news', and 'bluesky' collections.
+ *              Requires admin authentication.
+ *
+ * @returns {200 OK} An array of reported posts, sorted by latest report timestamp.
+ * @returns {401 Unauthorized} If the requester is not an authenticated admin.
+ * @returns {500 Internal Server Error} If an error occurs while fetching the data.
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import firebase_app from "@/firebase/config";

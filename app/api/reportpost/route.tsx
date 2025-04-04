@@ -1,3 +1,21 @@
+/**
+ * @route POST /api/reportpost
+ * @description Reports a post for inappropriate content or other reasons. Each user can report a post only once.
+ *
+ * @requestBody JSON {
+ *   postId: string;        // ID of the post to report (required)
+ *   reportedBy: string;    // Username of the reporting user (required)
+ *   reason: string;        // Reason for the report (required)
+ *   postType: string;      // Type of the post (e.g., "posts", "news", "bluesky") (required)
+ * }
+ *
+ * @returns {200 OK} If the report was added successfully.
+ * @returns {400 Bad Request} If required fields are missing or user already reported.
+ * @returns {401 Unauthorized} If the user is not authenticated.
+ * @returns {403 Forbidden} If the user is not authorized.
+ * @returns {404 Not Found} If the post does not exist.
+ * @returns {500 Internal Server Error} On unexpected failure.
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";

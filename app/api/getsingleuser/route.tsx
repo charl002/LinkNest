@@ -1,3 +1,16 @@
+/**
+ * @route GET /api/getsingleuser
+ * @description Fetches a single user document from Firestore by either email or username.
+ *              One of the query parameters (`email` or `username`) must be provided.
+ *
+ * @query {string} email - The user's email (optional if username is provided).
+ * @query {string} username - The user's username (optional if email is provided).
+ *
+ * @returns {200 OK} The user's Firestore document ID and data.
+ * @returns {400 Bad Request} If neither email nor username is provided.
+ * @returns {404 Not Found} If the user does not exist.
+ * @returns {500 Internal Server Error} If an error occurs while fetching the user.
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "@firebase/firestore";
 import firebase_app from "@/firebase/config";

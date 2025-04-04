@@ -1,3 +1,12 @@
+/**
+ * @route GET /api/bluesky
+ * @description Fetches a shuffled list of 50 trending posts from the Bluesky API.
+ * Tries multiple Bluesky feed routes and returns the first successful result.
+ * Requires environment variables: BLUESKY_USERNAME and BLUESKY_PASSWORD.
+ *
+ * @returns {200 OK} A JSON object containing an array of posts with metadata.
+ * @returns {500 Internal Server Error} If login or fetching posts fails.
+ */
 import { BskyAgent, AppBskyFeedDefs, AppBskyEmbedImages } from '@atproto/api'
 import { NextResponse } from 'next/server'
 import { withRetry } from '@/utils/backoff';

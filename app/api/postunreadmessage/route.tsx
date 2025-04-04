@@ -1,3 +1,22 @@
+/**
+ * @route POST /api/postunreadmessage
+ * @description Creates or updates the unread message count and latest message for private or group chats.
+ *
+ * @auth Required - Only authenticated users can access this endpoint.
+ *
+ * @requestBody {
+ *   sender: string;         // Username of the message sender
+ *   receiver: string;       // Username of the message receiver
+ *   count: number;          // Unread message count to update
+ *   message: string;        // Latest message content
+ *   groupId?: string;       // (Optional) Group ID for group chats
+ * }
+ *
+ * @returns {200 OK} If the unread message count was updated or created successfully.
+ * @returns {400 Bad Request} If any required field is missing.
+ * @returns {401 Unauthorized} If the user is not authenticated.
+ * @returns {500 Internal Server Error} On server or Firestore/Azure failure.
+ */
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { auth } from "@/lib/auth";

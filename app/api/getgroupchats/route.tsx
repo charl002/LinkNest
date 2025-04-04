@@ -1,3 +1,13 @@
+/**
+ * @route GET /api/getusergroups
+ * @description Retrieves all group chats from the 'group_chats' collection that the specified user is a member of.
+ *
+ * @query {string} user - The username of the current user.
+ *
+ * @returns {200 OK} { groupChats: object[] } - An array of group chats the user is a part of.
+ * @returns {400 Bad Request} If the `user` query parameter is missing.
+ * @returns {500 Internal Server Error} If an error occurs while querying Firestore or processing the request.
+ */
 import { NextResponse } from "next/server";
 import { withRetry } from '@/utils/backoff';
 import { getData } from "@/firebase/firestore/getData";

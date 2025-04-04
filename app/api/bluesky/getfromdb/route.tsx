@@ -1,3 +1,12 @@
+/**
+ * @route GET /api/bluesky/getfromdb
+ * @description Fetches Bluesky posts from Firestore, processes them (including image validation), and returns them sorted by creation date. Uses in-memory server cache to improve performance.
+ *
+ * @returns {200 OK} An array of formatted Bluesky posts.
+ * @returns {500 Internal Server Error} If data fetching or image validation fails.
+ *
+ * @caching Server-side cache with key 'bluesky-posts'. If valid cache exists, returns it instead of querying Firestore.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';

@@ -1,3 +1,18 @@
+/**
+ * @route GET /api/getmessages
+ * @description Retrieves a list of messages between a sender and receiver (for private chat), or for a specific group (for group chat).
+ *
+ * @query {string} sender - The username of the user making the request (must match the authenticated user).
+ * @query {string} receiver - (Optional) The username of the other user in the private chat.
+ * @query {string} groupId - (Optional) The ID of the group chat (used instead of receiver).
+ *
+ * @returns {200 OK} JSON containing an array of messages sorted by date.
+ * @returns {400 Bad Request} If required parameters are missing (sender, and either receiver or groupId).
+ * @returns {401 Unauthorized} If the user is not authenticated.
+ * @returns {403 Forbidden} If the sender in the query does not match the authenticated user.
+ * @returns {404 Not Found} If the user is not found in the Firestore database.
+ * @returns {500 Internal Server Error} If an error occurs during data fetching or processing.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { auth } from "@/lib/auth";

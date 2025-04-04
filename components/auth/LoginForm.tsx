@@ -1,3 +1,9 @@
+/**
+ * LoginForm component
+ *
+ * Renders a Google Sign-In button using a form that triggers the `doSocialLogin` server action.
+ * When submitted, it initiates authentication via the Google provider.
+ */
 import { doSocialLogin } from "@/app/actions"
 import { FaGoogle } from "react-icons/fa";
 

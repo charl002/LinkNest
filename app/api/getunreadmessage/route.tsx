@@ -1,3 +1,15 @@
+/**
+ * @route GET /api/getunreadmessage
+ * @description Retrieves unread message counts for a specified receiver.
+ *              Can fetch either private unread messages or group unread messages based on provided query params.
+ *
+ * @query {string} receiver - The username of the message receiver (required).
+ * @query {string} [groupId] - Optional group ID to fetch group-specific unread messages.
+ *
+ * @returns {200 OK} Object mapping each sender to their unread message count, latest message, and groupId.
+ * @returns {400 Bad Request} If the receiver parameter is missing.
+ * @returns {500 Internal Server Error} If an error occurs while fetching data from Firestore.
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "@firebase/firestore";
 import firebase_app from "@/firebase/config";

@@ -1,3 +1,22 @@
+/**
+ * @route PUT /api/putcommentlikes
+ * @description Updates the like count on a specific comment within a post.
+ *              Supports both incrementing and decrementing likes.
+ *
+ * @requestBody JSON {
+ *   id: string;            // The ID of the post containing the comment (required)
+ *   type: string;          // The post collection type (e.g., "posts", "news", "bluesky") (required)
+ *   increment: boolean;    // Whether to increment (true) or decrement (false) the like count (required)
+ *   username: string;      // The username of the user performing the like action (required)
+ *   commentIndex: number;  // Index of the comment within the post's comments array (required)
+ * }
+ *
+ * @returns {200 OK} If the like count is successfully updated.
+ * @returns {400 Bad Request} If any required fields are missing.
+ * @returns {401 Unauthorized} If the user is not authenticated.
+ * @returns {403 Forbidden} If the user is not authorized.
+ * @returns {500 Internal Server Error} If the operation fails.
+ */
 import { NextResponse } from "next/server";
 import { incrementCommentLikes } from "@/firebase/firestore/updateCommentLikes";
 import { withRetry } from '@/utils/backoff';

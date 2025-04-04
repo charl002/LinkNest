@@ -1,3 +1,16 @@
+/**
+ * @route GET /api/getpendingrequests
+ * @description Retrieves a list of pending friend requests for a specific user (receiver).
+ *
+ * @query {string} username - The username of the receiver to fetch pending requests for.
+ *
+ * @returns {200 OK} JSON with an array of usernames who sent pending friend requests.
+ * @returns {400 Bad Request} If the username query parameter is missing.
+ * @returns {401 Unauthorized} If the user is not authenticated.
+ * @returns {403 Forbidden} If the user is not authorized to access the data.
+ * @returns {404 Not Found} If no pending requests are found.
+ * @returns {500 Internal Server Error} If an error occurs during data fetching.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';

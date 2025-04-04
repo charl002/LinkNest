@@ -1,3 +1,17 @@
+/**
+ * @route POST /api/news/postnews
+ * @description Fetches external news data from the News API via the internal GET endpoint,
+ *              checks Firestore for existing entries by UUID, and adds new news items with
+ *              initialized `likes`, `likedBy`, `comments`, and `createdAt` fields.
+ *              Skips already existing items to avoid duplication.
+ *
+ * @returns {201 Created} If new news items were successfully added to the Firestore.
+ * @returns {200 OK} If all news items were already present and none were added.
+ * @returns {500 Internal Server Error} If an error occurs during the fetch or write process.
+ *
+ * @notes Uses exponential backoff (`withRetry`) for robustness during Firestore and fetch operations.
+ *        Relies on the `GET /api/news/getnews` endpoint as its data source.
+ */
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { getAllDocuments } from "@/firebase/firestore/getData";

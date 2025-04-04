@@ -1,3 +1,29 @@
+/**
+ * @route DELETE /api/deleteaccount
+ * @description Deletes a user account and all associated data across Firestore and Azure Blob Storage.
+ *
+ * @requestBody
+ * {
+ *   username: string; // The username of the account to delete
+ * }
+ *
+ * @authentication Required
+ * - Verifies the request is authenticated and authorized using middleware.
+ *
+ * @behavior
+ * - Deletes all likes and comments made by the user from: ["posts", "bluesky", "news"]
+ * - Deletes all posts by the user (including Azure blob cleanup)
+ * - Deletes all friend relationships and friend requests
+ * - Deletes all messages and unread messages
+ * - Deletes all uploaded images (including from Azure blob storage)
+ * - Deletes the user document from Firestore
+ *
+ * @returns {200 OK} { message: "User and all associated data deleted successfully" }
+ * @returns {400 Bad Request} { message: "Username is required" }
+ * @returns {403 Forbidden} If authentication or authorization fails
+ * @returns {404 Not Found} If the user does not exist
+ * @returns {500 Internal Server Error} For unexpected failures
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, arrayRemove, updateDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";

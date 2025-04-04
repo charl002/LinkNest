@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/getfriends
+ * @description Retrieves a list of friends for a given username.
+ *
+ * @query {string} username - The username of the user whose friends are being requested.
+ *
+ * @returns {200 OK} { friends: string[] } - List of usernames that are friends with the provided user.
+ * @returns {400 Bad Request} If the `username` query parameter is missing.
+ * @returns {404 Not Found} If no friend documents are found.
+ * @returns {500 Internal Server Error} If a server error occurs or Firestore query fails.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 

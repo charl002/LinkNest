@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/checkadmin
+ * @description Checks if a user with the provided email is an admin.
+ *
+ * @queryParam {string} email - The email address of the user to check.
+ *
+ * @returns {200 OK} `{ isAdmin: true | false }` - Whether the user has admin privileges.
+ * @returns {400 Bad Request} `{ isAdmin: false }` - If no email is provided.
+ * @returns {404 Not Found} `{ isAdmin: false }` - If user with provided email is not found.
+ * @returns {500 Internal Server Error} `{ isAdmin: false }` - On any unexpected server error.
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
