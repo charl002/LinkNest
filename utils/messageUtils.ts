@@ -107,8 +107,6 @@ export const emitPrivateMessage = (
 ) => {
   const encryptedMessage = encryptMessage(message);
 
-  console.log('THIS IS IN EMIT PRIVATE MSG!');
-
   if(groupId && receivers){
     socket.emit("groupMessage", {
       senderId: sender,

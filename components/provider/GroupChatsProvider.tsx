@@ -57,8 +57,6 @@ export function GroupChatsProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        console.log("Group Chat: ", data.groupChats);
-
         setGroupChats(data.groupChats);
       } catch (error) {
         console.error("Error fetching group chats:", error);
