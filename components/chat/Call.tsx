@@ -24,11 +24,11 @@ import { customToast } from "@/components/ui/customToast";
 import { useGroupChats } from "../provider/GroupChatsProvider";
 import { GroupChat } from "@/types/group";
 
-
+const agoraClient = AgoraRTC.createClient({ codec: "vp8", mode: "rtc" });
 
 function Call() {
   const client = useRTCClient(
-    AgoraRTC.createClient({ codec: "vp8", mode: "rtc" })
+    agoraClient
   );
 
   const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
@@ -171,10 +171,10 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
         if (groupchatId != ""){
 
           const groupData = groupChats.find((group) => group.id === groupchatId);
-          if (!groupData) {
-            throw new Error("Group not found");
+          while (!groupData) {
+            console.warn("Waiting for group data...");
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second before checking again
           }
-
           const validMembers = groupData.members.filter((member) => member !== null ) as string[];
 
           if (friendUsername == "Guest" && !validMembers.includes(currentUsername)){
