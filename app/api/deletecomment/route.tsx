@@ -2,13 +2,22 @@ import { NextResponse } from "next/server";
 import { getFirestore, doc, getDoc, updateDoc, arrayRemove, DocumentReference, DocumentData } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
 import { Comment } from "@/types/comment";
+import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";
 
 const db = getFirestore(firebase_app);
 const collections = ["posts", "bluesky", "news"];
 
 export async function POST(request: Request) {
-  try {
-    const { postId, username, comment, date } = await request.json();
+    try {
+        // Check authentication
+        const authError = await authenticateRequest();
+        if (authError) return authError;
+
+        const { postId, username, comment, date } = await request.json();
+
+        // Authorize the user
+        const authzError = await authorizeUser(username);
+        if (authzError) return authzError;
 
     if (!postId || !username || !comment || !date) {
       return NextResponse.json(

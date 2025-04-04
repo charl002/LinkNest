@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { authenticateAdmin } from "@/lib/authMiddleware";
+
 
 interface Report {
     reportedBy: string;
@@ -21,6 +23,8 @@ interface ReportedPost {
 const db = getFirestore(firebase_app);
 
 export async function GET() {
+    const authError = await authenticateAdmin();
+    if (authError) return authError;
     try {
         const collections = ['posts', 'news', 'bluesky'];
         let allReportedPosts: ReportedPost[] = [];
