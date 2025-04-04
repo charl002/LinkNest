@@ -382,55 +382,124 @@ export default function Chat() {
 
   //Handles the logic of entering a VideoCall with a friend
   const handleRedirectToCall = async () => {
-    if (!currentUsername || !friendUsername) return;
-
-    const callMessage = "📞 I entered the call! Join Up!";
+    if (!currentUsername || (!friendUsername && !groupchatId)) {
+      return;
+    }
+  
     const isCallMsg = true;
+  
+    if (groupchatId) {
+      // GROUP CALL
+      const callMessage = "📞 I entered the group call! Join Up!";
+      try {
+        if (socket && group?.members) {
+          const validMembers = group.members.filter(
+            (member) => member !== null && member !== currentUsername
+          ) as string[];
+  
+          const replyData = replyToMessage
+            ? {
+                id: replyToMessage.id,
+                sender: replyToMessage.sender,
+                message: replyToMessage.message,
+              }
+            : undefined;
+  
+          const postMessageData = await postMessageAndUnread(
+            currentUsername,
+            callMessage,
+            false,
+            undefined,
+            groupchatId,
+            validMembers,
+            replyData
+          );
+  
+          emitPrivateMessage(
+            socket,
+            currentUsername,
+            callMessage,
+            postMessageData.id,
+            false,
+            undefined,
+            groupchatId,
+            validMembers,
+            replyData
+          );
+  
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: postMessageData.id,
+              sender: currentUsername,
+              message: callMessage,
+              date: formatTimestamp(new Date().toISOString()),
+              isCallMsg: isCallMsg,
+              replyTo: replyData ?? undefined,
+            },
+          ]);
+  
+          setInput("");
+          router.push(`/channel?group=${encodeURIComponent(groupchatId)}&user=${encodeURIComponent(currentUsername)}`);
+        }
+      } catch (error) {
+        console.error("Error starting the group call:", error);
+        toast.error("Error starting the call.");
+      }
+  
+    } else if (friendUsername) {
+      // DIRECT CALL
+      if (!currentUsername || !friendUsername) return;
 
-    try {
-      // Post call message and unread count, and emit socket message
-      const postMessageData = await postMessageAndUnread(
-        currentUsername,
-        friendUsername,
-        true,
-        callMessage,
-      );
+      const callMessage = "📞 I entered the call! Join Up!";
 
-      if(socket){
-        emitPrivateMessage(
-          socket,
+      try {
+        // Post call message and unread count, and emit socket message
+        const postMessageData = await postMessageAndUnread(
           currentUsername,
-          callMessage,
-          postMessageData.id,
+          friendUsername,
           true,
-          friendUsername
+          callMessage,
         );
 
-        socket.emit("call", {
-          senderId: currentUsername,
-          receiverId: friendUsername,
-        });
-      }
-      
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: postMessageData.docId,
-          sender: currentUsername,
-          message: callMessage,
-          date: formatTimestamp(new Date().toISOString()),
-          isCallMsg: isCallMsg,
-        },
-      ]);
+        if(socket){
+          emitPrivateMessage(
+            socket,
+            currentUsername,
+            callMessage,
+            postMessageData.id,
+            true,
+            friendUsername
+          );
 
-      setInput(""); // Clear the input field
-  
-      router.push(`/channel?friend=${encodeURIComponent(friendUsername)}&user=${encodeURIComponent(currentUsername)}`);
-    } catch (error) {
-      console.error("Error starting the call:", error);
-      toast.error("Error starting the call.");
+          socket.emit("call", {
+            senderId: currentUsername,
+            receiverId: friendUsername,
+          });
+        }
+        
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            id: postMessageData.docId,
+            sender: currentUsername,
+            message: callMessage,
+            date: formatTimestamp(new Date().toISOString()),
+            isCallMsg: isCallMsg,
+          },
+        ]);
+
+        setInput(""); // Clear the input field
+    
+        router.push(`/channel?friend=${encodeURIComponent(friendUsername)}&user=${encodeURIComponent(currentUsername)}`);
+
+      } catch (error) {
+        console.error("Error starting the direct call:", error);
+        toast.error("Error starting the call.");
+      }
     }
   };
+  
 
   // Function to handle deleting a message.
   const handleDeleteMessage = async (message: Message) => {

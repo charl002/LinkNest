@@ -60,43 +60,82 @@ export default function ProfilePage({ user }: { user: string }) {
   const [isSessionUserAdmin, setIsSessionUserAdmin] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
 
+  /**
+   * Fetches user data based on the `username` query parameter.
+   * 
+   * This function:
+   * - Calls the `/api/getsingleuser` endpoint
+   * - Sets the user data, username, and description states if successful
+   * - Catches and displays any error
+   * - Finally, sets the loading state to false
+   * 
+   * @returns {Promise<void>} No return value, but updates state.
+   */
   const fetchUser = useCallback(async () => {
     try {
+      // Make an API request to fetch user info by username
       const response = await fetch(`/api/getsingleuser?username=${user}`);
       const result = await response.json();
 
+      // If the response is not OK, throw an error with the message
       if (!response.ok) {
         throw new Error(result.message || "Failed to fetch user");
       }
 
+      // Update state with the retrieved user data
       setUserData(result);
       setUsername(result.data.username);
       setDescription(result.data.description);
     } catch (err) {
+      // Handle and display errors
       setError((err as Error).message + " in LinkNest");
     } finally {
+      // Indicate that loading has finished
       setLoading(false);
     }
   }, [user]);
 
+
+  /**
+   * Fetches the list of friends for a given user and their details.
+   *
+   * This function:
+   * - Skips execution if `sessionUsername` is not available
+   * - Fetches the list of friend usernames from the server
+   * - For each friend, fetches detailed user data
+   * - Filters out any failed friend fetches
+   * - Sets the list of friends and friend count
+   * - Determines if the current session user is a friend
+   *
+   * @returns {Promise<void>} No return value, but updates multiple states.
+   */
   const fetchFriends = useCallback(async () => {
+    // Exit early if there's no session user
     if (!sessionUsername) return;
+
+    // Start the loading state for friends
     setIsFriendLoading(true);
+
     try {
+      // Fetch the list of friend usernames
       const response = await fetch(`/api/getfriends?username=${user}`);
       const result = await response.json();
 
+      // Throw if the fetch failed
       if (!response.ok) {
         throw new Error(result.message || "Failed to fetch friends");
       }
 
+      // Update the friend count
       setFriendsCount(result.friends.length);
 
+      // Fetch data for each friend concurrently
       const friendsData = await Promise.all(
         result.friends.map(async (friendUsername: string) => {
           const userResponse = await fetch(`/api/getsingleuser?username=${friendUsername}`);
           const userData = await userResponse.json();
 
+          // If friend data is successfully fetched, return structured info
           if (userResponse.ok) {
             return { id: userData.id, ...userData.data };
           } else {
@@ -105,23 +144,44 @@ export default function ProfilePage({ user }: { user: string }) {
           }
         })
       );
+
+      // Remove null entries (failed fetches)
       const filteredFriends = friendsData.filter(Boolean);
+
+      // Update the state with the filtered friends
       setFriends(filteredFriends);
+
+      // Check if the session user is a friend
       setIsFriend(filteredFriends.some(friend => friend.username === sessionUsername));
     } catch (err) {
       console.error("Error fetching friends:", err);
     } finally {
+      // End the loading state for friends
       setIsFriendLoading(false);
     }
   }, [user, sessionUsername]);
 
+
+  /**
+   * Fetches user session data and all posts made by the target user.
+   *
+   * This function:
+   * - Fetches the current session user's data by email
+   * - Fetches posts by the target username
+   * - Sets the session username and admin status
+   * - Sets post data and post count
+   *
+   * @returns {Promise<void>}
+   */
   const fetchPosts = useCallback(async () => {
     try {
+      // Run both fetches in parallel
       const [userResponse, postsResponse] = await Promise.all([
         fetch(`/api/getsingleuser?email=${email}`),
         fetch(`/api/getpostbyusername?username=${user}`)
       ]);
 
+      // Handle user response
       if (!userResponse.ok) {
         throw new Error("Failed to fetch user");
       }
@@ -130,6 +190,7 @@ export default function ProfilePage({ user }: { user: string }) {
       setSessionUsername(sessionUser.data?.username || "Unknown");
       setIsSessionUserAdmin(sessionUser.data?.isAdmin || false);
 
+      // Handle posts response
       if (!postsResponse.ok) {
         throw new Error("Failed to fetch posts");
       }
@@ -137,6 +198,7 @@ export default function ProfilePage({ user }: { user: string }) {
       const result = await postsResponse.json();
       const posts = result.posts || [];
 
+      // Update state with posts
       setPostsCount(posts.length);
       setPosts(posts);
     } catch (err) {
@@ -144,13 +206,26 @@ export default function ProfilePage({ user }: { user: string }) {
     }
   }, [user, email]);
 
+  /**
+   * Checks whether the target user is blocked by the session user.
+   *
+   * This function:
+   * - Fetches session user's data
+   * - Checks if the `blockedUsers` list contains the target username
+   * - Updates `isBlocked` state accordingly
+   *
+   * @returns {Promise<void>}
+   */
   const checkBlockStatus = useCallback(async () => {
+    // Skip if needed values are missing
     if (!sessionUsername || !user) return;
-    
+
     try {
+      // Fetch session user's info
       const response = await fetch(`/api/getsingleuser?username=${sessionUsername}`);
       const userData = await response.json();
-      
+
+      // Check if the target user is blocked
       if (response.ok && userData.data.blockedUsers) {
         setIsBlocked(userData.data.blockedUsers.includes(user));
       }
@@ -159,9 +234,19 @@ export default function ProfilePage({ user }: { user: string }) {
     }
   }, [sessionUsername, user]);
 
+
+  /**
+   * Runs once on component mount to fetch:
+   * - Posts
+   * - User data
+   * - Friends data
+   * - Block status
+   * 
+   * Also sets up cleanup to abort fetches and avoid state updates if component unmounts.
+   */
   useEffect(() => {
-    let isMounted = true;
-    const abortController = new AbortController();
+    let isMounted = true; // Avoid setting state on unmounted component
+    const abortController = new AbortController(); // For canceling fetch requests
 
     const fetchData = async () => {
       if (isMounted) {
@@ -174,13 +259,23 @@ export default function ProfilePage({ user }: { user: string }) {
 
     fetchData();
 
+    // Cleanup to prevent memory leaks
     return () => {
       isMounted = false;
-      abortController.abort();
+      abortController.abort(); // Cancel any in-progress fetches
     };
   }, [fetchPosts, fetchUser, fetchFriends, checkBlockStatus]);
 
+
+  /**
+   * Handles sending a friend request from the session user to the profile user.
+   * 
+   * Validates input, sends POST request to backend, and shows appropriate toast messages.
+   *
+   * @returns {Promise<void>}
+   */
   const handleAddFriend = async () => {
+    // Validate required fields
     if (!session?.user?.name || !user) {
       customToast({ message: "Error! Missing username", type: "error" });
       return;
@@ -206,7 +301,7 @@ export default function ProfilePage({ user }: { user: string }) {
       const result = await response.json();
 
       if (!response.ok) {
-        customToast({ message: `${result.message}`, type: "error" });
+        customToast({ message: result.message, type: "error" });
         return;
       }
 
@@ -214,19 +309,32 @@ export default function ProfilePage({ user }: { user: string }) {
 
     } catch (error) {
       console.error("Error adding friend:", error);
-      customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+      customToast({
+        message: "An unexpected error occurred. Please try again.",
+        type: "error"
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+
+  /**
+   * Handles removing a user from the friend list.
+   * 
+   * Validates the required fields, sends a DELETE request to the backend, 
+   * and provides feedback via toast messages.
+   *
+   * @returns {Promise<void>}
+   */
   const handleRemoveFriend = async () => {
+    // Validate required fields before proceeding
     if (!session?.user?.name || !user) {
       customToast({ message: "Error! Missing username", type: "error" });
       return;
     }
 
-    setIsLoading(true);
+    setIsLoading(true); // Set loading state to true while the request is in progress
 
     try {
       const response = await fetch("/api/deletefriend", {
@@ -241,28 +349,43 @@ export default function ProfilePage({ user }: { user: string }) {
       const result = await response.json();
 
       if (!response.ok) {
+        // If the request fails, show an error toast with the message
         customToast({ message: `${result.message}`, type: "error" });
         return;
       }
 
+      // If successful, show a success toast and update friend status
       customToast({ message: `You have removed ${user} as a friend.`, type: "success" });
 
-      setIsFriend(false);
+      setIsFriend(false); // Update local state to reflect the removed friend status
     } catch (error) {
       console.error("Error removing friend:", error);
+      // If an unexpected error occurs, show a general error toast
       customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
     } finally {
+      // Reset loading state once the operation completes (either success or failure)
       setIsLoading(false);
     }
   };
 
+
+  /**
+   * Handles the process of saving changes to the user's profile.
+   * 
+   * This function uploads profile and background pictures if they are changed,
+   * then updates the user profile information and provides feedback to the user.
+   *
+   * @returns {Promise<void>}
+   */
   const handleSaveChanges = async () => {
-    if (!userData) return;
+    if (!userData) return; // Exit early if userData is not available
 
     try {
+      // Initialize URLs for profile and background pictures
       let profilePictureUrl = userData.data.image;
       let backgroundPictureUrl = userData.data.background;
 
+      // If a new profile picture is selected, upload it
       if (profilePicture) {
         const formData = new FormData();
         formData.append("file", profilePicture);
@@ -278,9 +401,10 @@ export default function ProfilePage({ user }: { user: string }) {
           throw new Error(result.message || "Failed to upload profile picture");
         }
 
-        profilePictureUrl = result.fileUrl;
+        profilePictureUrl = result.fileUrl; // Update profile picture URL
       }
 
+      // If a new background picture is selected, upload it
       if (background) {
         const formData = new FormData();
         formData.append("file", background);
@@ -296,9 +420,10 @@ export default function ProfilePage({ user }: { user: string }) {
           throw new Error(result.message || "Failed to upload background picture");
         }
 
-        backgroundPictureUrl = result.fileUrl;
+        backgroundPictureUrl = result.fileUrl; // Update background picture URL
       }
 
+      // Send updated user profile data to the backend
       const updateResponse = await fetch("/api/updateuser", {
         method: "PATCH",
         headers: {
@@ -309,7 +434,7 @@ export default function ProfilePage({ user }: { user: string }) {
           username,
           description,
           image: profilePictureUrl,
-          background: backgroundPictureUrl
+          background: backgroundPictureUrl,
         }),
       });
 
@@ -318,98 +443,116 @@ export default function ProfilePage({ user }: { user: string }) {
         throw new Error(updateResult.message || "Failed to update profile");
       }
 
+      // Update local state with the new user data
       setUserData((prev) =>
         prev ? { ...prev, data: { ...prev.data, username, description, image: profilePictureUrl } } : null
       );
 
+      // Provide success feedback and close the dialog
       customToast({ message: "Profile updated successfully!", type: "success" });
       setIsDialogOpen(false);
     } catch (err) {
+      // Provide error feedback if something goes wrong
       customToast({ message: "Error updating profile: " + (err as Error).message, type: "error" });
     }
   };
 
+
+  /**
+   * Handles banning or unbanning a user.
+   * 
+   * This function sends a request to the server to toggle the ban status of a user.
+   * It also updates the local state and provides feedback to the user.
+   *
+   * @returns {Promise<void>}
+   */
   const handleBanUser = async () => {
-    if (!userData) return;
+    if (!userData) return; // Exit if user data is not available
 
     try {
+      // Send a request to ban or unban the user
       const response = await fetch("/api/banuser", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: userData.id,
-          isBanned: !userData.data.isBanned
+          isBanned: !userData.data.isBanned, // Toggle the ban status
         }),
       });
 
       const result = await response.json();
-      
       if (!response.ok) {
         throw new Error(result.message || "Failed to update ban status");
       }
 
-      setUserData(prev => 
-        prev ? {
-          ...prev,
-          data: {
-            ...prev.data,
-            isBanned: !prev.data.isBanned
-          }
-        } : null
+      // Update local state with the new ban status
+      setUserData((prev) =>
+        prev
+          ? {
+              ...prev,
+              data: { ...prev.data, isBanned: !prev.data.isBanned },
+            }
+          : null
       );
 
-      customToast({ 
-        message: userData.data.isBanned ? 
-          `${userData.data.username} has been unbanned.` : 
-          `${userData.data.username} has been banned.`, 
-        type: "success" 
+      // Provide feedback to the user
+      customToast({
+        message: userData.data.isBanned
+          ? `${userData.data.username} has been unbanned.`
+          : `${userData.data.username} has been banned.`,
+        type: "success",
       });
-
     } catch (err) {
-      customToast({ 
-        message: "Error updating ban status: " + (err as Error).message, 
-        type: "error" 
+      // Provide error feedback if something goes wrong
+      customToast({
+        message: "Error updating ban status: " + (err as Error).message,
+        type: "error",
       });
     }
   };
 
+
+  /**
+   * Handles blocking or unblocking a user.
+   * 
+   * This function sends a request to the server to block or unblock a user,
+   * updates the local blocked status, and provides feedback to the user.
+   *
+   * @returns {Promise<void>}
+   */
   const handleBlockUser = async () => {
-    if (!userData || !sessionUsername) return;
-  
+    if (!userData || !sessionUsername) return; // Exit if necessary data is missing
+
     try {
+      // Send a request to block the user
       const response = await fetch("/api/blockuser", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: sessionUsername,
-          blockedUserId: userData.data.username
+          userId: sessionUsername, // The current session user
+          blockedUserId: userData.data.username, // The user being blocked
         }),
       });
-  
+
       const result = await response.json();
-      
       if (!response.ok) {
         throw new Error(result.message || "Failed to update block status");
       }
 
-      setIsBlocked(prev => !prev);
-  
-      customToast({ 
-        message: result.message,
-        type: "success" 
-      });
-  
+      // Toggle the blocked status locally
+      setIsBlocked((prev) => !prev);
+
+      // Provide feedback to the user
+      customToast({ message: result.message, type: "success" });
     } catch (err) {
-      customToast({ 
-        message: "Error updating block status: " + (err as Error).message, 
-        type: "error" 
+      // Provide error feedback if something goes wrong
+      customToast({
+        message: "Error updating block status: " + (err as Error).message,
+        type: "error",
       });
     }
   };
+
 
   let profileContent = null;
   if (userData) profileContent = (
