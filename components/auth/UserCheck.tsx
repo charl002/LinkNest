@@ -76,7 +76,7 @@ export default function UserCheck() {
 
     /**
      * Fetches initial posts for the user, including posts from different categories.
-     * Sorts the posts by creation date and prepares the data for display.
+     * Sorts the posts by creation date and prepares the data for display..
      */
     const fetchInitialPosts = useCallback(async () => {
         if (!session?.user?.email) return;
