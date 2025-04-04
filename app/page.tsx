@@ -7,22 +7,36 @@ import { useSession } from "next-auth/react";
 import LoadingLogo from "../components/custom-ui/LoadingLogo";
 import { PostType } from "@/types/post";
 
+
+/**
+ * The Home component is the main entry point for the app.
+ * It handles fetching posts and rendering the appropriate content based on the user's authentication status.
+ * If the user is authenticated, it renders the UserCheck component.
+ * If the user is not authenticated, it displays posts and allows interaction with the public view.
+ * 
+ * @returns {JSX.Element} The rendered Home component.
+ */
 export default function Home() {
   const { status } = useSession();
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [sessionUsername] = useState('');
 
+  /**
+   * Fetches posts from multiple sources and combines them into one list.
+   * The posts are then shuffled randomly before being set in the state.
+   */
   useEffect(() => {
     const fetchPosts = async () => {
       setLoadingPosts(true);
       try {
+        // Fetch posts from different categories concurrently
         const [response, newsResponse, customResponse] = await Promise.all([
           fetch('/api/bluesky/getfromdb'),
           fetch('/api/news/getfromdb'),
           fetch('/api/getuserpost')
         ]);
-
+      // Parse the responses into JSON
       const [data, newsData, customData] = await Promise.all([
           response.json(),
           newsResponse.json(),
@@ -30,7 +44,7 @@ export default function Home() {
       ]);
 
         let allPosts: PostType[] = [];
-
+        // Check if posts exist in each category and concatenate them
         if (data.success) {
           allPosts = allPosts.concat(data.posts);
         }
@@ -40,7 +54,7 @@ export default function Home() {
         if (customData.success) {
           allPosts = allPosts.concat(customData.posts);
         }
-
+        // Shuffle the posts randomly for variety
         const shuffledPosts = allPosts.sort(() => Math.random() - 0.5);
         setPosts(shuffledPosts);
       } catch (err) {
@@ -53,6 +67,9 @@ export default function Home() {
     fetchPosts();
   }, []);
 
+  /**
+   * Renders a loading screen if posts are still being fetched.
+   */
   if (loadingPosts) {
     return <LoadingLogo />;
   }
