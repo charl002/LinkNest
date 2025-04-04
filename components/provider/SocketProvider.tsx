@@ -6,7 +6,7 @@ import { io, Socket } from "socket.io-client";
 const isDev = process.env.NODE_ENV !== "production";
 const socketUrl = isDev 
   ? "ws://localhost:3000" 
-  : "wss://linknest-rqd1.onrender.com";
+  : "wss://linknest.live";
 
 const SocketContext = createContext<Socket | null>(null);
 
