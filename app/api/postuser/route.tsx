@@ -1,3 +1,19 @@
+/**
+ * @route POST /api/postuser
+ * @description Registers a new user by storing their data in the Firestore "users" collection.
+ *
+ * @requestBody JSON {
+ *   email: string;         // User's email (required)
+ *   name: string;          // Full name (required)
+ *   image: string;         // Profile picture URL (required)
+ *   username: string;      // Unique username (required)
+ *   description?: string;  // Optional user bio/description
+ * }
+ *
+ * @returns {200 OK} If the user was added successfully.
+ * @returns {400 Bad Request} If required fields are missing.
+ * @returns {500 Internal Server Error} If Firestore insertion fails.
+ */
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 

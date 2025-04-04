@@ -1,3 +1,29 @@
+/**
+ * @route POST /api/deletecomment
+ * @description Deletes a specific comment made by a user on a post across any of the supported content collections.
+ *
+ * @requestBody
+ * {
+ *   postId: string;    // ID of the post containing the comment
+ *   username: string;  // Username of the comment author
+ *   comment: string;   // Content of the comment to delete
+ *   date: string;      // Date of the comment (or "Just now" as fallback)
+ * }
+ *
+ * @authentication Required
+ * - Validates request authentication via `authenticateRequest`
+ * - Ensures the user is authorized to delete their comment via `authorizeUser`
+ *
+ * @behavior
+ * - Searches the post across the collections: ["posts", "bluesky", "news"]
+ * - Locates the comment and removes it from the `comments` array
+ *
+ * @returns {200 OK} { message: "Comment deleted successfully" }
+ * @returns {400 Bad Request} { message: "Missing required fields" }
+ * @returns {403 Forbidden} If authentication or authorization fails
+ * @returns {404 Not Found} If the post or comment could not be found
+ * @returns {500 Internal Server Error} For unexpected errors
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, doc, getDoc, updateDoc, arrayRemove, DocumentReference, DocumentData } from "firebase/firestore";
 import firebase_app from "@/firebase/config";

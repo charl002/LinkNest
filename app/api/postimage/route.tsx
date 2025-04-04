@@ -1,3 +1,14 @@
+/**
+ * @route POST /api/postimage
+ * @description Uploads an image to Azure Blob Storage and stores metadata in Firestore.
+ *
+ * @formData {string} username - The name of the user uploading the image.
+ * @formData {File} file - The image file to upload.
+ *
+ * @returns {201 Created} Image uploaded and metadata saved successfully. Returns image ID and file URL.
+ * @returns {400 Bad Request} If username or file is missing from the form data.
+ * @returns {500 Internal Server Error} If upload to Azure or saving metadata to Firestore fails.
+ */
 import { BlobServiceClient } from "@azure/storage-blob";
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";

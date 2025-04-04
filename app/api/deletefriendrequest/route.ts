@@ -1,3 +1,24 @@
+/**
+ * @route DELETE /api/friend_requests
+ * @description Deletes a pending friend request between two users.
+ *
+ * @requestBody
+ * {
+ *   senderUsername: string;    // The username of the sender of the friend request
+ *   receiverUsername: string;  // The username of the receiver of the friend request
+ * }
+ *
+ * @behavior
+ * - Validates both usernames are provided.
+ * - Uses a retry mechanism to fetch all friend requests from Firestore.
+ * - Finds the friend request matching the sender and receiver.
+ * - Deletes the matching request using retry logic.
+ *
+ * @returns {200 OK} { message: "Friend request deleted successfully" }
+ * @returns {400 Bad Request} If one or both usernames are missing.
+ * @returns {404 Not Found} If no matching friend request exists.
+ * @returns {500 Internal Server Error} If fetching or deletion fails.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import  deleteData  from "@/firebase/firestore/deleteData"

@@ -1,3 +1,23 @@
+/**
+ * @route DELETE /api/deletefriend
+ * @description Deletes an existing friendship between two users and any related friend requests.
+ *
+ * @requestBody
+ * {
+ *   senderUsername: string;    // Username of the user initiating the delete
+ *   receiverUsername: string;  // Username of the other user in the friendship
+ * }
+ *
+ * @behavior
+ * - Validates input usernames.
+ * - Deletes any matching friend request from the `friend_requests` collection (in either direction).
+ * - Searches and deletes the friendship record from the `friends` collection.
+ *
+ * @returns {200 OK} { message: "Friendship and friend request deleted successfully" }
+ * @returns {400 Bad Request} If required usernames are missing.
+ * @returns {404 Not Found} If no matching friendship is found.
+ * @returns {500 Internal Server Error} If fetching or deletion fails.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import deleteData from "@/firebase/firestore/deleteData";

@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/getlatestimage
+ * @description Fetches the most recently uploaded image by a specific user.
+ *
+ * @query {string} username - The username of the user whose image is being fetched.
+ *
+ * @returns {200 OK} { message: "Image retrieved successfully", fileUrl: string } - Latest image URL for the user.
+ * @returns {400 Bad Request} If the `username` query parameter is missing.
+ * @returns {404 Not Found} If no images exist or no image is found for the specified user.
+ * @returns {500 Internal Server Error} If there is a server-side or Firestore error.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 

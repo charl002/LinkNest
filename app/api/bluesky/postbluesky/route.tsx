@@ -1,3 +1,13 @@
+/**
+ * @route POST /api/bluesky/postbluesky
+ * @description Fetches Bluesky posts using the internal API, checks against 
+ * existing records in Firestore, and adds only new posts to the 'bluesky' collection. Adds 
+ * metadata fields (`likes`, `likedBy`, `comments`) during insert. Skips posts that already exist based on ID.
+ *
+ * @returns {201 Created} On successful insertion of one or more new posts.
+ * @returns {200 OK} If no new posts were added (all were already present).
+ * @returns {500 Internal Server Error} If an error occurs during fetch, validation, or database write.
+ */
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { getAllDocuments } from "@/firebase/firestore/getData";

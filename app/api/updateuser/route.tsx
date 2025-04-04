@@ -1,3 +1,20 @@
+/**
+ * @route PATCH /api/updateuser
+ * @description Updates a user's profile information in Firestore.
+ *
+ * @requestBody JSON {
+ *   id: string;           // Firestore document ID of the user (required)
+ *   username: string;     // Username of the authenticated user (required)
+ *   image?: string;       // New profile image URL (optional)
+ *   description?: string; // User description or bio (optional)
+ *   background?: string;  // Background image URL (optional)
+ * }
+ *
+ * @returns {200 OK} User profile updated successfully.
+ * @returns {400 Bad Request} If required fields (id, username) are missing.
+ * @returns {401/403 Unauthorized} If authentication or authorization fails.
+ * @returns {500 Internal Server Error} On unexpected failure.
+ */
 import { NextResponse } from "next/server";
 import firebase_app from "@/firebase/config";
 import { getFirestore, doc, updateDoc } from "@firebase/firestore";

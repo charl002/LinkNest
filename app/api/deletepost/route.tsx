@@ -1,3 +1,24 @@
+/**
+ * @route DELETE /api/deletepost
+ * @description Deletes a post from Firestore and its associated image from Azure Blob Storage (if applicable).
+ *
+ * @requestBody
+ * {
+ *   postId: string;    // The ID of the post to delete
+ *   postType: string;  // The Firestore collection type (e.g., "posts", "news", "bluesky")
+ * }
+ *
+ * @behavior
+ * - Validates the required fields (postId, postType).
+ * - Retrieves the post document from Firestore.
+ * - If the post type is 'posts' and contains a file URL, deletes the file from Azure Blob Storage.
+ * - Deletes the post document from Firestore using a retry mechanism.
+ *
+ * @returns {200 OK} { message: "Post deleted successfully" }
+ * @returns {400 Bad Request} If required fields are missing.
+ * @returns {404 Not Found} If the post does not exist.
+ * @returns {500 Internal Server Error} If deletion fails or an unexpected error occurs.
+ */
 import { BlobServiceClient } from "@azure/storage-blob";
 import { NextResponse } from "next/server";
 import deleteData from "@/firebase/firestore/deleteData";

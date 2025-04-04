@@ -1,3 +1,17 @@
+/**
+ * @route POST /api/banuser
+ * @description Admin-only route to update a user's ban status in Firestore.
+ * 
+ * The request must include:
+ * - `userId` (string): The ID of the user to update.
+ * - `isBanned` (boolean): Whether the user should be banned or unbanned.
+ * 
+ * Requires admin authentication via `authenticateAdmin()`. If the user is not
+ * authorized as an admin, the route will return an appropriate error.
+ * 
+ * @returns 200 OK if the update is successful, 400 if required fields are missing,
+ * or 500 if an internal server error occurs.
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";

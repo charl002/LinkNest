@@ -1,3 +1,13 @@
+/**
+ * @route GET /api/getpostbyusername
+ * @description Retrieves all posts made by a specific user.
+ *
+ * @query {string} username - The username of the user whose posts should be fetched.
+ *
+ * @returns {200 OK} JSON containing an array of posts made by the user.
+ * @returns {400 Bad Request} If the username query parameter is missing.
+ * @returns {500 Internal Server Error} If an error occurs while fetching the posts.
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "@firebase/firestore";
 import firebase_app from "@/firebase/config";

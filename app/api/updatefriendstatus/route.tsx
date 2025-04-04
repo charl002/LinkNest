@@ -1,3 +1,18 @@
+/**
+ * @route POST /api/updatefriendstatus
+ * @description Updates the status of a friend request (e.g., "accepted", "rejected").
+ *
+ * @requestBody JSON {
+ *   senderUsername: string;   // Username of the sender (required)
+ *   receiverUsername: string; // Username of the receiver (required)
+ *   status: string;           // New status of the friend request (e.g., "accepted", "rejected") (required)
+ * }
+ *
+ * @returns {200 OK} If the friend request status was updated successfully.
+ * @returns {400 Bad Request} If any required parameter is missing.
+ * @returns {404 Not Found} If no matching friend request is found.
+ * @returns {500 Internal Server Error} If a server or Firestore error occurs.
+ */
 import { NextResponse } from "next/server";
 import { getFriendRequests } from "@/firebase/firestore/getData";
 import { updateFriendRequestStatus } from "@/firebase/firestore/updateStatus";
