@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import { incrementCommentLikes } from "@/firebase/firestore/updateCommentLikes";
 import { withRetry } from '@/utils/backoff';
 import cache from "@/lib/cache";
+import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";
 
 export async function PUT(req: Request) {
     try {
+        // Check authentication
+        const authError = await authenticateRequest();
+        if (authError) return authError;
+
         const { id, type, increment, username, commentIndex } = await req.json();
+
+        // Authorize the user
+        const authzError = await authorizeUser(username);
+        if (authzError) return authzError;
 
         // Validate input
         if (!id || commentIndex === undefined || !username) {

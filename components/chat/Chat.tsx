@@ -70,6 +70,7 @@ export default function Chat() {
   useEffect(() => {
     if (!currentUsername || !friendUsername) return;
 
+    // Get's all the previous messages (Between 2 users).
     async function fetchPreviousMessages() {
       try {
         setIsLoading(true);
@@ -123,6 +124,7 @@ export default function Chat() {
   useEffect(() => {
     if(!groupchatId || !currentUsername) return;
 
+    // Get all the group messages.
     async function fetchGroupMessages() {
       if (!groupchatId || !currentUsername || !groupChats || groupChats.length === 0) return;
   
@@ -130,6 +132,7 @@ export default function Chat() {
         setIsLoading(true);
 
         const groupData = groupChats.find((group) => group.id === groupchatId);
+        console.log('group Data', groupData);
         if (!groupData) {
           throw new Error("Group not found");
         }
@@ -200,10 +203,9 @@ export default function Chat() {
 
     socket.emit("register", currentUsername);
     
-    socket.on("groupMessage", ({ senderId, message, msgId, isCallMsg, groupId }) => {
+    // Listens for group messages
+    socket.on("groupMessage", async ({ senderId, message, msgId, isCallMsg, groupId }) => {
       
-      console.log("gC", message);
-
       if (groupId === groupchatId) {
 
         setMessages((prev) => [
@@ -221,6 +223,7 @@ export default function Chat() {
       }
     });
 
+    // Listens for private messages
     socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, replyTo }) => {
       
       if (senderId === friendUsername) {
@@ -241,10 +244,11 @@ export default function Chat() {
 
     return () => {
       socket.off("privateMessage");
-      // socket.off("groupMessage");
+      socket.off("groupMessage");
     };
   }, [socket, currentUsername, friendUsername, groupchatId]);
 
+  // Function to send a message
   const sendMessage = async () => {
     if (socket && input.trim() && currentUsername) {
       try {
@@ -428,6 +432,7 @@ export default function Chat() {
     }
   };
 
+  // Function to handle deleting a message.
   const handleDeleteMessage = async (message: Message) => {
     const messageId = typeof message.id === "string" ? message.id : String(message.id);
     const username = currentUsername;
@@ -497,12 +502,14 @@ export default function Chat() {
     }
   };
 
+  // Function for copying a 'message'.
   const handleCopyMessage = (text: string) => {
     navigator.clipboard.writeText(text)
     .then(() => toast.success("Copied to clipboard!"))
     .catch(() => toast.error("Failed to copy message."));
   }
 
+  // Function to remove a reaction.
   const handleRemoveReaction = async (message: Message) => {
     try {
       const response = await fetch("/api/deletereaction", {
@@ -543,6 +550,7 @@ export default function Chat() {
     }
   };
 
+  //Utility function to format the time to human readable.
   function formatTimestamp(timestamp: string): string {
     const date = new Date(timestamp);
     return date.toLocaleString("en-US", {
@@ -800,6 +808,7 @@ export default function Chat() {
     </section>
   );
   
+    // Mobile view
     return (
       <div className="bg-grey-100 min-h-screen w-full text-gray-800">
         {/* Mobile Toggle Buttons */}
