@@ -130,6 +130,7 @@ export default function Chat() {
         setIsLoading(true);
 
         const groupData = groupChats.find((group) => group.id === groupchatId);
+        console.log('group Data', groupData);
         if (!groupData) {
           throw new Error("Group not found");
         }
@@ -202,8 +203,6 @@ export default function Chat() {
     
     socket.on("groupMessage", ({ senderId, message, msgId, isCallMsg, groupId }) => {
       
-      console.log("gC", message);
-
       if (groupId === groupchatId) {
 
         setMessages((prev) => [

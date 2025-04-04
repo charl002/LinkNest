@@ -55,6 +55,30 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on("groupMessage", ({ senderId, message, msgId, isCallMsg, receiverId, groupId, receiversIds }) => {
+      if(receiversIds && receiversIds.length > 0){
+        receiversIds.forEach((groupReceiverId: string) => {
+          const receiverSocketId = userSockets[groupReceiverId];
+          if (receiverSocketId) {
+            io.to(receiverSocketId).emit("groupMessage", {
+              senderId,
+              groupReceiverId,
+              message,
+              msgId,
+              isCallMsg,
+              groupId
+            });
+          }
+        });
+      } 
+      // else {
+      //   const receiverSocketId = userSockets[receiverId];
+      //   if (receiverSocketId) {
+      //     io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message, msgId, isCallMsg });
+      //   }
+      // }
+    });
+
     // For some reason this socket does not work on prod, but works on dev. Will look into it another time.
     socket.on("call", ({ senderId, receiverId }) => {
       const receiverSocketId = userSockets[receiverId];
