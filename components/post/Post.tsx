@@ -32,7 +32,25 @@ interface PostProps {
     sessionUsername: string;
 }
 
-
+/**
+ * Post component displays a post along with its comments, likes, and options to like, comment, or delete.
+ *
+ * @component
+ * @param {object} props - The props for the Post component.
+ * @param {string} props.title - The title of the post.
+ * @param {string} props.username - The username of the person who created the post.
+ * @param {string} props.description - The description of the post.
+ * @param {string[]} props.tags - The tags associated with the post.
+ * @param {Comment[]} props.comments - The comments on the post.
+ * @param {number} props.likes - The number of likes the post has.
+ * @param {Object[]} props.images - The images or videos associated with the post.
+ * @param {string} props.profilePicture - The profile picture of the post's author.
+ * @param {string} props.documentId - The document ID of the post.
+ * @param {string} props.postType - The type of post (e.g., 'posts', 'bluesky', 'news').
+ * @param {string[]} props.likedBy - A list of users who have liked the post.
+ * @param {string} props.sessionUsername - The current session's username.
+ * @returns {JSX.Element}
+ */
 export default function Post({ title, username, description, tags, comments, likes, images, profilePicture, documentId, postType, likedBy, sessionUsername }: PostProps) {
     const { ref, inView } = useInView({
         threshold: 0.1,
@@ -48,18 +66,41 @@ export default function Post({ title, username, description, tags, comments, lik
     const [isZoomed, setIsZoomed] = useState(false);
     const [showReportDialog, setShowReportDialog] = useState(false);
 
+    const router = useRouter();
+
+    /**
+     * Checks if the current session user has already liked the post.
+     * This effect runs when the session or likedBy props change.
+     */
     useEffect(() => {
         const fetchSessionUsername = async () => {
             if (!session?.user) return;
-            setIsLiked(likedBy.includes(sessionUsername));
+            setIsLiked(likedBy.includes(sessionUsername));  // Check if the post is liked by the user
         };
 
         fetchSessionUsername();
     }, [session, likedBy, sessionUsername]);
 
+    /**
+     * Fetches the profile picture for the comments when the component mounts.
+     * This is necessary when the comment does not already have a profile picture.
+     */
+    useEffect(() => {
+      const fetchInitialCommentPics = async () => {
+          const withPics = await fetchProfilePictures(comments);
+          setPostComments(withPics);
+      };
+      fetchInitialCommentPics();
+    }, [comments]);
+
     
-    
-    // Fetch profile pictures for comments
+    /**
+     * Fetches profile pictures for comments that do not have one.
+     * If the comment doesn't have a profile picture, an API request is made to get the user's profile image.
+     * 
+     * @param {Comment[]} comments - The comments to update with profile pictures.
+     * @returns {Promise<Comment[]>} - The updated comments array with profile pictures.
+     */
     const fetchProfilePictures = async (comments: Comment[]) => {
       const updatedComments = await Promise.all(
           comments.map(async (comment) => {
@@ -78,13 +119,16 @@ export default function Post({ title, username, description, tags, comments, lik
                       return { ...comment, profilePicture: "/defaultProfilePic.jpg" };
                   }
               }
-              return comment;
+              return comment; // Return the comment as is if the profile picture is already available
           })
       );
       return updatedComments;
   };    
 
-    const router = useRouter();
+    /**
+     * Handles the process of toggling the "like" state of the post.
+     * Makes an API request to update the like status and updates the UI accordingly.
+     */
     const handleToggleLike = async () => {
         if (!session?.user || !sessionUsername || isLoading) return;
 
@@ -103,7 +147,7 @@ export default function Post({ title, username, description, tags, comments, lik
 
             const data = await response.json();
             if (response.ok) {
-                setLikeCount(prevCount => newIsLiked ? prevCount + 1 : prevCount - 1);
+                setLikeCount(prevCount => newIsLiked ? prevCount + 1 : prevCount - 1); // Update the like count based on the new state
                 setIsLiked(newIsLiked);
                 router.refresh();
             } else {
@@ -116,6 +160,10 @@ export default function Post({ title, username, description, tags, comments, lik
         }
     };
 
+    /**
+     * Handles the submission of a new comment.
+     * The comment is added to the state, and a request is made to the server to save the comment.
+     */
     const handlePostComment = async () => {
         if (!session?.user || !sessionUsername || !newComment.trim()) return;
 
@@ -128,30 +176,30 @@ export default function Post({ title, username, description, tags, comments, lik
   
             const data = await response.json();
             if (response.ok) {
-                // Convert "Just now" to the actual timestamp for previous comments
-                const updatedComments = postComments.map(comment =>
-                    comment.date === "Just now"
-                        ? { ...comment, date: new Date().toLocaleString() }
-                        : comment
-                );
+              const isoDate = new Date().toISOString();
+              // This makes a copy of all previous comments and removes the justNow marker from them.
+              const updatedComments = postComments.map(c => ({ ...c, justNow: false }));
   
-            // Add the new comment with a temporary profile picture
+            // Add the new comment with "justNow: true" and a temporary profile picture
             const newCommentData = { 
               username: sessionUsername, 
               comment: newComment, 
-              date: "Just now", 
+              date: isoDate, 
               likes: 0, 
               likedBy: [],
-              profilePicture: "/defaultProfilePic.jpg" // Temporary placeholder
+              profilePicture: "/defaultProfilePic.jpg",
+              justNow: true // Set 'justNow' to true for the new comment
+
           };
 
-          setPostComments([...updatedComments, newCommentData]);
-
-          // Fetch profile pictures for all comments (including the new one)
-          const updatedCommentsWithProfilePictures = await fetchProfilePictures([...updatedComments, newCommentData]);
-          setPostComments(updatedCommentsWithProfilePictures);
+          // Add the new comment and update the state
+          const withNewComment = [...updatedComments, newCommentData];
+          const withPics = await fetchProfilePictures(withNewComment); // Fetch profile pics for the new comment
+          // Ensure only the last comment gets justNow: true
+          const finalComments = withPics.map((c, i, arr) => i === arr.length - 1 ? { ...c, justNow: true } : { ...c, justNow: false });
+          setPostComments(finalComments);
+          setNewComment("");
           router.refresh();
-                setNewComment(""); 
             } else {
                 console.error(data.message);
             }
@@ -160,15 +208,28 @@ export default function Post({ title, username, description, tags, comments, lik
         }
     };
 
+
+    /**
+     * Handles the reply to a comment. Pre-fills the input with the username of the comment being replied to.
+     * 
+     * @param {string} username - The username of the comment being replied to.
+     */
     const handleReply = (username: string) => {
         setNewComment(`@${username} `);
-        // Focus on the input field
         const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement;
         if (inputElement) {
-            inputElement.focus();
+            inputElement.focus(); // Focus on the comment input field for easy typing
         }
     };
 
+
+    /**
+     * Handles the like/unlike action on a comment.
+     * This makes an API request to update the like status of the comment and updates the UI accordingly.
+     * 
+     * @param {number} commentIndex - The index of the comment being liked/unliked.
+     * @param {boolean} isLiked - The current like status of the comment.
+     */
     const handleCommentLike = async (commentIndex: number, isLiked: boolean) => {
         if (!session?.user || !sessionUsername || isLoading) return;
   
@@ -215,20 +276,33 @@ export default function Post({ title, username, description, tags, comments, lik
         }
     };
 
+    // Function to handle the change of the comment input and check for length limit
     const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const input = e.target.value;
         setIsOverLimit(input.length > 100);
         setNewComment(input);
     };
 
+    /**
+     * Handles the pressing of the Enter key when posting a comment.
+     * This triggers the comment submission if the comment length is within the limit.
+     * 
+     * @param {React.KeyboardEvent<HTMLInputElement>} e - The keyboard event.
+     */
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && !isOverLimit && newComment.trim()) {
             handlePostComment();
         }
     };
 
+
     const defaultImageUrl = "/defaultProfilePic.jpg";
 
+    /**
+     * Handles the deletion of a comment. This makes an API request to delete the comment from the server.
+     * 
+     * @param {Comment} comment - The comment to be deleted.
+     */
     const handleDeleteComment = async (comment: Comment) => {
     setIsLoading(true);
 
@@ -270,6 +344,7 @@ export default function Post({ title, username, description, tags, comments, lik
     }
   };
 
+  // Function to handle the deletion of the post
   const handleDelete = async () => {
     try {
       const response = await fetch("/api/deletepost", {
@@ -290,6 +365,7 @@ export default function Post({ title, username, description, tags, comments, lik
     }
   };
 
+    // Return a placeholder if the post is not in view
     if (!inView) {
         return <div ref={ref} className="h-[300px] bg-gray-100 animate-pulse rounded-md" />;
     }
@@ -322,6 +398,7 @@ export default function Post({ title, username, description, tags, comments, lik
               <p className="font-bold">{username}</p>
             </div>
           </Link>
+          {/* Conditional delete button for the post's author */}
             {sessionUsername === username && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -345,6 +422,7 @@ export default function Post({ title, username, description, tags, comments, lik
             )}
           </div>
 
+        {/* Post Image or Video */}
         {images.length > 0 && images[0].url ? (
           <div className="mt-4 relative w-full overflow-hidden bg-transparent rounded-md group">
             {images[0].url.match(/\.(mp4|webm|ogg)$/) ? (
@@ -411,9 +489,11 @@ export default function Post({ title, username, description, tags, comments, lik
           </DialogContent>
         </Dialog>
 
+        {/* Post Description and Tags */}
         <p className="mt-2 font-semibold">{title}</p>
         <p className="text-gray-500">{description}</p>
         <p className="text-blue-500 text-sm mt-2">{tags.join(' ')}</p>
+        {/* Post Action Buttons */}
         <div className="mt-4 flex items-center space-x-6">
           <button
             onClick={handleToggleLike}
@@ -424,10 +504,14 @@ export default function Post({ title, username, description, tags, comments, lik
             {isLiked ? <FaThumbsUp className="text-blue-600" /> : <FaRegThumbsUp />} 
             <span>{likeCount} {likeCount === 1 ? 'Like' : 'Likes'}</span>
           </button>
-
-          <Dialog onOpenChange={(isOpen) => {
-              if (isOpen && comments.length > 0) {
-                  fetchProfilePictures(comments).then(setPostComments);
+          {/* Comment Dialog */}    
+          <Dialog onOpenChange={async (isOpen) => {
+              if (isOpen) {
+                //Refetch the post if user interaction on a post since cache was reset
+                const res = await fetch(`/api/getsinglepost?id=${documentId}&type=${postType}`);
+                const json = await res.json();
+                const withPics = await fetchProfilePictures(json.comments);
+                setPostComments(withPics);
               }
           }}>
             <DialogTrigger asChild>
@@ -457,7 +541,7 @@ export default function Post({ title, username, description, tags, comments, lik
                       <div className="flex items-center justify-between">
                       <Link key={index} href={`/profile/${encodeURIComponent(comment.username)}`}>
                         <p className="font-bold text-sm text-gray-900 transition-transform duration-200 hover:scale-105 active:scale-95">
-                          {comment.username} <span className="text-gray-500 text-xs">{comment.date}</span>
+                          {comment.username} <span className="text-gray-500 text-xs"> {comment.justNow ? "Just now" : new Date(comment.date).toLocaleString()}</span>
                         </p>
                       </Link>
                         {sessionUsername === comment.username && (

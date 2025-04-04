@@ -37,14 +37,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Email, name, username, and image are required" }, { status: 400 });
         }
 
-        const now = new Date();
-        const datePart = now.toISOString().split("T")[0]; 
-        const timePart = now.toLocaleString("en-US", {
-            hour: "numeric",
-            minute: "numeric",
-            hour12: true,
-        });
-        const date = `${datePart} ${timePart}`
+        const date = new Date().toISOString();
 
         const newComment = { 
             username,
