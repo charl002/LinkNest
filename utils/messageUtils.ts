@@ -107,15 +107,30 @@ export const emitPrivateMessage = (
 ) => {
   const encryptedMessage = encryptMessage(message);
 
-  socket.emit("privateMessage", {
-    senderId: sender,
-    message: encryptedMessage,
-    msgId: docId,
-    isCallMsg: isCallMsg,
-    receiverId: receiver,
-    groupId: groupId,
-    receiversIds: receivers,
-    replyTo
-  });
+  console.log('THIS IS IN EMIT PRIVATE MSG!');
+
+  if(groupId && receivers){
+    socket.emit("groupMessage", {
+      senderId: sender,
+      message: encryptedMessage,
+      msgId: docId,
+      isCallMsg: isCallMsg,
+      receiverId: receiver,
+      groupId: groupId,
+      receiversIds: receivers,
+      replyTo
+    });
+  } else {
+    socket.emit("privateMessage", {
+      senderId: sender,
+      message: encryptedMessage,
+      msgId: docId,
+      isCallMsg: isCallMsg,
+      receiverId: receiver,
+      groupId: groupId,
+      receiversIds: receivers,
+      replyTo
+    });
+  }
 };
 
