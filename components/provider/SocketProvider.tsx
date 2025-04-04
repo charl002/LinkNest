@@ -6,7 +6,7 @@ import { io, Socket } from "socket.io-client";
 const isDev = process.env.NODE_ENV !== "production";
 const socketUrl = isDev 
   ? "ws://localhost:3000" 
-  : "wss://linknest-fkd5eba5dqbrhzd7.canadacentral-01.azurewebsites.net";
+  : "wss://620-section02-group5-ahm-git-25daa8-abdullahs-projects-9fc8172a.vercel.app";
 
 const SocketContext = createContext<Socket | null>(null);
 
