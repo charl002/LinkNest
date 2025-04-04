@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import updateArrayField from "@/firebase/firestore/updateData";
 import { withRetry } from '@/utils/backoff';
 import cache from "@/lib/cache";
+import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";
 
 export async function POST(req: Request) {
     try {
+        // Check authentication
+        const authError = await authenticateRequest();
+        if (authError) return authError;
+
         const { postId, username, comment, postType } = await req.json();
+
+        // Authorize the user
+        const authzError = await authorizeUser(username);
+        if (authzError) return authzError;
 
         if (!postId || !username || !comment || !postType) {
             return NextResponse.json({ message: "Email, name, username, and image are required" }, { status: 400 });

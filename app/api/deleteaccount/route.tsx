@@ -3,6 +3,7 @@ import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, arrayR
 import firebase_app from "@/firebase/config";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { Comment } from "@/types/comment";
+import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";
 
 const db = getFirestore(firebase_app);
 
@@ -18,11 +19,19 @@ const containerClient = blobService.getContainerClient(containerName);
 
 export async function DELETE(req: Request) {
   try {
+    // Check authentication
+    const authError = await authenticateRequest();
+    if (authError) return authError;
+
     const { username } = await req.json();
 
     if (!username) {
       return NextResponse.json({ message: "Username is required" }, { status: 400 });
     }
+
+    // Authorize the user
+    const authzError = await authorizeUser(username);
+    if (authzError) return authzError;
 
     const usersRef = collection(db, "users");
     const userQuery = query(usersRef, where("username", "==", username));

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";
 
 interface Report {
     reportedBy: string;
@@ -12,7 +13,15 @@ const db = getFirestore(firebase_app);
 
 export async function POST(request: Request) {
     try {
+        // Check authentication
+        const authError = await authenticateRequest();
+        if (authError) return authError;
+
         const { postId, reportedBy, reason, postType } = await request.json();
+
+        // Authorize the user
+        const authzError = await authorizeUser(reportedBy);
+        if (authzError) return authzError;
 
         if (!postId || !reportedBy || !reason || !postType) {
             return NextResponse.json(
