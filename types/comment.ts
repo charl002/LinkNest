@@ -5,4 +5,5 @@ export interface Comment {
   likes: number;
   likedBy: string[];
   profilePicture?: string;
+  justNow?: boolean;
 }

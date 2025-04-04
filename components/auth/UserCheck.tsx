@@ -8,10 +8,15 @@ import Post from "@/components/post/Post";
 import { Toaster } from "sonner";
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
 import { getUserByEmail, getUserByUsername, getAllPosts, submitUser } from "@/app/actions";
-
 import { PostType } from "@/types/post";
 import { useInView } from 'react-intersection-observer';
 
+/**
+ * The UserCheck component is responsible for managing the user's session, checking username availability, and displaying posts.
+ * It handles the fetching of user data, post data, and displays the content based on user actions such as liking or commenting.
+ * 
+ * @returns {JSX.Element} The rendered UserCheck component.
+ */
 export default function UserCheck() {
     const { data: session } = useSession();
     const [usernameRequired, setUsernameRequired] = useState(false);
@@ -35,6 +40,10 @@ export default function UserCheck() {
     const [showChatList, setShowChatList] = useState(false);
     const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
 
+    /**
+     * Fetches user data when the session exists and checks if the username is required.
+     * It also checks if the user is banned and handles blocked users.
+     */
     useEffect(() => {
         if (!session?.user) return;
 
@@ -65,6 +74,10 @@ export default function UserCheck() {
         fetchData();
     }, [session]);
 
+    /**
+     * Fetches initial posts for the user, including posts from different categories.
+     * Sorts the posts by creation date and prepares the data for display..
+     */
     const fetchInitialPosts = useCallback(async () => {
         if (!session?.user?.email) return;
         
@@ -78,11 +91,11 @@ export default function UserCheck() {
 
             const fetchedPosts = await getAllPosts();
             const sortedPosts = fetchedPosts.sort((a, b) => 
-                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() // Sort posts by creation date
             );
 
-            setAllPosts(sortedPosts);
-            setPosts(sortedPosts.slice(0, pageSize));
+            setAllPosts(sortedPosts); // Set all posts
+            setPosts(sortedPosts.slice(0, pageSize)); // Paginate the first set of posts
             setHasMore(sortedPosts.length > pageSize);
             setCurrentPage(0);
         } catch (err) {
@@ -92,6 +105,12 @@ export default function UserCheck() {
         }
     }, [session, pageSize]);
 
+     /**
+     * Filters posts based on blocked users and the active tab ('user', 'bluesky', or 'news').
+     * 
+     * @param {PostType[]} posts - The posts to filter.
+     * @returns {PostType[]} - The filtered posts.
+     */
     const filterPosts = useCallback((posts: PostType[]) => {
         return posts.filter(post => {
             if (blockedUsers.includes(post.username)) return false;
@@ -103,22 +122,34 @@ export default function UserCheck() {
         });
     }, [activeTab, blockedUsers]);
 
+    /**
+     * Fetches posts whenever the session or initial data is loaded.
+     */
     useEffect(() => {
         if (!session?.user) return;
         fetchInitialPosts();
     }, [session, fetchInitialPosts]);
 
+    /**
+     * Filters posts whenever the active tab or all posts change.
+     */
     useEffect(() => {
         const filteredPosts = filterPosts(allPosts);
-        setPosts(filteredPosts.slice(0, pageSize));
+        setPosts(filteredPosts.slice(0, pageSize)); // Set filtered posts and reset to page 0
         setCurrentPage(0);
         setHasMore(filteredPosts.length > pageSize);
     }, [activeTab, allPosts, pageSize, filterPosts]);
 
+    /**
+     * Keeps track of the current state and paginated data for posts.
+     */
     useEffect(() => {
         scrollRef.current = { allPosts, currentPage, pageSize, hasMore, loadingPosts };
     }, [allPosts, currentPage, pageSize, hasMore, loadingPosts]);
 
+    /**
+     * Handles the infinite scroll behavior by checking if more posts are available and loading them.
+     */
     useEffect(() => {
         if (!inView || !scrollRef.current.hasMore || scrollRef.current.loadingPosts) return;
         
@@ -129,9 +160,9 @@ export default function UserCheck() {
             const end = start + scrollRef.current.pageSize;
 
             if (start < filteredPosts.length) {
-                setPosts(prev => [...prev, ...filteredPosts.slice(start, end)]);
-                setCurrentPage(nextPage);
-                setHasMore(end < filteredPosts.length);
+                setPosts(prev => [...prev, ...filteredPosts.slice(start, end)]); // Append new posts
+                setCurrentPage(nextPage); // Update current page
+                setHasMore(end < filteredPosts.length); // Check if there are more posts
             } else {
                 setHasMore(false);
             }
@@ -140,6 +171,12 @@ export default function UserCheck() {
         return () => clearTimeout(timer);
     }, [inView, filterPosts]);
 
+    /**
+     * Checks if the username is available by making a request to the API.
+     * 
+     * @param {string} username - The username to check.
+     * @returns {Promise<boolean>} - Returns true if the username is available, otherwise false.
+     */
     const checkUsernameAvailability = async (username: string) => {
         if (!username) {
             console.error("Username is required but was empty.");
@@ -155,6 +192,10 @@ export default function UserCheck() {
         }
     };
 
+    /**
+     * Handles the submission of the username and description form.
+     * It validates the input fields and stores the user data if valid.
+     */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -199,9 +240,15 @@ export default function UserCheck() {
         }
     };
 
+    /**
+     * Displays the account setup form if the username is required.
+     * 
+     * @returns {JSX.Element} The rendered form for setting up the account.
+     */
     const mainContent = (
         <section className="flex flex-col h-[calc(100vh-120px)] overflow-hidden">
             <div className="flex space-x-2 mb-6">
+            {/* Tabs for displaying posts, bluesky, and news */}
                 <button
                     onClick={() => setActiveTab('user')}
                     className={`flex-1 px-4 py-2 rounded-md transition-all ease-in-out duration-300 ${
@@ -234,6 +281,7 @@ export default function UserCheck() {
                 </button>
             </div>
             <div className="space-y-6 overflow-y-auto flex-1 h-[calc(100vh-120px)]">
+                {/* Render posts based on active tab */}
                 {posts.map((post, index) => (
                     <Post 
                         key={`${post.id}-${index}`} 
@@ -251,6 +299,9 @@ export default function UserCheck() {
         </section>
     );
 
+    /**
+     * Renders the form to setup a new account if the username is not yet set.
+     */
     if (usernameRequired) {
         return (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -283,7 +334,7 @@ export default function UserCheck() {
     }
 
     if (loadingPosts) {
-        return <LoadingLogo />;
+        return <LoadingLogo />; // Show the loading logo while posts are being fetched
     }
 
     return (

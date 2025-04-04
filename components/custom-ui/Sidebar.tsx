@@ -23,6 +23,12 @@ import Link from "next/link";
 
 import { User } from "@/types/user";
 
+/**
+ * Sidebar component for the user interface.
+ * Displays user information, allows friend requests, manages pending requests, and provides admin access if the user has privileges.
+ * 
+ * @returns {JSX.Element} The rendered Sidebar component.
+ */
 export default function Sidebar() {
   const socket = useSocket();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -36,8 +42,9 @@ export default function Sidebar() {
   const currentUser = users.find((user) => user.email === session?.user?.email);
   const senderUsername = currentUser?.username || null;
 
-  const { setFriends } = useFriends();
+  const { setFriends } = useFriends(); // Access the friends context to set friends
 
+  // Fetch admin status on mount
   useEffect(() => {
       const checkAdminStatus = async () => {
           if (!session?.user?.email) return;
@@ -54,6 +61,7 @@ export default function Sidebar() {
       checkAdminStatus();
   }, [session]);
 
+  // Fetch all users from the database
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -61,7 +69,7 @@ export default function Sidebar() {
         const data = await response.json();
 
         if (data && Array.isArray(data.users)) {
-          setUsers(data.users as User[]);
+          setUsers(data.users as User[]); // Set all users in the state
         } else {
           console.error("Unexpected API response:", data);
           setUsers([]);
@@ -71,9 +79,10 @@ export default function Sidebar() {
         setUsers([]);
       }
     }
-    fetchUsers();
+    fetchUsers(); // Fetch users when the component mounts
   }, []);
 
+  // Filter users based on the friend's name input
   useEffect(() => {
     if (friendName.trim() === "") {
       setFilteredUsers([]);
@@ -88,6 +97,7 @@ export default function Sidebar() {
     }
   }, [friendName, users]);
 
+  // Setup socket events for real-time updates
   useEffect(() => {
     if (socket) {
       console.log("Registering user to WebSocket:", senderUsername);
@@ -118,6 +128,7 @@ export default function Sidebar() {
             return;
           }
 
+          // Add the new friend request to the state
           setPendingRequests((prev) => {
             if (prev.some((user) => user.username === senderUsername))
               return prev;
@@ -152,6 +163,7 @@ export default function Sidebar() {
     }
   }, [socket, senderUsername]);
 
+  // Fetch pending friend requests for the current user
   useEffect(() => {
     if (!currentUser) return;
 
@@ -172,7 +184,7 @@ export default function Sidebar() {
                 : null;
             })
           );
-          setPendingRequests(userRequests.filter(Boolean));
+          setPendingRequests(userRequests.filter(Boolean)); // Set filtered requests
         } else {
           setPendingRequests([]);
         }
@@ -185,6 +197,10 @@ export default function Sidebar() {
     fetchPendingRequests();
   }, [currentUser, senderUsername]);
 
+  /**
+   * Handles adding a new friend by sending a friend request.
+   * Validates input, sends the request, and updates the UI accordingly.
+   */
   const handleAddFriend = async () => {
     if (!session?.user?.name || !friendName) {
       customToast({ message: `Error! Missing username`, type: "error" });
@@ -238,6 +254,10 @@ export default function Sidebar() {
     }
   };
 
+  /**
+   * Handles denying a pending friend request.
+   * Removes the request from the pending list and updates the UI.
+   */
   const handleDenyRequest = async (friendUsername: string) => {
     if (!senderUsername) {
       customToast({
@@ -284,6 +304,10 @@ export default function Sidebar() {
     }
   };
 
+  /**
+   * Handles accepting a pending friend request.
+   * Adds the friend to the user's friend list and updates the UI accordingly.
+   */
   const handleAcceptRequest = async (friendUsername: string) => {
     if (!senderUsername) {
       customToast({
@@ -344,6 +368,7 @@ export default function Sidebar() {
         });
         return;
       }
+      // Remove the accepted friend request from pending list
       setPendingRequests((prevRequests) =>
         prevRequests.filter((user) => user.username !== friendUsername)
       );
@@ -358,7 +383,7 @@ export default function Sidebar() {
         );
         return;
       }
-
+       // Add the friend to the friends list context
       setFriends((prev) => [
         ...prev,
         {
@@ -392,9 +417,11 @@ export default function Sidebar() {
     }
   };
 
+  // Return the rendered sidebar
   return (
     <aside className="bg-white shadow-md p-4 rounded-md flex flex-col h-[calc(100vh-120px)] overflow-y-auto">
       <div className="flex-1 flex flex-col justify-center items-center pt-4">
+        {/* Dialog for adding a friend */}
         <Dialog>
           <DialogTrigger asChild>
             <Button className="transition-transform duration-200 hover:scale-110 active:scale-90">
@@ -459,6 +486,7 @@ export default function Sidebar() {
         {pendingRequests.length > 0 ? (
           <ScrollArea className="w-full max-h-60 overflow-y-auto">
             <ul className="mt-2 w-full">
+              {/* Display pending requests if available */}
               {pendingRequests.map((user) => (
                 <li
                   key={user.id}

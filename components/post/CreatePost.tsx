@@ -9,9 +9,17 @@ import { Progress } from "@/components/ui/progress";
 import ChatList from "../chat/ChatList";
 import Sidebar from "../custom-ui/Sidebar";
 
+/**
+ * CreatePost component allows the user to create a new post with title, description, hashtags, and optional media upload.
+ * It handles form validation, file selection, progress indication, and the submission process.
+ *
+ * @returns {JSX.Element} The rendered CreatePost component.
+ */
 const CreatePost = () => {
     const router = useRouter();
     const {data: session } = useSession()
+
+    // State variables for managing post data, file upload progress, and UI states.
     const [title, setTitle] = useState("");
     const [text, setText] = useState("");
     const [hashtags, setHashtags] = useState("");
@@ -23,8 +31,13 @@ const CreatePost = () => {
     const [showSidebar, setShowSidebar] = useState(false);
     const [showChatList, setShowChatList] = useState(false);
   
+    /**
+     * Fetches the username of the current user based on their email from the session.
+     * Sets the username in the component state.
+     */
     useEffect(() => {
         const fetchUsername = async () => {
+            // If a session exists with user email, fetch the user's username.
             if (session?.user?.email) {
                 try {
                     const response = await fetch(`/api/getsingleuser?email=${session.user.email}`);
@@ -42,30 +55,45 @@ const CreatePost = () => {
                 }
             }
         };
-
         fetchUsername();
     }, [session]);
 
+
+    /**
+     * Handles file upload to the server, updating the progress during the upload process.
+     *
+     * @param {FormData} formData - The form data including the post content and file.
+     * @returns {Promise<any>} The server response containing post upload status.
+     */
     const uploadPost = async (formData: FormData) => {
-        setProgress(20);
+        setProgress(20); // Initialize progress at 20% when starting upload
         const response = await fetch("/api/postuploadpost", {
             method: "POST",
             body: formData,
         });
 
-        setProgress(80);
+        setProgress(80); // Set progress to 80% after the request is sent
         const data = await response.json();
         return data;
     };
 
     const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
     const MAX_VIDEO_LENGTH = 38; // 38 seconds
+
+    /**
+     * Validates the duration of a video file.
+     * Ensures the video is not longer than the allowed duration.
+     *
+     * @param {File} file - The video file to be validated.
+     * @returns {Promise<boolean>} Whether the video duration is valid.
+     */
     const validateVideoDuration = (file: File): Promise<boolean> => {
         return new Promise((resolve) => {
             const video = document.createElement("video");
             video.preload = "metadata";
             video.src = URL.createObjectURL(file);
 
+            // Once the video metadata is loaded, check its duration
             video.onloadedmetadata = () => {
                 URL.revokeObjectURL(video.src);
                 if (video.duration > MAX_VIDEO_LENGTH) {
@@ -77,10 +105,17 @@ const CreatePost = () => {
             };
         });
     };
-    
+
+
+    /**
+     * Handles form submission, performs validation on input fields, and uploads the post data.
+     *
+     * @param {React.FormEvent<HTMLFormElement>} e - The form submit event.
+     */
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
     
+        // Basic validation for title, description, and hashtags.
         if (!title || !text) {
             customToast({ message: "Title and description are required.", type: "error" });
             return;
@@ -101,6 +136,7 @@ const CreatePost = () => {
             return;
         }
 
+        // Checking if any hashtag exceeds the length limit (20 characters per tag)
         let tooLong = false;
         hashtags.split(" ").forEach(tag => {
             if(tag.length > 20){
@@ -113,7 +149,7 @@ const CreatePost = () => {
             return;
         }
 
-    //Image and Video restrictions    
+    // Image and Video validation  
         const allowedTypes = [
             "image/png", "image/jpeg", "image/jpg", 
             "video/mp4", "video/webm", "video/ogg"
@@ -136,6 +172,7 @@ const CreatePost = () => {
             }
         }
 
+        // Preparing the form data for submission
         const formData = new FormData();
         formData.append("username", username);
         formData.append("title", title);
@@ -146,13 +183,15 @@ const CreatePost = () => {
         }
 
         try {
-            setIsUploading(true);
-            setProgress(5);
+            setIsUploading(true); // Start uploading
+            setProgress(5); 
 
+            // Set an interval to simulate progress
             const progressInterval = setInterval(() => {
-                setProgress((prev) => Math.min(prev + 10, 90));
+                setProgress((prev) => Math.min(prev + 10, 90)); //increment Progress
             }, 300);
 
+            // Perform the post upload
             const result = await uploadPost(formData);
 
             clearInterval(progressInterval);
@@ -165,13 +204,14 @@ const CreatePost = () => {
                 setHashtags("");
                 setSelectedFile(null);
 
+                // Reset the file input field
                 if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                 }
 
                 setTimeout(() => {
                     setIsUploading(false);
-                    router.push("/");
+                    router.push("/"); // Redirect to the homepage after successful post creation
                 }, 1500);
 
                 } else {
@@ -187,6 +227,12 @@ const CreatePost = () => {
             }    
     };
 
+
+    /**
+     * Form layout for creating a new post, including input fields for title, description, hashtags, and file upload.
+     *
+     * @returns {JSX.Element} The rendered form for creating a new post.
+     */
     const form = (
         <div className="bg-white shadow-md rounded-lg p-8 flex items-center justify-center flex-grow overflow-auto h-[calc(100vh-120px)]">
             <div className="w-full max-w-2xl bg-gray-200 shadow-lg rounded-lg p-10">
@@ -224,18 +270,23 @@ const CreatePost = () => {
                         placeholder="#sports #coding"
                     />
                     </div>
-            
+                    {/* Upload Image/Video Section */}
                     <div className="w-full">
                         <label className="block text-gray-700 font-semibold mb-2">Upload Image/Video:</label>
+                        {/* 
+                            The div below handles the file input click, drag-and-drop functionality, 
+                            and displays a preview of the selected file (image or video).
+                        */}
                         <div 
                             className="border-2 border-dashed border-gray-400 bg-white rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-all flex flex-col items-center justify-center"
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={() => fileInputRef.current?.click()} // Triggers file input dialog when clicked
                             onDrop={(e) => {
                                 e.preventDefault();
-                                setSelectedFile(e.dataTransfer.files[0]);
+                                setSelectedFile(e.dataTransfer.files[0]); // Set the dropped file
                             }}
                             onDragOver={(e) => e.preventDefault()}
                         >
+                             {/* Conditionally render content based on the selected file type (image or video) */}
                             {selectedFile ? (
                                 <>
                                     {selectedFile.type.startsWith("image/") ? (
@@ -260,6 +311,7 @@ const CreatePost = () => {
                                 </>
                             ) : (
                                 <>
+                                    {/* Default view when no file is selected */}
                                     <div className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600">
                                         Click to Upload
                                     </div>
@@ -269,6 +321,7 @@ const CreatePost = () => {
                             )}
                         </div>
 
+                        {/* Hidden file input element for selecting files */}    
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -277,13 +330,14 @@ const CreatePost = () => {
                             className="hidden"
                         />
 
+                        {/* Show selected file name and allow removal of file */}    
                         {selectedFile && (
                             <div className="mt-3 flex justify-between items-center">
                                 <p className="text-sm text-gray-500">{selectedFile.name}</p>
                                 <button 
                                     type="button"
                                     className="text-red-500 text-sm font-medium hover:underline"
-                                    onClick={() => setSelectedFile(null)}
+                                    onClick={() => setSelectedFile(null)} // Remove selected file
                                 >
                                     Remove
                                 </button>
@@ -291,6 +345,7 @@ const CreatePost = () => {
                         )}
                     </div>
             
+                    {/* Show progress bar if uploading */}
                     {isUploading && (
                         <div className="mt-4">
                             <Progress value={progress} className="h-2 bg-gray-300" />
