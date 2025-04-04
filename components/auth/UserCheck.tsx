@@ -7,6 +7,7 @@ import Sidebar from "@/components/custom-ui/Sidebar";
 import Post from "@/components/post/Post";
 import { Toaster } from "sonner";
 import LoadingLogo from "@/components/custom-ui/LoadingLogo";
+import { getUserByEmail, getUserByUsername, getAllPosts, submitUser } from "@/app/actions";
 import { PostType } from "@/types/post";
 import { useInView } from 'react-intersection-observer';
 
@@ -55,25 +56,15 @@ export default function UserCheck() {
             }
         
             try {
-                const response = await fetch(`/api/getsingleuser?email=${encodeURIComponent(email)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-        
-                if (response.status === 404) {
+                const userData = await getUserByEmail(email);
+                if (userData.status === 404) {
                     setUsernameRequired(true);
-                } else if (response.ok) {
-                    const userData = await response.json();
-                    // Check if user is banned
+                } else {
                     if (userData.data?.isBanned) {
                         window.location.href = '/banned';
                         return;
                     }
-                    setBlockedUsers(userData.data.blockedUsers || []); // Set blocked users if any
-                } else {
-                    console.error("Failed to fetch user:", await response.json());
+                    setBlockedUsers(userData.data.blockedUsers || []);
                 }
             } catch (err) {
                 console.error("Error checking user data:", err);
@@ -92,32 +83,13 @@ export default function UserCheck() {
         
         setLoadingPosts(true);
         try {
-            const response = await fetch(`/api/getsingleuser?email=${session.user.email}`);
-            const sessionUser = await response.json();
-
-            if (response.ok) {
+            const sessionUser = await getUserByEmail(session.user.email);
+            if (sessionUser.status !== 404) {
                 setSessionUsername(sessionUser.data.username);
                 setBlockedUsers(sessionUser.data.blockedUsers || []);
             }
 
-             // Fetch posts from multiple sources concurrently
-            const [blueskyResponse, newsResponse, customResponse] = await Promise.all([
-                fetch('/api/bluesky/getfromdb'),
-                fetch('/api/news/getfromdb'),
-                fetch('/api/getuserpost')
-            ]);
-
-            const [blueskyData, newsData, customData] = await Promise.all([
-                blueskyResponse.json(),
-                newsResponse.json(),
-                customResponse.json()
-            ]);
-            
-            let fetchedPosts: PostType[] = [];
-            if (blueskyData.success) fetchedPosts = fetchedPosts.concat(blueskyData.posts); // Add bluesky posts
-            if (newsData.success) fetchedPosts = fetchedPosts.concat(newsData.posts);
-            if (customData.success) fetchedPosts = fetchedPosts.concat(customData.posts);
-
+            const fetchedPosts = await getAllPosts();
             const sortedPosts = fetchedPosts.sort((a, b) => 
                 new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime() // Sort posts by creation date
             );
@@ -141,10 +113,8 @@ export default function UserCheck() {
      */
     const filterPosts = useCallback((posts: PostType[]) => {
         return posts.filter(post => {
-            // First filter out blocked users
             if (blockedUsers.includes(post.username)) return false;
             
-            // Then apply tab filtering
             if (activeTab === 'user') return !['bluesky', 'news'].includes(post.postType);
             if (activeTab === 'bluesky') return post.postType === 'bluesky';
             if (activeTab === 'news') return post.postType === 'news';
@@ -214,21 +184,8 @@ export default function UserCheck() {
         }
     
         try {
-            const response = await fetch(`/api/getsingleuser?username=${encodeURIComponent(username)}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-    
-            if (response.status === 404) {
-                return true; // Username available
-            } else if (response.ok) {
-                return false;
-            } else {
-                console.error("Failed to check username:", await response.json());
-                return false;
-            }
+            const user = await getUserByUsername(username);
+            return user === null;
         } catch (err) {
             console.error("Error checking username availability:", err);
             return false;
@@ -242,7 +199,10 @@ export default function UserCheck() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!session?.user) return;
+        if (!session?.user?.email || !session.user.name || !session.user.image) {
+            console.error("Required user data is missing");
+            return;
+        }
 
         const isUsernameAvailable = await checkUsernameAvailability(username);
 
@@ -261,18 +221,16 @@ export default function UserCheck() {
             return;
         }
 
-        const { email, name, image } = session.user;
-
         try {
-            const postResponse = await fetch('/api/postuser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, name, image, username, description }),
+            const success = await submitUser({
+                email: session.user.email,
+                name: session.user.name,
+                image: session.user.image,
+                username,
+                description
             });
-
-            if (!postResponse.ok) {
+            
+            if (!success) {
                 console.error("Failed to store user data in Firebase");
             } else {
                 setUsernameRequired(false);
