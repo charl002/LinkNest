@@ -1,3 +1,14 @@
+/**
+ * @route POST /api/postfriendrq
+ * @description Sends a new friend request between two users if one does not already exist.
+ *
+ * @body {string} senderUsername - The username of the user sending the friend request.
+ * @body {string} receiverUsername - The username of the user receiving the friend request.
+ *
+ * @returns {200 OK} If the friend request was successfully created.
+ * @returns {400 Bad Request} If usernames are missing or a request already exists.
+ * @returns {500 Internal Server Error} If an error occurred while processing the request.
+ */
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { getFriendRequests } from "@/firebase/firestore/getData";

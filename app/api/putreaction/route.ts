@@ -1,3 +1,18 @@
+/**
+ * @route PUT /api/putreaction
+ * @description Adds or updates a user's emoji reaction on a specific message.
+ *
+ * @requestBody JSON {
+ *   messageId: string;  // ID of the message being reacted to (required)
+ *   user: string;       // Username of the user reacting (required)
+ *   emoji: string;      // Emoji reaction to add (required)
+ * }
+ *
+ * @returns {200 OK} Reaction successfully added or updated.
+ * @returns {400/401} If any required fields are missing or unauthorized access.
+ * @returns {403 Forbidden} If the user is not authorized.
+ * @returns {500 Internal Server Error} If the update fails.
+ */
 import { NextResponse } from "next/server";
 import updateArrayField from "@/firebase/firestore/updateReaction";
 import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";

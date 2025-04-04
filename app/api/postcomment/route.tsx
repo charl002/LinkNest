@@ -1,3 +1,20 @@
+/**
+ * @route POST /api/postcomment
+ * @description Adds a comment to a post in Firestore and invalidates server-side cache for that post type.
+ *
+ * @auth Requires authentication and authorization of the commenting user.
+ *
+ * @body {string} postId - The ID of the post being commented on.
+ * @body {string} username - The username of the commenter.
+ * @body {string} comment - The content of the comment.
+ * @body {string} postType - The collection type of the post (e.g., "posts", "news", "bluesky").
+ *
+ * @returns {200 OK} If the comment was successfully added.
+ * @returns {400 Bad Request} If required fields are missing.
+ * @returns {401 Unauthorized} If the user is not authenticated.
+ * @returns {403 Forbidden} If the user is not authorized.
+ * @returns {500 Internal Server Error} If there was an error adding the comment.
+ */
 import { NextResponse } from "next/server";
 import updateArrayField from "@/firebase/firestore/updateData";
 import { withRetry } from '@/utils/backoff';

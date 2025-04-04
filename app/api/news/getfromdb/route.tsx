@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/news/getfromdb
+ * @description Retrieves all news posts from Firestore, processes image verification,
+ *              and returns them sorted by creation date. Uses in-memory server-side caching
+ *              to optimize performance and reduce database load.
+ *
+ * @returns {200 OK} JSON response with news posts data.
+ * @returns {500 Internal Server Error} If an error occurs while fetching or processing the data.
+ *
+ * @cache server-only (no-store); expires when cache is manually refreshed or invalidated.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';

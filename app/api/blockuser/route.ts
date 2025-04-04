@@ -1,3 +1,17 @@
+/**
+ * @route POST /api/blockuser
+ * @description Authenticated route to block or unblock a user.
+ * The current user (blocker) can block or unblock another user by username.
+ * Requires authentication and authorization.
+ * 
+ * @param {string} userId - The username of the user performing the block/unblock.
+ * @param {string} blockedUserId - The username of the user to be blocked or unblocked.
+ * 
+ * @returns {200 OK} - JSON response with a success message.
+ * @returns {400 Bad Request} - Missing required usernames.
+ * @returns {404 Not Found} - Blocker user not found in Firestore.
+ * @returns {500 Internal Server Error} - Server or Firestore error.
+ */
 import { NextResponse } from "next/server";
 import { getFirestore, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 import firebase_app from "@/firebase/config";

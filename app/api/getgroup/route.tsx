@@ -1,3 +1,14 @@
+/**
+ * @route GET /api/getgroup
+ * @description Retrieves group chat data by groupId from the 'group_chats' Firestore collection.
+ *
+ * @query {string} groupId - The ID of the group chat to retrieve.
+ *
+ * @returns {200 OK} { group: object } - The group chat data.
+ * @returns {400 Bad Request} If the `groupId` query parameter is missing.
+ * @returns {404 Not Found} If no group is found with the given ID.
+ * @returns {500 Internal Server Error} If a server-side error occurs.
+ */
 import { NextResponse } from "next/server";
 import { getDocument } from "@/firebase/firestore/getData"; // We will define this function next
 

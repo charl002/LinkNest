@@ -1,3 +1,20 @@
+/**
+ * @route PUT /api/putlikes
+ * @description Updates the like count for a specific post. Handles both incrementing and decrementing likes.
+ *
+ * @requestBody JSON {
+ *   id: string;         // ID of the post to update (required)
+ *   type: string;       // Type of the post (e.g., "posts", "news", "bluesky") (required)
+ *   increment: boolean; // Whether to increment (true) or decrement (false) the like count (required)
+ *   username: string;   // The user performing the like action (required)
+ * }
+ *
+ * @returns {200 OK} If the like count is successfully updated.
+ * @returns {400 Bad Request} If required parameters are missing.
+ * @returns {401 Unauthorized} If user is not authenticated.
+ * @returns {403 Forbidden} If user is not authorized.
+ * @returns {500 Internal Server Error} If the update fails.
+ */
 import { NextResponse } from "next/server";
 import { incrementLikes } from "@/firebase/firestore/updateLikes";
 import { withRetry } from '@/utils/backoff';

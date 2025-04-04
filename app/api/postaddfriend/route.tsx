@@ -1,3 +1,16 @@
+/**
+ * @route POST /api/postaddfriend
+ * @description Creates a new friendship between two users if one doesn't already exist.
+ *              Checks Firestore for existing friendships to prevent duplicates.
+ *
+ * @body {string} senderUsername - The username of the user initiating the friend request.
+ * @body {string} receiverUsername - The username of the user receiving the friend request.
+ *
+ * @returns {200 OK} If the friend was successfully added.
+ * @returns {400 Bad Request} If one or both usernames are missing.
+ * @returns {409 Conflict} If the friendship already exists.
+ * @returns {500 Internal Server Error} If there's an issue retrieving or storing the data.
+ */
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import addData from "@/firebase/firestore/addData";

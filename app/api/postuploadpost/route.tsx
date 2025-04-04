@@ -1,3 +1,23 @@
+/**
+ * @route POST /api/postuploadpost
+ * @description Uploads a user post to Firestore and (optionally) an image to Azure Blob Storage.
+ *
+ * @requestBody FormData {
+ *   username: string;          // Author of the post
+ *   title: string;             // Title of the post
+ *   text: string;              // Main content of the post
+ *   tags: string[];            // List of tags (multiple fields allowed)
+ *   file?: File;               // (Optional) Image file to upload
+ * }
+ *
+ * @returns {201 Created} If the post was created successfully.
+ * @returns {400 Bad Request} If required fields are missing.
+ * @returns {500 Internal Server Error} If upload or database save fails.
+ *
+ * @notes
+ * - Uploaded images are stored in Azure Blob Storage and their URL is saved in Firestore.
+ * - Server cache for "user-posts" is cleared after a successful post.
+ */
 // app/api/postuploadpost/route.ts
 import { BlobServiceClient } from "@azure/storage-blob";
 import { NextResponse } from "next/server";
