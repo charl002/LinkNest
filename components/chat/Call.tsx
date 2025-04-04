@@ -43,7 +43,8 @@ function Call() {
   const channelName = friendUsername === "Guest" ? groupchatId ?? `${first}_${second}` : `${first}_${second}`;
   const { groupChats } = useGroupChats();
   const [group, setGroup] = useState<GroupChat | null>(null);
-  const [members, setMembers] = useState<string[]>([]);
+
+  console.log(groupChats);
    
 
   const socket = useSocket();
@@ -71,8 +72,6 @@ function Call() {
       if (groupchatId && group?.members) {
 
         const validMembers = group.members.filter((member) => member !== null && member != currentUsername) as string[];
-
-        setMembers(validMembers);
 
         await sendGroupCallEndMessage(currentUsername, validMembers);
 
@@ -125,7 +124,7 @@ function Call() {
 
   return (
     <AgoraRTCProvider client={client}>
-      <Videos currentUsername={currentUsername} friendUsername={friendUsername} channelName={channelName} AppID={appId} callMembers={members}/>
+      <Videos currentUsername={currentUsername} friendUsername={friendUsername} channelName={channelName} AppID={appId} groupchatId={groupchatId ?? ""}/>
       <div className="fixed z-10 bottom-0 left-0 right-0 flex justify-center pb-4">
         <Link
           className="px-5 py-3 text-base font-medium text-center text-white bg-red-500 rounded-lg hover:bg-red-400"
@@ -138,8 +137,8 @@ function Call() {
   );
 }
 
-function Videos(props: {currentUsername: string; friendUsername: string; channelName: string; AppID: string; callMembers: string[];}) {
-  const { currentUsername, friendUsername, AppID, channelName, callMembers} = props;
+function Videos(props: {currentUsername: string; friendUsername: string; channelName: string; AppID: string; groupchatId: string;}) {
+  const { currentUsername, friendUsername, AppID, channelName, groupchatId} = props;
   const { isLoading: isLoadingMic, localMicrophoneTrack } = useLocalMicrophoneTrack();
   const { isLoading: isLoadingCam, localCameraTrack } = useLocalCameraTrack();
   const remoteUsers = useRemoteUsers();
@@ -148,6 +147,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
   const { data: session } = useSession();
   const email = session?.user?.email;
   const [isValidUser, setIsValidUser] = useState(false);
+  const { groupChats } = useGroupChats();
 
   useJoin({
     appid: AppID,
@@ -168,10 +168,20 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
         const sessionUser = await userResponse.json();
         const fetchedUsername = sessionUser.data?.username || "Unknown";
 
-        /*if (friendUsername == "Guest" && !callMembers.includes(currentUsername)){
-          customToast({ message: "You cannot access this call!", type: "error" });
-          router.push("/")
-        }*/
+        if (groupchatId != ""){
+
+          const groupData = groupChats.find((group) => group.id === groupchatId);
+          if (!groupData) {
+            throw new Error("Group not found");
+          }
+
+          const validMembers = groupData.members.filter((member) => member !== null ) as string[];
+
+          if (friendUsername == "Guest" && !validMembers.includes(currentUsername)){
+            customToast({ message: "You cannot access this call!", type: "error" });
+            router.push("/")
+          }
+        }
 
         if (fetchedUsername !== currentUsername) {
           customToast({ message: "You cannot access this call!", type: "error" });
@@ -194,7 +204,7 @@ function Videos(props: {currentUsername: string; friendUsername: string; channel
       } 
     }
 
-  }, [remoteUsers, router, email, currentUsername, friendUsername, callMembers]);
+  }, [remoteUsers, router, email, currentUsername, friendUsername, groupchatId, groupChats]);
 
   if (!isValidUser) return <LoadingLogo />;
 
