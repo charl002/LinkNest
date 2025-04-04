@@ -29,6 +29,10 @@ interface GroupChatsListProps {
   router: ReturnType<typeof useRouter>;
 }
 
+/**
+ * This file is for the UI when looking at groupchats.
+ * A lot of code is commented out (for message preview), did not have time to polish.
+ */
 const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   const { groupChats } = useGroupChats();
   const { setGroupChats } = useGroupChats();
@@ -51,8 +55,6 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   
     // Listen for group messages and update unread count
     socket.on("groupMessage", async ({ senderId, groupId, message }) => {
-      // console.log('Group Stuff', senderId, groupId, message, activeGroupId);
-      // console.log(activeGroupId);
       if (groupId) {
         // If it's not from the current user, increment unread count
         if (senderId !== currentUser) {
@@ -161,8 +163,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
   
   }, [currentUser, groupChats]); // Dependencies: currentUser and groupChats
   
-  
-
+  // When u select a friend, they are added to the list.
   const handleFriendSelect = (friend: User) => {
     setSelectedFriends((prev) =>
       prev.includes(friend)
@@ -173,6 +174,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
     setSearchTerm("");
   };
 
+  // Handles the image when the user selects one
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -180,6 +182,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
     }
   };
 
+  // Create group chat logic
   const handleCreateGroup = async () => {
     if (selectedFriends.length < 2) {
       setWarningMessage(

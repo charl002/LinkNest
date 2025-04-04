@@ -12,6 +12,9 @@ interface FriendsContextType {
   setFriends: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
+/**
+ * Same concept as the other providers, I want to have 1 instance, and fetched once.
+ */
 const FriendsContext = createContext<FriendsContextType | undefined>(undefined);
 
 export function FriendsProvider({ children }: { children: ReactNode }) {

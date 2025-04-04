@@ -7,6 +7,10 @@ import { customToast } from "../ui/customToast";
 
 import { GroupChat } from "@/types/group";
 
+/**
+ * The purpose of this file is to fetch once the groupchats, and populate the UI. Will need
+ * to fix it by connecting websockets to this.
+ */
 interface GroupChatsContextType {
   groupChats: GroupChat[];
   setGroupChats: React.Dispatch<React.SetStateAction<GroupChat[]>>;
