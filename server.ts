@@ -9,7 +9,7 @@ const port = Number(process.env.PORT) || 3000;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-const userSockets: Record<string, string> = {};
+const userSockets: Record<string, string> = {}; // Store userSocket mapping (username to socketId)
 
 const server = createServer((req, res) => {
   const parsedUrl = parse(req.url!, true);
@@ -17,23 +17,27 @@ const server = createServer((req, res) => {
 });
 
 app.prepare().then(() => {
+  // Create a new Socket.IO server
   const io = new SocketIOServer(server, {
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
+      origin: "*", // Allow all origins (you can restrict this in production)
+      methods: ["GET", "POST"] // Allow only GET and POST methods
     }
   });
 
+  // Handle initial socket connection
   io.on("connection", (socket) => {
     console.log("User connected", socket.id);
 
+    // Register the user to their socket ID
     socket.on("register", (userId) => {
       userSockets[userId] = socket.id;
       console.log(`User ${userId} connected with socket ID ${socket.id}`);
     });
 
+    // Handle private messages or group messages
     socket.on("privateMessage", ({ senderId, message, msgId, isCallMsg, receiverId, groupId, receiversIds }) => {
-      if(receiversIds && receiversIds.length > 0){
+      if(receiversIds && receiversIds.length > 0){ //////////// Remove this, mght be redundant
         receiversIds.forEach((groupReceiverId: string) => {
           const receiverSocketId = userSockets[groupReceiverId];
           if (receiverSocketId) {
@@ -52,6 +56,25 @@ app.prepare().then(() => {
         if (receiverSocketId) {
           io.to(receiverSocketId).emit("privateMessage", { senderId, receiverId, message, msgId, isCallMsg });
         }
+      }
+    });
+
+    //Handle group message
+    socket.on("groupMessage", ({ senderId, message, msgId, isCallMsg, groupId, receiversIds }) => {
+      if(receiversIds && receiversIds.length > 0){
+        receiversIds.forEach((groupReceiverId: string) => {
+          const receiverSocketId = userSockets[groupReceiverId];
+          if (receiverSocketId) {
+            io.to(receiverSocketId).emit("groupMessage", {
+              senderId,
+              groupReceiverId,
+              message,
+              msgId,
+              isCallMsg,
+              groupId
+            });
+          }
+        });
       }
     });
 
@@ -75,6 +98,7 @@ app.prepare().then(() => {
       }
     });
 
+    // Listens for when a friend request is accepted.
     socket.on("friendAccepted", ({ sender, receiver }) => {
       console.log(`Friend request accepted! ${sender} and ${receiver} are now friends.`);
     
@@ -100,6 +124,7 @@ app.prepare().then(() => {
       }
     });    
 
+    // Delete the pair from the list of socket - usernames
     socket.on("disconnect", () => {
       Object.keys(userSockets).forEach((userId) => {
         if (userSockets[userId] === socket.id) {
@@ -110,6 +135,7 @@ app.prepare().then(() => {
     });
   });
 
+  // CLeanup.
   server.once("error", (err) => {
     console.error(err);
     process.exit(1);
