@@ -5,8 +5,8 @@ import { io, Socket } from "socket.io-client";
 
 const isDev = process.env.NODE_ENV !== "production";
 const socketUrl = isDev 
-  ? "ws://linknest.live" 
-  : "wss://linknest.live";
+  ? "ws://localhost:3000" 
+  : "wss://linknest-fkd5eba5dqbrhzd7.canadacentral-01.azurewebsites.net";
 
 const SocketContext = createContext<Socket | null>(null);
 
