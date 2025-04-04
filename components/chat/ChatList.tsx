@@ -104,9 +104,6 @@ export default function ChatList() {
         };
       });
 
-      console.log(activeChatFriend);
-      console.log(data.senderId);
-
       // Check if the receiver is online, if not update Firestore
       if (activeChatFriend === data.senderId) {
         try {

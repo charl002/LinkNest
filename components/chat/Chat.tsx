@@ -132,20 +132,15 @@ export default function Chat() {
         setIsLoading(true);
 
         const groupData = groupChats.find((group) => group.id === groupchatId);
-        console.log('group Data', groupData);
         if (!groupData) {
           throw new Error("Group not found");
         }
-
-        console.log(groupchatId);
 
         setGroup(groupData);
 
         const response = await fetch(`/api/getmessages?groupId=${groupchatId}&sender=${currentUsername}`);
         const data = await response.json();
 
-        console.log(data);
-        
         if (!response.ok) throw new Error(data.message || "Failed to fetch messages");
 
         setMessages(

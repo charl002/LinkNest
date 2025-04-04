@@ -304,7 +304,6 @@ export default function Post({ title, username, description, tags, comments, lik
      * @param {Comment} comment - The comment to be deleted.
      */
     const handleDeleteComment = async (comment: Comment) => {
-    console.log(comment);
     setIsLoading(true);
 
     try {
@@ -358,8 +357,6 @@ export default function Post({ title, username, description, tags, comments, lik
         throw new Error("Failed to delete post");
       }
 
-      const data = await response.json();
-      console.log(data.message);
       customToast({ message: `Post has been deleted`, type: "success" });
 
     } catch (error) {

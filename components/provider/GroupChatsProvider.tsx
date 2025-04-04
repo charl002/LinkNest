@@ -7,6 +7,10 @@ import { customToast } from "../ui/customToast";
 
 import { GroupChat } from "@/types/group";
 
+/**
+ * The purpose of this file is to fetch once the groupchats, and populate the UI. Will need
+ * to fix it by connecting websockets to this.
+ */
 interface GroupChatsContextType {
   groupChats: GroupChat[];
   setGroupChats: React.Dispatch<React.SetStateAction<GroupChat[]>>;
@@ -52,8 +56,6 @@ export function GroupChatsProvider({ children }: { children: ReactNode }) {
           console.error("Error fetching group chats:", data);
           return;
         }
-
-        console.log("Group Chat: ", data.groupChats);
 
         setGroupChats(data.groupChats);
       } catch (error) {

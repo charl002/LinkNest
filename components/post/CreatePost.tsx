@@ -47,7 +47,6 @@ const CreatePost = () => {
                     }
 
                     const result = await response.json();
-                    console.log("Fetched data:", result); 
                     setUsername(result.data.username || "Anonymous"); // Access username from result.data
                 } catch (error) {
                     console.error("Error fetching username:", error);

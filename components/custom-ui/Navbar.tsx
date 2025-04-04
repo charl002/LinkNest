@@ -60,8 +60,6 @@ const Navbar = () => {
           throw new Error("Failed to delete account");
         }
         
-        const data = await response.json();
-        console.log(data.message);
         customToast({ message: `Account has been deleted`, type: "success" });
         
       } catch (error) {
