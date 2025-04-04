@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
-import { incrementLikes } from "@/firebase/firestore/updateLikes"; // Adjust the import path as necessary
+import { incrementLikes } from "@/firebase/firestore/updateLikes";
 import { withRetry } from '@/utils/backoff';
 import cache from "@/lib/cache";
+import { authenticateRequest, authorizeUser } from "@/lib/authMiddleware";
 
 export async function PUT(req: Request) {
     try {
-        const { id, type, increment, username } = await req.json(); // Expecting { id: string, type: 'posts' | 'bluesky' | 'news', increment: boolean, username: string }
+        // Check authentication
+        const authError = await authenticateRequest();
+        if (authError) return authError;
+
+        const { id, type, increment, username } = await req.json();
+
+        // Authorize the user
+        const authzError = await authorizeUser(username);
+        if (authzError) return authzError;
 
         // Validate input
         if (!id || !type || !username) {
