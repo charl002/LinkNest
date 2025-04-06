@@ -31,8 +31,11 @@ import { PostType } from "@/types/post"
 
 export async function getUserByEmail(email: string) {
   const res = await fetch(`${process.env.NEXTAUTH_URL}/api/getsingleuser?email=${encodeURIComponent(email)}`)
-  if (!res.ok) throw new Error("Failed to fetch user by email")
-  return await res.json()
+  if (!res.ok) {
+    return { status: res.status, data: null }
+  }
+  const data = await res.json()
+  return { status: res.status, data }
 }
 
 export async function getUserByUsername(username: string) {

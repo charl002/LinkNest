@@ -59,20 +59,22 @@ export default function UserCheck() {
                 const userData = await getUserByEmail(email);
                 if (userData.status === 404) {
                     setUsernameRequired(true);
-                } else {
-                    if (userData.data?.isBanned) {
+                } else if (userData.data) {
+                    if (userData.data.isBanned) {
                         window.location.href = '/banned';
                         return;
                     }
                     setBlockedUsers(userData.data.blockedUsers || []);
+                    setUsernameRequired(false);
                 }
             } catch (err) {
                 console.error("Error checking user data:", err);
+                setUsernameRequired(true);
             }
         };
          
         fetchData();
-    }, [session]);
+    }, [session?.user?.email]);
 
     /**
      * Fetches initial posts for the user, including posts from different categories.
@@ -234,6 +236,7 @@ export default function UserCheck() {
                 console.error("Failed to store user data in Firebase");
             } else {
                 setUsernameRequired(false);
+                window.location.reload();
             }
         } catch (err) {
             console.error("Error storing user data:", err);
