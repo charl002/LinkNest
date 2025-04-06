@@ -34,8 +34,7 @@ export async function getUserByEmail(email: string) {
   if (!res.ok) {
     return { status: res.status, data: null }
   }
-  const data = await res.json()
-  return { status: res.status, data }
+  return await res.json()
 }
 
 export async function getUserByUsername(username: string) {
