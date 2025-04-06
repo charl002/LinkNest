@@ -20,7 +20,7 @@ import { useSocket } from "@/components/provider/SocketProvider";
 import { useFriends } from "../provider/FriendsProvider";
 import { X } from "lucide-react";
 import Link from "next/link";
-
+import { getAllUsers, checkAdminStatus } from "@/app/actions";
 import { User } from "@/types/user";
 
 /**
@@ -46,40 +46,32 @@ export default function Sidebar() {
 
   // Fetch admin status on mount
   useEffect(() => {
-      const checkAdminStatus = async () => {
-          if (!session?.user?.email) return;
-          
-          try {
-              const response = await fetch(`/api/checkadmin?email=${encodeURIComponent(session.user.email)}`);
-              const data = await response.json();
-              setIsAdmin(data.isAdmin);
-          } catch (error) {
-              console.error("Error checking admin status:", error);
-          }
-      };
+    async function fetchAdminStatus() {
+      if (!session?.user?.email) return;
+      
+      try {
+        const isAdminStatus = await checkAdminStatus(session.user.email);
+        setIsAdmin(isAdminStatus);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+      }
+    }
 
-      checkAdminStatus();
+    fetchAdminStatus();
   }, [session]);
 
   // Fetch all users from the database
   useEffect(() => {
     async function fetchUsers() {
       try {
-        const response = await fetch("/api/getalluser");
-        const data = await response.json();
-
-        if (data && Array.isArray(data.users)) {
-          setUsers(data.users as User[]); // Set all users in the state
-        } else {
-          console.error("Unexpected API response:", data);
-          setUsers([]);
-        }
+        const usersData = await getAllUsers();
+        setUsers(usersData as User[]);
       } catch (error) {
         console.error("Error fetching users:", error);
         setUsers([]);
       }
     }
-    fetchUsers(); // Fetch users when the component mounts
+    fetchUsers();
   }, []);
 
   // Filter users based on the friend's name input

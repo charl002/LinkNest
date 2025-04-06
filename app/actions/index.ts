@@ -78,3 +78,22 @@ export async function submitUser(payload: {
 
   return res.ok
 }
+
+
+export async function getAllUsers() {
+  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/getalluser`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch users');
+  }
+  const data = await res.json();
+  return data.users;
+}
+
+export async function checkAdminStatus(email: string) {
+  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/checkadmin?email=${encodeURIComponent(email)}`);
+  if (!res.ok) {
+    throw new Error('Failed to check admin status');
+  }
+  const data = await res.json();
+  return data.isAdmin;
+}
