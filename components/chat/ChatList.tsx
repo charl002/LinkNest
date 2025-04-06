@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import FriendsList from "./FriendsList";
 import GroupChatsList from "./GroupChatsList";
 import { decryptMessage } from "@/utils/decrypt";
+import { getAllUsers } from "@/app/actions";
 
 export default function ChatList() {
   const { data: session } = useSession();
@@ -31,14 +32,8 @@ export default function ChatList() {
     async function fetchUsersAndUnreadMessages() {
       try {
         // 🔹 Fetch all users
-        const response = await fetch("/api/getalluser");
-        const data = await response.json();
-        if (data && Array.isArray(data.users)) {
-          setUsers(data.users as User[]);
-        } else {
-          console.error("Unexpected API response:", data);
-          setUsers([]);
-        }
+        const usersData = await getAllUsers();
+        setUsers(usersData as User[]);
         
         if (currentUser) {
           const unreadResponse = await fetch(`/api/getunreadmessage?receiver=${currentUser}`);
