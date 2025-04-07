@@ -47,6 +47,12 @@ const CreatePost = () => {
                     }
 
                     const result = await response.json();
+
+                    if (result.data.isBanned) {
+                        window.location.href = '/banned';
+                        return;
+                    }
+                    
                     setUsername(result.data.username || "Anonymous"); // Access username from result.data
                 } catch (error) {
                     console.error("Error fetching username:", error);
