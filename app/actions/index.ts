@@ -12,6 +12,8 @@
 
 import { signIn, signOut } from "@/lib/auth"
 
+const BASE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
 export async function doSocialLogin(formData: FormData) {
     const action = formData.get('action');
     if (typeof action === 'string') {
@@ -30,7 +32,7 @@ export async function doLogout(){
 import { PostType } from "@/types/post"
 
 export async function getUserByEmail(email: string) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/getsingleuser?email=${encodeURIComponent(email)}`)
+  const res = await fetch(`${BASE_URL}/api/getsingleuser?email=${encodeURIComponent(email)}`)
   if (!res.ok) {
     return { status: res.status, data: null }
   }
@@ -38,15 +40,15 @@ export async function getUserByEmail(email: string) {
 }
 
 export async function getUserByUsername(username: string) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/getsingleuser?username=${encodeURIComponent(username)}`)
+  const res = await fetch(`${BASE_URL}/api/getsingleuser?username=${encodeURIComponent(username)}`)
   return res.status === 404 ? null : await res.json()
 }
 
 export async function getAllPosts(): Promise<PostType[]> {
   const [bluesky, news, custom] = await Promise.all([
-    fetch(`${process.env.NEXTAUTH_URL}/api/bluesky/getfromdb`),
-    fetch(`${process.env.NEXTAUTH_URL}/api/news/getfromdb`),
-    fetch(`${process.env.NEXTAUTH_URL}/api/getuserpost`)
+    fetch(`${BASE_URL}/api/bluesky/getfromdb`),
+    fetch(`${BASE_URL}/api/news/getfromdb`),
+    fetch(`${BASE_URL}/api/getuserpost`)
   ])
 
   const [blueskyData, newsData, customData] = await Promise.all([
@@ -70,7 +72,7 @@ export async function submitUser(payload: {
   username: string,
   description: string
 }) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/postuser`, {
+  const res = await fetch(`${BASE_URL}/api/postuser`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -81,7 +83,7 @@ export async function submitUser(payload: {
 
 
 export async function getAllUsers() {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/getalluser`);
+  const res = await fetch(`${BASE_URL}/api/getalluser`);
   if (!res.ok) {
     throw new Error('Failed to fetch users');
   }
@@ -90,7 +92,7 @@ export async function getAllUsers() {
 }
 
 export async function checkAdminStatus(email: string) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/checkadmin?email=${encodeURIComponent(email)}`);
+  const res = await fetch(`${BASE_URL}/api/checkadmin?email=${encodeURIComponent(email)}`);
   if (!res.ok) {
     throw new Error('Failed to check admin status');
   }

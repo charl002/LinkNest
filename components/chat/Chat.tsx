@@ -635,30 +635,40 @@ export default function Chat() {
   const chatMainContent = (
     <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
       <h1 className="text-lg font-semibold p-4">
-        {groupchatId && group ? (
-          <div className="flex items-center gap-2">
-            <Avatar className="w-10 h-10 rounded-full">
-              <AvatarImage 
-                src={group?.image || "/defaultGroupPic.png"}
-                alt={group?.name || "Group Chat"}
-                className="w-full h-full object-cover rounded-full"
-              />
-              <AvatarFallback className="flex items-center justify-center w-full h-full bg-gray-300 text-white rounded-full">
-                {group?.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            {/* Show skeleton if group name is loading */}
-            {group ? (
-              <span>{group.name}</span>
-            ) : (
-              <Skeleton className="h-4 w-32 rounded-md" />
-            )}
+      {groupchatId && group ? (
+        <div className="relative group flex items-center gap-2">
+          <Avatar className="w-10 h-10 rounded-full">
+            <AvatarImage 
+              src={group?.image || "/defaultGroupPic.png"}
+              alt={group?.name || "Group Chat"}
+              className="w-full h-full object-cover rounded-full"
+            />
+            <AvatarFallback className="flex items-center justify-center w-full h-full bg-gray-300 text-white rounded-full">
+              {group?.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          {/* Show skeleton if group name is loading */}
+          {group ? (
+            <span>{group.name}</span>
+          ) : (
+            <Skeleton className="h-4 w-32 rounded-md" />
+          )}
+
+          {/* group members */}
+          <div className="absolute top-full left-0 mt-2 w-max max-w-xs bg-white text-sm text-gray-800 shadow-lg rounded-md p-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+            <ul>
+              {group.members.map((member, index) => (
+                <li key={index}>{member}</li>
+              ))}
+            </ul>
           </div>
-        ) : friendUsername ? (
-          `Chat with ${friendUsername}`
-        ) : (
-          <Skeleton className="h-4 w-32 rounded-md" />
-        )}
+        </div>
+      ) : friendUsername ? (
+        `Chat with ${friendUsername}`
+      ) : (
+        <Skeleton className="h-4 w-32 rounded-md" />
+      )}
+
       </h1>
       <div
         ref={messagesContainerRef}
