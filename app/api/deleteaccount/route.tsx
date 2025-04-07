@@ -91,26 +91,45 @@ export async function DELETE(req: Request) {
     return Promise.all(updateLikes);
     });
 
-    // Remove user comments from all content types
+    // Remove user comments and comment likes from all content types
     const removeUserComments = contentTypes.map(async (type) => {
-    const contentRef = collection(db, type);
-    const contentSnapshot = await getDocs(contentRef);
+      const contentRef = collection(db, type);
+      const contentSnapshot = await getDocs(contentRef);
 
-    const updateComments = contentSnapshot.docs.map(async (docSnap) => {
+      const updateComments = contentSnapshot.docs.map(async (docSnap) => {
         const contentData = docSnap.data();
-        const currentComments = contentData.comments || [];
+        const currentComments: Comment[] = contentData.comments || [];
 
-        // Remove comments by the user
-        const userComments = currentComments.filter((c: Comment) => c.username === username);
-        if (userComments.length > 0) {
-        await updateDoc(doc(db, type, docSnap.id), {
-            comments: arrayRemove(...userComments),
+        // Filter out comments made by the user
+        const remainingComments = currentComments.filter((c) => c.username !== username);
+
+        // Also remove the user's likes from comments
+        const updatedComments = remainingComments.map((comment) => {
+          if (comment.likedBy && comment.likedBy.includes(username)) {
+            return {
+              ...comment,
+              likedBy: comment.likedBy.filter((u: string) => u !== username),
+              likes: comment.likedBy.filter((u: string) => u !== username).length
+            };
+          }
+          return comment;
         });
+
+        // If any changes were made (comments removed or likes removed), update Firestore
+        if (
+          updatedComments.length !== currentComments.length ||
+          JSON.stringify(currentComments) !== JSON.stringify(updatedComments)
+        ) {
+          await updateDoc(doc(db, type, docSnap.id), {
+            comments: updatedComments,
+          });
         }
+      });
+
+      return Promise.all(updateComments);
     });
 
-    return Promise.all(updateComments);
-    });
+
 
     // Execute all deletions in parallel
     await Promise.all([...removeUserLikes, ...removeUserComments]);
