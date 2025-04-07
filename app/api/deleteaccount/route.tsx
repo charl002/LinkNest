@@ -160,6 +160,18 @@ export async function DELETE(req: Request) {
       getDocs(receivedRequestsQuery)
     ]);
 
+    const groupChatsRef = collection(db, "group_chats");
+    const groupChatsQuery = query(groupChatsRef, where("members", "array-contains", username));
+    const groupChatsSnapshot = await getDocs(groupChatsQuery);
+
+    const updateGroupChats = groupChatsSnapshot.docs.map(async (chatDoc) => {
+      await updateDoc(doc(db, "group_chats", chatDoc.id), {
+        members: arrayRemove(username)
+      });
+    });
+
+    await Promise.all(updateGroupChats);
+
     // Query Firestore for images
     const imagesRef = collection(db, "images");
     const imagesQuery = query(imagesRef, where("imageName", "==", username));
