@@ -656,7 +656,7 @@ export default function Chat() {
 
           {/* group members */}
           <div className="absolute top-full left-0 mt-2 w-max max-w-xs bg-white text-sm text-gray-800 shadow-lg rounded-md p-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            <ul className="pl-5">
+            <ul>
               {group.members.map((member, index) => (
                 <li key={index}>{member}</li>
               ))}
