@@ -104,6 +104,11 @@ export default function Chat() {
     
         const senderData = await senderResponse.json();
         const friendData = await friendResponse.json();
+
+        if (senderData.data.isBanned) {
+          window.location.href = '/banned';
+          return;
+        }
     
         setCurrentUser(senderData.data);
         setOtherUsers([friendData.data]);

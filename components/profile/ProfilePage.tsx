@@ -82,6 +82,11 @@ export default function ProfilePage({ user }: { user: string }) {
         throw new Error(result.message || "Failed to fetch user");
       }
 
+      if (result.data.isBanned) {
+        window.location.href = '/banned';
+        return;
+      }
+
       // Update state with the retrieved user data
       setUserData(result);
       setUsername(result.data.username);
