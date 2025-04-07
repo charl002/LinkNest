@@ -117,6 +117,11 @@ const Navbar = () => {
                           Create Post
                         </DropdownMenuItem>
                       </Link>
+                      <Link href="/contact">
+                        <DropdownMenuItem>
+                          Contact Us
+                        </DropdownMenuItem>
+                      </Link>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <form action={doLogout}>
