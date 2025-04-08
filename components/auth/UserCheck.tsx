@@ -218,6 +218,11 @@ export default function UserCheck() {
             return;
         }
 
+        if (username.endsWith(" ")) {
+            setUsernameError("Username should not end with a space.");
+            return;
+        }
+
         if (description.length > 350) {
             setUsernameError("User desctiption should be less that 350 charecters long.")
             return;
