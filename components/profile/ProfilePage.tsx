@@ -77,9 +77,17 @@ export default function ProfilePage({ user }: { user: string }) {
       const response = await fetch(`/api/getsingleuser?username=${user}`);
       const result = await response.json();
 
+      const currentUser = await fetch(`/api/getsingleuser?email=${email}`);
+      const currentUserResult = await currentUser.json();
+
       // If the response is not OK, throw an error with the message
       if (!response.ok) {
         throw new Error(result.message || "Failed to fetch user");
+      }
+
+      if (currentUserResult.data.isBanned) {
+        window.location.href = '/banned';
+        return;
       }
 
       // Update state with the retrieved user data
