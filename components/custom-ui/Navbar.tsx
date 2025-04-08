@@ -125,7 +125,7 @@ const Navbar = () => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
                       <button type="button" className="w-full text-left">
-                        Log out
+                        Logout
                       </button>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
