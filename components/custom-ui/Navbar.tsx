@@ -114,7 +114,7 @@ const Navbar = () => {
                       </Link>
                       <Link href="/createpost">
                         <DropdownMenuItem>
-                          Create Post
+                          Create a Post
                         </DropdownMenuItem>
                       </Link>
                       <Link href="/contact">
