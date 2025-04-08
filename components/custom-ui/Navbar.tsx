@@ -127,7 +127,7 @@ const Navbar = () => {
                     <form action={doLogout}>
                       <DropdownMenuItem>
                         <button type="submit" className="w-full text-left">
-                          Log out
+                          Logout
                         </button>
                       </DropdownMenuItem>
                     </form>
