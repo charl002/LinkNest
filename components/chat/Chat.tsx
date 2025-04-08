@@ -899,7 +899,7 @@ export default function Chat() {
             }}
             className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
           >
-            {showSidebar ? "Close Sidebar" : "Sidebar"}
+            {showSidebar ? "Close Friend Requests" : "Friend Requests"}
           </button>
           <button
             onClick={() => {

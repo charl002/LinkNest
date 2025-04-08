@@ -357,7 +357,7 @@ export default function UserCheck() {
                         }}
                         className="bg-blue-500 text-white px-4 py-2 rounded-md w-1/2"
                     >
-                        {showSidebar ? "Close Sidebar" : "Sidebar"}
+                        {showSidebar ? "Close Friend Requests" : "Friend Requests"}
                     </button>
                     <button
                         onClick={() => {
@@ -370,7 +370,7 @@ export default function UserCheck() {
                     </button>
                 </div>
 
-                <div className="md:hidden min-h-screen overflow-y-auto px-4">
+                <div className="md:hidden min-h-[100dvh] overflow-y-auto px-4">
                     {showSidebar && <Sidebar />}
                     {showChatList && <ChatList />}
                     {!showSidebar && !showChatList && mainContent}
