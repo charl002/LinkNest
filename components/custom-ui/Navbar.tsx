@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doLogout } from "@/app/actions"
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import LoginForm from "@/components/auth/LoginForm";
 import Link from "next/link";
@@ -67,7 +66,7 @@ const Navbar = () => {
         customToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
       }
       finally{
-        await doLogout();
+        signOut({ callbackUrl: "/" });
       }
     };
   
@@ -124,13 +123,11 @@ const Navbar = () => {
                       </Link>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <form action={doLogout}>
-                      <DropdownMenuItem>
-                        <button type="submit" className="w-full text-left">
-                          Log out
-                        </button>
-                      </DropdownMenuItem>
-                    </form>
+                    <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
+                      <button type="button" className="w-full text-left">
+                        Log out
+                      </button>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuSeparator />
                     <form>
