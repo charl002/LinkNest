@@ -2,17 +2,35 @@
 
 import React, { useState } from "react";
 import { Mail } from "lucide-react";
+import { customToast } from "@/components/ui/customToast";
+import { useRouter } from "next/navigation";
 
 const ContactUs = () => {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const router = useRouter();
 
   const handleSend = () => {
+
+    if (!message.trim()) {
+        customToast({
+          message: "Please enter a message before sending.",
+          type: "error",
+        });
+        return;
+    }
+
     const mailtoLink = `mailto:linknestlive@gmail.com?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(message)}`;
+    
     window.location.href = mailtoLink;
+
+    setTimeout(() => {
+        router.push("/");
+    }, 1500);
   };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-blue-50 px-4 py-16">

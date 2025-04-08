@@ -636,7 +636,7 @@ export default function Chat() {
     <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
       <h1 className="text-lg font-semibold p-4">
       {groupchatId && group ? (
-        <div className="relative group flex items-center gap-2">
+        <div className="relative group flex items-center gap-2 hover:cursor-pointer">
           <Avatar className="w-10 h-10 rounded-full">
             <AvatarImage 
               src={group?.image || "/defaultGroupPic.png"}
