@@ -1,5 +1,5 @@
-import type { Config } from "tailwindcss";
-import tailwindcssAnimate from "tailwindcss-animate";
+import type { Config } from "tailwindcss"
+import tailwindcssAnimate from "tailwindcss-animate"
 
 export default {
   darkMode: ["class"],
@@ -7,6 +7,7 @@ export default {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -51,6 +52,8 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        dark: "#121212", // Add a dark color for backgrounds
+        light: "#ffffff", // Add a light color for backgrounds
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -60,4 +63,4 @@ export default {
     },
   },
   plugins: [tailwindcssAnimate],
-} satisfies Config;
+} satisfies Config

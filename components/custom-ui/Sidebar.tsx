@@ -412,7 +412,7 @@ export default function Sidebar() {
 
   // Return the rendered sidebar
   return (
-    <aside className="bg-white shadow-md p-4 rounded-md flex flex-col h-[calc(100vh-120px)] overflow-y-auto">
+    <aside className="bg-white dark:bg-dark shadow-md p-4 rounded-md flex flex-col h-[calc(100vh-120px)] overflow-y-auto">
       <div className="flex-1 flex flex-col justify-center items-center pt-4">
         {/* Dialog for adding a friend */}
         <Dialog>
