@@ -31,6 +31,7 @@ import { GroupChat } from "@/types/group";
 import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { AvatarFallback } from "../ui/avatar";
 import { useGroupChats } from "../provider/GroupChatsProvider";
+import { Settings } from 'lucide-react';
 
 export default function Chat() {
   const socket = useSocket();
@@ -634,42 +635,43 @@ export default function Chat() {
   }
   const chatMainContent = (
     <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
-      <h1 className="text-lg font-semibold p-4">
-      {groupchatId && group ? (
-        <div className="relative group flex items-center gap-2 hover:cursor-pointer">
-          <Avatar className="w-10 h-10 rounded-full">
-            <AvatarImage 
-              src={group?.image || "/defaultGroupPic.png"}
-              alt={group?.name || "Group Chat"}
-              className="w-full h-full object-cover rounded-full"
-            />
-            <AvatarFallback className="flex items-center justify-center w-full h-full bg-gray-300 text-white rounded-full">
-              {group?.name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          {/* Show skeleton if group name is loading */}
-          {group ? (
-            <span>{group.name}</span>
+      <div className="flex items-center justify-between p-4">
+        <h1 className="text-lg font-semibold">
+          {groupchatId && group ? (
+            <div className="relative group flex items-center gap-2 hover:cursor-pointer">
+              <Avatar className="w-10 h-10 rounded-full">
+                <AvatarImage 
+                  src={group?.image || "/defaultGroupPic.png"}
+                  alt={group?.name || "Group Chat"}
+                  className="w-full h-full object-cover rounded-full"
+                />
+                <AvatarFallback className="flex items-center justify-center w-full h-full bg-gray-300 text-white rounded-full">
+                  {group?.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {group ? (
+                <span>{group.name}</span>
+              ) : (
+                <Skeleton className="h-4 w-32 rounded-md" />
+              )}
+              <div className="absolute top-full left-0 mt-2 w-max max-w-xs bg-white text-sm text-gray-800 shadow-lg rounded-md p-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                <ul>
+                  {group.members.map((member, index) => (
+                    <li key={index}>{member}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : friendUsername ? (
+            `Chat with ${friendUsername}`
           ) : (
             <Skeleton className="h-4 w-32 rounded-md" />
           )}
+        </h1>
 
-          {/* group members */}
-          <div className="absolute top-full left-0 mt-2 w-max max-w-xs bg-white text-sm text-gray-800 shadow-lg rounded-md p-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            <ul>
-              {group.members.map((member, index) => (
-                <li key={index}>{member}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : friendUsername ? (
-        `Chat with ${friendUsername}`
-      ) : (
-        <Skeleton className="h-4 w-32 rounded-md" />
-      )}
+        <Settings className="transition-transform duration-200 hover:scale-110 active:scale-90"/>
+      </div>
 
-      </h1>
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
