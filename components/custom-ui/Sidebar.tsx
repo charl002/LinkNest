@@ -22,6 +22,7 @@ import { X } from "lucide-react";
 import Link from "next/link";
 import { getAllUsers, checkAdminStatus } from "@/app/actions";
 import { User } from "@/types/user";
+import ThemeToggle from "../toggle/ThemeToggle";
 
 /**
  * Sidebar component for the user interface.
@@ -472,6 +473,8 @@ export default function Sidebar() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <ThemeToggle/>
       </div>
       <div className="flex-1 flex flex-col justify-center items-center border-b pb-4">
         <h2 className="text-lg font-semibold">Pending Friend Requests</h2>
