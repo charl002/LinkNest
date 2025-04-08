@@ -238,8 +238,9 @@ const CreatePost = () => {
      *
      * @returns {JSX.Element} The rendered form for creating a new post.
      */
+    // Update the form container height
     const form = (
-        <div className="bg-white shadow-md rounded-lg p-8 flex items-center justify-center flex-grow overflow-auto h-[calc(100vh-120px)]">
+        <div className="bg-white shadow-md rounded-lg p-8 flex items-center justify-center flex-grow overflow-auto h-[calc(100dvh-200px)]">
             <div className="w-full max-w-2xl bg-gray-200 shadow-lg rounded-lg p-10">
                 <h1 className="text-3xl font-bold mb-6 text-center">Create a New Post</h1>
             
@@ -370,7 +371,7 @@ const CreatePost = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-100 text-gray-800">
+        <div className="min-h-[100dvh] bg-gray-100 text-gray-800">
             {/* Mobile View Toggle Buttons */}
             <div className="md:hidden flex justify-between p-4 gap-4">
                 <button
@@ -394,14 +395,14 @@ const CreatePost = () => {
             </div>
     
             {/* Mobile View Content */}
-            <div className="md:hidden min-h-[100dvh] overflow-y-auto px-4">
+            <div className="md:hidden min-h-[calc(100dvh-80px)] overflow-y-auto px-4 pb-20">
                 {showSidebar && <Sidebar />}
                 {showChatList && <ChatList />}
                 {!showSidebar && !showChatList && form}
             </div>
     
             {/* Desktop Layout */}
-            <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 p-6 h-[calc(100vh-4rem)] overflow-hidden">
+            <div className="hidden md:grid grid-cols-[300px_1fr_300px] gap-6 p-6 h-[calc(100dvh-4rem)] overflow-hidden">
                 <div className="w-full max-h-[calc(100vh-3rem)] overflow-y-auto">
                 <Sidebar />
                 </div>
