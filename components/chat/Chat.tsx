@@ -672,7 +672,7 @@ export default function Chat() {
       </h1>
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
+        className="flex-1 overflow-y-auto min-h-[calc(100dvh-350px)] max-h-[calc(100dvh-350px)] w-full space-y-5 pr-2 p-4 rounded-lg"
         style={{ scrollbarWidth: "thin" }}
       >
         {isLoading
@@ -913,7 +913,7 @@ export default function Chat() {
         </div>
   
         {/* Mobile View Content */}
-        <div className="md:hidden min-h-screen overflow-y-auto px-4">
+        <div className="md:hidden min-h-[100dvh] overflow-y-auto px-4">
           {showSidebar && <Sidebar />}
           {showChatList && <ChatList />}
           {!showSidebar && !showChatList && chatMainContent}
