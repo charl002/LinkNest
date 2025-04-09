@@ -634,7 +634,7 @@ export default function Chat() {
   }
   const chatMainContent = (
     <section className="relative flex flex-col bg-white shadow-md rounded-lg overflow-hidden">
-      <h1 className="text-lg font-semibold p-4">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200">
       {groupchatId && group ? (
         <div className="relative group flex items-center gap-2 hover:cursor-pointer">
           <Avatar className="w-10 h-10 rounded-full">
@@ -664,12 +664,21 @@ export default function Chat() {
           </div>
         </div>
       ) : friendUsername ? (
-        `Chat with ${friendUsername}`
+        <div className="flex items-center gap-2">
+        <Avatar className="w-10 h-10">
+          <AvatarImage 
+            src={otherUsers[0]?.image || "/defaultProfilePic.png"}
+            alt={otherUsers[0]?.username || ""}
+            className="w-full h-full object-cover rounded-full"
+          />
+          <AvatarFallback>{otherUsers[0]?.username.charAt(0).toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <span>{otherUsers[0]?.username}</span>
+      </div>
       ) : (
         <Skeleton className="h-4 w-32 rounded-md" />
       )}
-
-      </h1>
+      </div>
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto min-h-[calc(100vh-250px)] max-h-[calc(100vh-250px)] w-full space-y-5 pr-2 p-4 rounded-lg"
