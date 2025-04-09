@@ -52,8 +52,29 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
-        dark: "#121212", // Add a dark color for backgrounds
-        light: "#ffffff", // Add a light color for backgrounds
+        dark: {
+          100: "#121212",
+          200: "#1e1e1e",
+          300: "#2d2d2d",
+          400: "#3c3c3c",
+          500: "#4b4b4b",
+        },
+        gray: {
+          100: "#f5f5f5",
+          200: "#e5e5e5",
+          300: "#d4d4d4",
+          400: "#a3a3a3",
+          500: "#737373",
+          600: "#525252",
+          700: "#404040",
+          800: "#262626",
+          900: "#171717",
+        },
+        white: {
+          100: "#ffffff", // pure white
+          200: "#f8f8f8", // slightly off-white
+          300: "#e8e8e8", // light grayish white
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

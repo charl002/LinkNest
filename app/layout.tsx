@@ -21,7 +21,7 @@ export default async function RootLayout({
   const session = await auth();
   return (
     <html lang="en">
-     <body className="bg-gray-100 text-gray-900 antialiased">
+     <body className="bg-gray-100 dark:bg-dark-100 text-gray-900 dark:text-gray-200 antialiased">
       <SessionProvider session={session}>
         <SocketProvider>
           <FriendsProvider>

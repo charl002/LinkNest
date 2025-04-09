@@ -371,12 +371,12 @@ export default function Post({ title, username, description, tags, comments, lik
     }
 
     return (
-      <div ref={ref} className="bg-white shadow-md p-4 rounded-md">
+      <div ref={ref} className="bg-white dark:bg-dark-200 shadow-md p-4 rounded-md">
           <div className="flex items-center justify-between w-full">
           <Link href={`/profile/${encodeURIComponent(username)}`}>
             <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-110 active:scale-90">
               {profilePicture ? (
-                <Image 
+                <Image
                   src={profilePicture} 
                   alt={`${username}'s profile picture`} 
                   width={40} 
@@ -395,7 +395,7 @@ export default function Post({ title, username, description, tags, comments, lik
                   />
                 </div>
               )}
-              <p className="font-bold">{username}</p>
+              <p className="font-bold dark:text-white-100">{username}</p>
             </div>
           </Link>
           {/* Conditional delete button for the post's author */}
@@ -490,15 +490,18 @@ export default function Post({ title, username, description, tags, comments, lik
         </Dialog>
 
         {/* Post Description and Tags */}
-        <p className="mt-2 font-semibold">{title}</p>
-        <p className="text-gray-500">{description}</p>
+        <p className="mt-2 font-semibold dark:text-white-200">{title}</p>
+        <p className="text-gray-500 dark:text-gray-300">{description}</p>
         <p className="text-blue-500 text-sm mt-2">{tags.join(' ')}</p>
         {/* Post Action Buttons */}
         <div className="mt-4 flex items-center space-x-6">
           <button
             onClick={handleToggleLike}
-            className={`flex items-center space-x-2 px-3 py-1 rounded-md text-sm transition-transform duration-200 hover:scale-105 active:scale-95 
-                ${isLiked ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'} hover:bg-blue-200`}
+            className={`flex items-center space-x-2 px-3 py-1 rounded-md text-sm transition-transform duration-200 hover:scale-105 
+              active:scale-95 
+              bg-white-200 dark:bg-dark-100 
+              text-gray-400 dark:text-white-100
+                ${isLiked ? 'bg-blue-200 text-dark-200 dark:bg-blue-400' : 'bg-gray-100 text-dark-200'} hover:bg-blue-200`}
             disabled={isLoading}
           >
             {isLiked ? <FaThumbsUp className="text-blue-600" /> : <FaRegThumbsUp />} 
@@ -515,7 +518,7 @@ export default function Post({ title, username, description, tags, comments, lik
               }
           }}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center bg-gray-100 text-gray-600 space-x-2 px-3 py-1 rounded-md transition-transform duration-200 hover:scale-105 active:scale-95">
+              <Button variant="outline" className="flex items-center bg-white-200 dark:bg-dark-100 text-gray-800 dark:text-white-100 space-x-2 px-3 py-1 rounded-md transition-transform duration-200 hover:scale-105 active:scale-95">
                 <FaRegComment />
                 <span>Comment</span>
               </Button>
@@ -607,7 +610,7 @@ export default function Post({ title, username, description, tags, comments, lik
           </Dialog>
           <button
             onClick={() => setShowReportDialog(true)}
-            className="text-gray-400 hover:text-red-500 text-sm transition-colors duration-200"
+            className="text-gray-400 dark:text-white-100 hover:text-red-500 dark:hover:text-red-500 text-sm transition-colors duration-200"
           >
             Report
           </button>
