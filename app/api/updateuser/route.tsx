@@ -16,13 +16,22 @@ export async function PATCH(req: Request) {
         // Reference the user document
         const userRef = doc(db, "users", id);
 
-        // Update fields
-        await updateDoc(userRef, {
-            image: image,
+        // Prepare update data - only include defined values
+        const updateData: any = {
             username,
             description: description ?? "", // Set to empty string if not provided
-            background: background,
-        });
+        };
+
+        if (image !== undefined) {
+            updateData.image = image;
+        }
+
+        if (background !== undefined) {
+            updateData.background = background;
+        }
+
+        // Update fields
+        await updateDoc(userRef, updateData);
 
         return NextResponse.json({ message: "User updated successfully" }, { status: 200 });
     } catch (err) {

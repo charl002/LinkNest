@@ -1,20 +1,9 @@
 // app/api/postuploadpost/route.ts
-import { BlobServiceClient } from "@azure/storage-blob";
 import { NextResponse } from "next/server";
 import addData from "@/firebase/firestore/addData";
 import { withRetry } from '@/utils/backoff';
 import cache from "@/lib/cache";
-
-// Azure Storage Configuration
-const sasToken = process.env.AZURE_SAS;
-const containerName = process.env.AZURE_BLOB_CONTAINER || "helloblob";
-const storageAccountName = process.env.AZURE_STORAGE_ACCOUNT || "webprojazure";
-const blobPublicUrl = `https://${storageAccountName}.blob.core.windows.net/${containerName}/`;
-
-const blobService = new BlobServiceClient(
-  `https://${storageAccountName}.blob.core.windows.net/?${sasToken}`
-);
-const containerClient = blobService.getContainerClient(containerName);
+import { uploadFile } from "@/lib/storage";
 
 export async function POST(request: Request) {
   try {
@@ -50,16 +39,10 @@ export async function POST(request: Request) {
     if (file && file.size > 0) {
       // Convert file to buffer
       const buffer = Buffer.from(await file.arrayBuffer());
-      
-      // Generate unique blob name
-      const blobName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`;
-      const blobClient = containerClient.getBlockBlobClient(blobName);
 
-      // Upload to Azure Blob Storage with retry
-      await withRetry(
-        () => blobClient.uploadData(buffer, {
-          blobHTTPHeaders: { blobContentType: file.type },
-        }),
+      // Upload to Cloudinary with retry
+      const { url: uploadedUrl } = await withRetry(
+        () => uploadFile(buffer, file.name, "linknest/posts"),
         {
           maxAttempts: 3,
           initialDelay: 1000,
@@ -68,7 +51,7 @@ export async function POST(request: Request) {
       );
 
       // Add file URL to post data
-      postData.fileUrl = `${blobPublicUrl}${encodeURIComponent(blobName)}`;
+      postData.fileUrl = uploadedUrl;
     }
 
     // Add post data to Firestore

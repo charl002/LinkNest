@@ -1,20 +1,10 @@
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, arrayRemove, updateDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
-import { BlobServiceClient } from "@azure/storage-blob";
 import { Comment } from "@/types/comment";
+import { deleteFile } from "@/lib/storage";
 
 const db = getFirestore(firebase_app);
-
-// Azure Storage Configuration
-const sasToken = process.env.AZURE_SAS;
-const containerName = process.env.AZURE_BLOB_CONTAINER || "helloblob";
-const storageAccountName = process.env.AZURE_STORAGE_ACCOUNT || "webprojazure";
-
-const blobService = new BlobServiceClient(
-  `https://${storageAccountName}.blob.core.windows.net/?${sasToken}`
-);
-const containerClient = blobService.getContainerClient(containerName);
 
 export async function DELETE(req: Request) {
   try {
@@ -92,11 +82,9 @@ export async function DELETE(req: Request) {
 
       if (fileUrl) {
         try {
-          const blobName = fileUrl.split("/").pop();
-          const blobClient = containerClient.getBlockBlobClient(blobName!);
-          await blobClient.deleteIfExists();
+          await deleteFile(fileUrl);
         } catch (err) {
-          console.error("Failed to delete post image from Azure:", err);
+          console.error("Failed to delete post image from Cloudinary:", err);
         }
       }
 
@@ -168,18 +156,16 @@ export async function DELETE(req: Request) {
       async (friendDoc) => deleteDoc(doc(db, "friends", friendDoc.id))
     );
 
-    // Delete all images from Firestore and Azure Blob Storage
+    // Delete all images from Firestore and Cloudinary
     const deleteImages = imagesSnapshot.docs.map(async (imageDoc) => {
       const imageData = imageDoc.data();
       const fileUrl = imageData.fileUrl;
 
       if (fileUrl) {
         try {
-          const blobName = fileUrl.split('/').pop();
-          const blobClient = containerClient.getBlockBlobClient(blobName!);
-          await blobClient.deleteIfExists();
+          await deleteFile(fileUrl);
         } catch (err) {
-          console.error("Failed to delete image from Azure:", err);
+          console.error("Failed to delete image from Cloudinary:", err);
         }
       }
 
