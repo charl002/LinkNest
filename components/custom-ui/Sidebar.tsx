@@ -20,6 +20,7 @@ import { useSocket } from "@/components/provider/SocketProvider";
 import { useFriends } from "../provider/FriendsProvider";
 import { X } from "lucide-react";
 import Link from "next/link";
+import { useImageFallback } from "@/lib/useImageFallback";
 
 import { User } from "@/types/user";
 
@@ -127,7 +128,7 @@ export default function Sidebar() {
               {
                 id: userData.id,
                 username: senderUsername,
-                image: userData.data.image || "/defaultProfilePic.png",
+                image: userData.data.image || "/defaultProfilePic.jpg",
                 email: userData.data.email || "",
                 name: userData.data.name || "",
                 background: userData.data.background || "", // Provide default
@@ -364,7 +365,7 @@ export default function Sidebar() {
         {
           id: userData.id,
           username: userData.data.username,
-          image: userData.data.image || "/defaultProfilePic.png",
+          image: userData.data.image || "/defaultProfilePic.jpg",
           email: userData.data.email || "",
           name: userData.data.name || "",
           background: userData.data.background || "", // Provide default value
@@ -432,6 +433,9 @@ export default function Sidebar() {
                           width={40}
                           height={40}
                           className="rounded-full"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/defaultProfilePic.jpg";
+                          }}
                         />
                         <span>{user.username}</span>
                       </div>
@@ -475,12 +479,9 @@ export default function Sidebar() {
                         width={40}
                         height={40}
                         className="rounded-full border"
-                        onError={(e) =>
-                          console.error(
-                            `Error loading image for ${user.username}:`,
-                            e
-                          )
-                        }
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/defaultProfilePic.jpg";
+                        }}
                       />
                       <span className="text-md font-medium">
                         {user.username}

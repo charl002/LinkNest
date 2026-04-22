@@ -28,11 +28,14 @@ const HoverCardComponent = ({
           <div className="relative inline-block">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 cursor-pointer relative">
               <Image
-                src={image || "/defaultProfilePic.png"}
+                src={image || "/defaultProfilePic.jpg"}
                 alt={username}
                 width={60}
                 height={60}
                 className="rounded-full border"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/defaultProfilePic.jpg";
+                }}
               />
             </div>
           </div>
@@ -41,11 +44,14 @@ const HoverCardComponent = ({
         <HoverCardContent className="w-64 p-4 bg-white rounded-lg shadow-lg border border-gray-200">
           <div className="flex items-center space-x-3">
             <Image
-              src={image || "/defaultProfilePic.png"}
+              src={image || "/defaultProfilePic.jpg"}
               alt={username}
               width={40}
               height={40}
               className="rounded-full border"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/defaultProfilePic.jpg";
+              }}
             />
 
             <div className="flex flex-col">

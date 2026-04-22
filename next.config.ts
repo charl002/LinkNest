@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
     formats: ['image/webp'],
     domains: ['cdn.bsky.app', 'res.cloudinary.com'],
+    unoptimized: process.env.NODE_ENV === 'development',
   },
   experimental: {
     optimizePackageImports: ['@atproto/api'],

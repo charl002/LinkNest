@@ -16,6 +16,7 @@ import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, A
 import { useInView } from 'react-intersection-observer';
 import ReportDialog from "./ReportDialog";
 import { useRouter } from "next/navigation";
+import { useImageFallback } from "@/lib/useImageFallback";
 
 interface PostProps {
     title: string;
@@ -39,6 +40,7 @@ export default function Post({ title, username, description, tags, comments, lik
         triggerOnce: true
     });
     const { data: session } = useSession();
+    const profileImageFallback = useImageFallback(profilePicture);
     const [likeCount, setLikeCount] = useState(likes);
     const [isLiked, setIsLiked] = useState(false);
     const [newComment, setNewComment] = useState("");
@@ -304,12 +306,13 @@ export default function Post({ title, username, description, tags, comments, lik
             <div className="flex items-center space-x-2 transition-transform duration-200 hover:scale-110 active:scale-90">
               {profilePicture ? (
                 <Image 
-                  src={profilePicture} 
+                  src={profileImageFallback.imageSrc} 
                   alt={`${username}'s profile picture`} 
                   width={40} 
                   height={40} 
                   className="rounded-full" 
                   layout="fixed"
+                  onError={profileImageFallback.handleImageError}
                 />
               ) : (
                 <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center">
@@ -319,6 +322,7 @@ export default function Post({ title, username, description, tags, comments, lik
                     width={40} 
                     height={40} 
                     className="rounded-full" 
+                    onError={profileImageFallback.handleImageError}
                   />
                 </div>
               )}
@@ -369,6 +373,9 @@ export default function Post({ title, username, description, tags, comments, lik
                   priority
                   className="object-contain"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/defaultProfilePic.jpg";
+                  }}
                 />
               </button>
             )}
@@ -454,6 +461,9 @@ export default function Post({ title, username, description, tags, comments, lik
                           width={40}
                           height={40}
                           className="rounded-full flex-shrink-0 transition-transform duration-200 hover:scale-105 active:scale-95"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/defaultProfilePic.jpg";
+                          }}
                         />
                       </Link>
                       <div className="min-w-0 flex-1">
