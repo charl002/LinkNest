@@ -17,7 +17,7 @@ export async function PATCH(req: Request) {
         const userRef = doc(db, "users", id);
 
         // Prepare update data - only include defined values
-        const updateData: any = {
+        const updateData: Record<string, string> = {
             username,
             description: description ?? "", // Set to empty string if not provided
         };

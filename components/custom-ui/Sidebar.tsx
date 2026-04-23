@@ -20,7 +20,6 @@ import { useSocket } from "@/components/provider/SocketProvider";
 import { useFriends } from "../provider/FriendsProvider";
 import { X } from "lucide-react";
 import Link from "next/link";
-import { useImageFallback } from "@/lib/useImageFallback";
 
 import { User } from "@/types/user";
 
