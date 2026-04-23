@@ -18,12 +18,14 @@ import {
 import { House, AlignJustify } from 'lucide-react';
 import {AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,} from "@/components/ui/alert-dialog"
 import { customToast } from "@/components/ui/customToast";
+import { useImageFallback } from "@/lib/useImageFallback";
 
 const Navbar = () => {
 
   const [userName, setUserName] = useState("User");
   const [userImage, setUserImage] = useState("/defaultProfilePic.jpg");
   const { data: session } = useSession();
+  const userImageFallback = useImageFallback(userImage);
 
   const email = session?.user?.email ?? "";
   const name = session?.user?.name ?? "User";
@@ -91,12 +93,13 @@ const Navbar = () => {
                   <DropdownMenuTrigger asChild>
                   <div className="flex items-center space-x-3 cursor-pointer">
                     <Image
-                      src={userImage}
+                      src={userImageFallback.imageSrc}
                       alt="User Profile"
                       width={40}
                       height={40}
                       priority
                       className="rounded-full border border-gray-300"
+                      onError={userImageFallback.handleImageError}
                     />
                     <div className="flex flex-col">
                       <p className="text-gray-700 font-medium">{name}</p>

@@ -16,6 +16,7 @@ import { PostType } from "@/types/post";
 import { User } from "@/types/user";
 import ChatList from "../chat/ChatList";
 import Sidebar from "../custom-ui/Sidebar";
+import { useImageFallback } from "@/lib/useImageFallback";
 
 interface UserData {
   id: string;
@@ -59,6 +60,9 @@ export default function ProfilePage({ user }: { user: string }) {
   const [showChatList, setShowChatList] = useState(false);
   const [isSessionUserAdmin, setIsSessionUserAdmin] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+
+  const profileImageFallback = useImageFallback();
+  const backgroundImageFallback = useImageFallback();
 
   const fetchUser = useCallback(async () => {
     try {
@@ -420,6 +424,7 @@ export default function ProfilePage({ user }: { user: string }) {
           alt="User Profile"
           layout="fill"
           objectFit="cover"
+          onError={backgroundImageFallback.handleImageError}
         />
       </div>
 
@@ -431,6 +436,7 @@ export default function ProfilePage({ user }: { user: string }) {
             width={80}
             height={80}
             className="rounded-full border-4 border-white shadow-md"
+            onError={profileImageFallback.handleImageError}
           />
         </button>
 
@@ -453,6 +459,7 @@ export default function ProfilePage({ user }: { user: string }) {
                 priority
                 className="rounded-full border-4 border-white shadow-md"
                 sizes="100vw"
+                onError={profileImageFallback.handleImageError}
               />
             </div>
           </DialogContent>
@@ -603,6 +610,9 @@ export default function ProfilePage({ user }: { user: string }) {
                             width={40} 
                             height={40} 
                             className="rounded-full border"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "/defaultProfilePic.jpg";
+                            }}
                           />
                           <p className="text-sm font-medium ml-4">{friend.username}</p> 
                         </li>

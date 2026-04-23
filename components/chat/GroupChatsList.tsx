@@ -397,7 +397,7 @@ const GroupChatsList = ({ currentUser, router }: GroupChatsListProps) => {
               {selectedFriends.map((friend) => (
                 <HoverCardComponent
                   key={friend.id}
-                  image={friend.image || "/public/defaultProfilePic.png"}
+                  image={friend.image || "/defaultProfilePic.jpg"}
                   username={friend.username}
                   description={
                     friend.description ||

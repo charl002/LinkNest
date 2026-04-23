@@ -1,18 +1,10 @@
-import { BlobServiceClient } from "@azure/storage-blob";
 import { NextResponse } from "next/server";
 import deleteData from "@/firebase/firestore/deleteData";
 import { withRetry } from "@/utils/backoff";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { deleteFile } from "@/lib/storage";
 
-const sasToken = process.env.AZURE_SAS;
-const containerName = process.env.AZURE_BLOB_CONTAINER || "helloblob";
-const storageAccountName = process.env.AZURE_STORAGE_ACCOUNT || "webprojazure";
-
-const blobService = new BlobServiceClient(
-  `https://${storageAccountName}.blob.core.windows.net/?${sasToken}`
-);
-const containerClient = blobService.getContainerClient(containerName);
 const db = getFirestore(firebase_app);
 
 export async function DELETE(request: Request) {
@@ -38,16 +30,16 @@ export async function DELETE(request: Request) {
 
     const postData = postSnap.data();
 
-    // Delete file from Azure Blob Storage if it exists (only for user posts)
+    // Delete file from Cloudinary if it exists (only for user posts)
     if (postType === 'posts' && postData.fileUrl) {
-      const fileName = decodeURIComponent(postData.fileUrl.split("/").pop());
-      const blobClient = containerClient.getBlockBlobClient(fileName);
-      
-      await withRetry(() => blobClient.deleteIfExists(), {
-        maxAttempts: 3,
-        initialDelay: 1000,
-        maxDelay: 5000,
-      });
+      await withRetry(
+        () => deleteFile(postData.fileUrl),
+        {
+          maxAttempts: 3,
+          initialDelay: 1000,
+          maxDelay: 5000,
+        }
+      );
     }
 
     // Delete post from Firestore
