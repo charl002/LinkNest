@@ -4,6 +4,7 @@ import addData from "@/firebase/firestore/addData";
 import { withRetry } from '@/utils/backoff';
 import cache from "@/lib/cache";
 import { uploadFile } from "@/lib/storage";
+import { getMissingCloudinaryEnvVars } from "@/lib/storage/cloudinary";
 
 export async function POST(request: Request) {
   try {
@@ -37,6 +38,21 @@ export async function POST(request: Request) {
     };
 
     if (file && file.size > 0) {
+      const missingCloudinaryEnvVars = getMissingCloudinaryEnvVars();
+      if (missingCloudinaryEnvVars.length > 0) {
+        console.error(
+          "[POST_UPLOAD] Missing Cloudinary env vars:",
+          missingCloudinaryEnvVars.join(", ")
+        );
+        return NextResponse.json(
+          {
+            message: "Cloudinary configuration is missing",
+            missingEnvVars: missingCloudinaryEnvVars,
+          },
+          { status: 500 }
+        );
+      }
+
       // Convert file to buffer
       const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -85,7 +101,7 @@ export async function POST(request: Request) {
     );
 
   } catch (error) {
-    console.error("Server error:", error);
+    console.error("[POST_UPLOAD] Server error:", error);
     return NextResponse.json(
       { message: "Internal server error", error: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }

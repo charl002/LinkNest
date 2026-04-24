@@ -11,6 +11,18 @@ cloudinary.config({
   api_secret: apiSecret,
 });
 
+export function getMissingCloudinaryEnvVars(): string[] {
+  const requiredEnvVars = [
+    ["CLOUDINARY_CLOUD_NAME", cloudName],
+    ["CLOUDINARY_API_KEY", apiKey],
+    ["CLOUDINARY_API_SECRET", apiSecret],
+  ] as const;
+
+  return requiredEnvVars
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+}
+
 function normalizeFileName(fileName: string) {
   const cleaned = fileName
     .replace(/[^a-zA-Z0-9-_\.]/g, "-")
