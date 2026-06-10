@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import firebase_app from "@/firebase/config";
+import { sanitizeAzureUrls } from "@/lib/utils";
 
 interface Report {
     reportedBy: string;
@@ -49,7 +50,7 @@ export async function GET() {
             return bLatest - aLatest;
         });
 
-        return NextResponse.json({ posts: allReportedPosts }, { status: 200 });
+        return NextResponse.json(sanitizeAzureUrls({ posts: allReportedPosts }), { status: 200 });
     } catch (error) {
         console.error("Error fetching reported posts:", error);
         return NextResponse.json(

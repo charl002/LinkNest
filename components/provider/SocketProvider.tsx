@@ -3,10 +3,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-const isDev = process.env.NODE_ENV !== "production";
-const socketUrl = isDev 
-  ? "ws://localhost:3000" 
-  : "wss://linknest-fkd5eba5dqbrhzd7.canadacentral-01.azurewebsites.net";
+const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 
+  (typeof window !== "undefined" ? window.location.origin.replace(/^http/, "ws") : "ws://localhost:3000");
 
 const SocketContext = createContext<Socket | null>(null);
 

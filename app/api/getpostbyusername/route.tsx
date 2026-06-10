@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "@firebase/firestore";
 import firebase_app from "@/firebase/config";
 import { Comment } from "@/types/comment";
+import { sanitizeAzureUrls } from "@/lib/utils";
 
 const db = getFirestore(firebase_app);
 
@@ -40,7 +41,7 @@ export async function GET(req: Request) {
             };
         });
 
-        return NextResponse.json({ success: true, posts }, { status: 200 });
+        return NextResponse.json(sanitizeAzureUrls({ success: true, posts }), { status: 200 });
     } catch (error) {
         return NextResponse.json({ message: "Error fetching posts", error }, { status: 500 });
     }

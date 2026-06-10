@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withRetry } from '@/utils/backoff';
 import { getData } from "@/firebase/firestore/getData";
+import { sanitizeAzureUrls } from "@/lib/utils";
 
 export async function GET(req: Request) {
   try {
@@ -32,7 +33,7 @@ export async function GET(req: Request) {
       );
     }
 
-    return NextResponse.json({ groupChats }, { status: 200 });
+    return NextResponse.json(sanitizeAzureUrls({ groupChats }), { status: 200 });
 
   } catch (err) {
     return NextResponse.json(

@@ -3,6 +3,7 @@ import { getAllDocuments } from "@/firebase/firestore/getData";
 import { Comment } from "@/types/comment";
 import { withRetry } from '@/utils/backoff';
 import cache from '@/lib/cache';
+import { sanitizeAzureUrls } from "@/lib/utils";
 
 interface Post {
     title: string;
@@ -105,7 +106,7 @@ export async function GET(){
             };
         });
 
-        const responseData = { success: true, posts };
+        const responseData = sanitizeAzureUrls({ success: true, posts });
 
         // Store in server cache
         cache.set('user-posts', responseData);

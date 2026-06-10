@@ -11,10 +11,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "res.cloudinary.com",
       },
-      {
-        protocol: "https",
-        hostname: "webprojazure.blob.core.windows.net",
-      },
+
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",

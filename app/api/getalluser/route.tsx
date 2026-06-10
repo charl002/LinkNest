@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
 import { withRetry } from '@/utils/backoff';
+import { sanitizeAzureUrls } from "@/lib/utils";
 
 export async function GET() {
     try {
@@ -25,7 +26,7 @@ export async function GET() {
             ...user.data(),
         }));
 
-        return NextResponse.json({ users }, { status: 200 });
+        return NextResponse.json(sanitizeAzureUrls({ users }), { status: 200 });
     } catch (err) {
         return NextResponse.json({ message: "Unexpected error occurred", error: err }, { status: 500 });
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAllDocuments } from "@/firebase/firestore/getData";
+import { sanitizeAzureUrls } from "@/lib/utils";
 
 export async function GET(request: Request) {
   try {
@@ -46,10 +47,10 @@ export async function GET(request: Request) {
 
     // Return the latest uploaded image by the user
     return NextResponse.json(
-      { 
+      sanitizeAzureUrls({ 
         message: "Image retrieved successfully", 
         fileUrl: userImages[0].fileUrl 
-      },
+      }),
       { status: 200 }
     );
 

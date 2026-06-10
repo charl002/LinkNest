@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getFirestore, collection, query, where, getDocs } from "@firebase/firestore";
 import firebase_app from "@/firebase/config";
 import { withRetry } from '@/utils/backoff';
+import { sanitizeAzureUrls } from "@/lib/utils";
 
 const db = getFirestore(firebase_app);
 
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
 
         const userDoc = querySnapshot.docs[0];
 
-        return NextResponse.json({ id: userDoc.id, data: userDoc.data() }, { status: 200 });
+        return NextResponse.json(sanitizeAzureUrls({ id: userDoc.id, data: userDoc.data() }), { status: 200 });
     } catch (error) {
         return NextResponse.json({ message: "Error fetching user", error: error }, { status: 500 });
     }

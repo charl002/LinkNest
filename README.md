@@ -94,7 +94,7 @@ Look at user profiles. <br />
 Create Posts! <br />
 
 ## Rationale behind development deployment
-    We use Vercel as the Production Deployment since it is much faster than Render and Azure, which was not loading images.
+    We use Vercel as the Production Deployment since it is much faster than Render.
     Our development deployment is render, since it is what we were using before and it was already set up.
 
 ## Health check
