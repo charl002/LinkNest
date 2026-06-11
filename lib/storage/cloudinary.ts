@@ -1,21 +1,19 @@
 import { v2 as cloudinary } from "cloudinary";
 import { Readable } from "stream";
 
-const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-const apiKey = process.env.CLOUDINARY_API_KEY;
-const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-cloudinary.config({
-  cloud_name: cloudName,
-  api_key: apiKey,
-  api_secret: apiSecret,
-});
+function ensureConfig() {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 export function getMissingCloudinaryEnvVars(): string[] {
   const requiredEnvVars = [
-    ["CLOUDINARY_CLOUD_NAME", cloudName],
-    ["CLOUDINARY_API_KEY", apiKey],
-    ["CLOUDINARY_API_SECRET", apiSecret],
+    ["CLOUDINARY_CLOUD_NAME", process.env.CLOUDINARY_CLOUD_NAME],
+    ["CLOUDINARY_API_KEY", process.env.CLOUDINARY_API_KEY],
+    ["CLOUDINARY_API_SECRET", process.env.CLOUDINARY_API_SECRET],
   ] as const;
 
   return requiredEnvVars
@@ -52,6 +50,8 @@ export async function uploadFile(
 ): Promise<{ url: string; publicId: string }> {
   const normalizedFileName = normalizeFileName(fileName);
   const publicId = `${folder}/${Date.now()}-${normalizedFileName}`;
+
+  ensureConfig();
 
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -100,6 +100,8 @@ export async function deleteFile(fileUrl: string): Promise<void> {
   }
 
   const resourceType = getCloudinaryResourceTypeFromUrl(fileUrl);
+
+  ensureConfig();
 
   const result = await cloudinary.uploader.destroy(publicId, {
     invalidate: true,
